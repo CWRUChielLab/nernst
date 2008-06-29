@@ -10,8 +10,8 @@ extern "C" {
 
 enum
 {
-   WORLD_X = 128,//512,
-   WORLD_Y = 1024 //512
+   WORLD_X = 512,
+   WORLD_Y = 512
 };
 
 extern unsigned long int direction_sz64;

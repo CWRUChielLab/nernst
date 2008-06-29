@@ -182,7 +182,6 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
    mainLayout->addLayout( startPauseLayout );
    mainLayout->addWidget( resetBtn );
    mainLayout->addWidget( quitBtn );
-   mainLayout->addStretch( 1 );
 
    setLayout( mainLayout );
 
