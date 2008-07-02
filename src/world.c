@@ -42,11 +42,20 @@ initWorld()
 
    //Lay out the memory for the direction array.
    for( direction_sz64 = get_min_array_size64() * 8; direction_sz64 < WORLD_X * WORLD_Y; direction_sz64 *= 2 );
+
 #ifdef BLR_USELINUX
    rc = posix_memalign( (void**)&direction, getpagesize(), direction_sz64 );
 #else
+#ifdef BLR_USEMAC
    direction = malloc( direction_sz64 );
+#else
+#ifdef BLR_USEWIN
+   direction = malloc( direction_sz64 + 16 );
+   direction += 16 - (long int)direction % 16;
 #endif
+#endif
+#endif
+
    assert( rc == 0 );
    assert( world && claimed && direction );
 }

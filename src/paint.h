@@ -20,7 +20,7 @@ class PaintWidget : public QGLWidget
    public slots:
       void startPaint();
       void resetPaint();
-      void changePores( QString pores );
+      void changePores( int pores );
       void changeLspacing( int lspacing );
       void changeRspacing( int rspacing );
 

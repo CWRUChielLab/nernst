@@ -16,8 +16,8 @@ class NernstSim : public QWidget
       NernstSim( struct options *options, QWidget *parent = 0 );
  
    public slots:
-      void changeIters( QString iters );
-      void changePores( QString pores );
+      void changeIters( int iters );
+      void changePores( int pores );
       void changeLspacing( int lspacing );
       void changeRspacing( int rspacing );
       void changeSelectivity( bool selectivity );

@@ -17,37 +17,11 @@
 #include <QGroupBox>
 #include <QStackedLayout>
 #include <time.h>
+#include <math.h>
 
 #include "ctrl.h"
 #include "options.h"
-
-
-// MyIntValidator is a subclass of QIntValidator that fixes bad input values
-class MyIntValidator : public QIntValidator
-{
-   public:
-      MyIntValidator( int bottom, int top, QWidget *parent = 0 );
-      void fixup( QString &input ) const;
-};
-
-
-MyIntValidator::MyIntValidator( int bottom, int top, QWidget *parent )
-   : QIntValidator( bottom, top, parent ) {}
-
-
-void
-MyIntValidator::fixup( QString &input ) const
-{
-   int value = input.toInt();
-   if( value < bottom() )
-   {
-      input = QString::number( bottom() );
-   }
-   if( value > top() )
-   {
-      input = QString::number( top() );
-   }
-}
+#include "world.h"
 
 
 CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
@@ -67,23 +41,34 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
 
    // Iterations control
    itersLbl = new QLabel( "&Iterations" );
-   itersLbl->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 9,999,999." );
+   itersLbl->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 1,000,000." );
 
-   itersVal = new QLineEdit( QString::number( itersDefault ) );
-   itersVal->setValidator( new MyIntValidator( 1, 9999999 ) );
-   itersVal->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 9,999,999." );
+   itersSld = new QSlider( Qt::Horizontal );
+   itersSld->setMinimumWidth( 100 );
+   itersSld->setRange( 1, 1000000 );
+   itersSld->setPageStep( 1000 );
+   itersSld->setValue( itersDefault );
+   itersSld->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 1,000,000." );
 
-   itersLbl->setBuddy( itersVal );
+   itersLbl->setBuddy( itersSld );
+
+   itersVal = new QLabel( QString::number( itersDefault ) );
+   itersVal->setAlignment( Qt::AlignRight );
 
    // Pores control
    poresLbl = new QLabel( "P&ores" );
-   poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 1 and 512." );
+   poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( WORLD_Y ) + "." );
 
-   poresVal = new QLineEdit( QString::number( poresDefault ) );
-   poresVal->setValidator( new MyIntValidator( 1, 512 ) );
-   poresVal->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 1 and 512." );
+   poresSld = new QSlider( Qt::Horizontal );
+   poresSld->setMinimumWidth( 100 );
+   poresSld->setRange( 0, WORLD_Y );
+   poresSld->setValue( poresDefault );
+   poresSld->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( WORLD_Y ) + "." );
 
-   poresLbl->setBuddy( poresVal );
+   poresLbl->setBuddy( poresSld );
+
+   poresVal = new QLabel( QString::number( poresDefault ) );
+   poresVal->setAlignment( Qt::AlignRight );
 
    // Seed control
    seedLbl = new QLabel( "See&d" );
@@ -99,7 +84,7 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
    lspacingLbl = new QLabel( "I&ntracellular" );
 
    lspacingSld = new QSlider( Qt::Horizontal );
-   lspacingSld->setMinimumWidth( 60 );
+   lspacingSld->setMinimumWidth( 100 );
    lspacingSld->setRange( 1, 24 );
    lspacingSld->setValue( lspacingDefault );
 
@@ -112,7 +97,7 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
    rspacingLbl = new QLabel( "E&xtracellular" );
 
    rspacingSld = new QSlider( Qt::Horizontal );
-   rspacingSld->setMinimumWidth( 60 );
+   rspacingSld->setMinimumWidth( 100 );
    rspacingSld->setRange( 1, 24 );
    rspacingSld->setValue( rspacingDefault );
 
@@ -142,16 +127,20 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
    mainLayout = new QVBoxLayout();
    ctrlLayout = new QGridLayout();
 
-   ctrlLayout->addWidget( headerLbl, 0, 0, 1, 2 );
+   ctrlLayout->addWidget( headerLbl, 0, 0, 1, 3 );
   
    ctrlLayout->addWidget( itersLbl, 1, 0 );
-   ctrlLayout->addWidget( itersVal, 1, 1 );
+   ctrlLayout->addWidget( itersSld, 1, 1 );
+   ctrlLayout->addWidget( itersVal, 1, 2 );
 
    ctrlLayout->addWidget( poresLbl, 2, 0 );
-   ctrlLayout->addWidget( poresVal, 2, 1 );
+   ctrlLayout->addWidget( poresSld, 2, 1 );
+   ctrlLayout->addWidget( poresVal, 2, 2 );
+
+   ctrlLayout->setColumnMinimumWidth( 2, 50 );
 
    ctrlLayout->addWidget( seedLbl, 3, 0 );
-   ctrlLayout->addWidget( seedVal, 3, 1 );
+   ctrlLayout->addWidget( seedVal, 3, 1, 1, 2 );
 
    spacingBox = new QGroupBox( "Initial Ionic Spacing" );
    spacingLayout = new QGridLayout( spacingBox );
@@ -165,10 +154,10 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
    spacingLayout->addWidget( rspacingVal, 1, 2);
 
    spacingLayout->setColumnMinimumWidth( 2, 16 );
-   ctrlLayout->addWidget( spacingBox, 4, 0, 1, 2 );
+   ctrlLayout->addWidget( spacingBox, 4, 0, 1, 3 );
 
-   ctrlLayout->addWidget( selectivity, 5, 0, 1, 2 );
-   ctrlLayout->addWidget( electrostatics, 6, 0, 1, 2 );
+   ctrlLayout->addWidget( selectivity, 5, 0, 1, 3 );
+   ctrlLayout->addWidget( electrostatics, 6, 0, 1, 3 );
 
    mainLayout->addLayout( ctrlLayout );
    mainLayout->addStretch( 1 );
@@ -186,8 +175,13 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
    setLayout( mainLayout );
 
    // Signals
-   connect( itersVal, SIGNAL( textChanged( QString ) ), this, SIGNAL( itersChanged( QString ) ) );
-   connect( poresVal, SIGNAL( textChanged( QString ) ), this, SIGNAL( poresChanged( QString ) ) );
+   connect( itersSld, SIGNAL( valueChanged( int ) ), itersVal, SLOT( setNum( int ) ) );
+   connect( itersSld, SIGNAL( valueChanged( int ) ), this, SIGNAL( itersChanged( int ) ) );
+   connect( itersSld, SIGNAL( valueChanged( int ) ), this, SLOT( roundIters( int ) ) );
+
+   connect( poresSld, SIGNAL( valueChanged( int ) ), poresVal, SLOT( setNum( int ) ) );
+   connect( poresSld, SIGNAL( valueChanged( int ) ), this, SIGNAL( poresChanged( int ) ) );
+
    connect( seedVal, SIGNAL( textChanged( QString ) ), this, SIGNAL( seedChanged( QString ) ) );
 
    connect( lspacingSld, SIGNAL( valueChanged( int ) ), lspacingVal, SLOT( setNum( int ) ) );
@@ -213,12 +207,24 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
 
 
 void
+CtrlWidget::roundIters( int value )
+{
+   // Round any value set on itersSld to the nearest multiple of 1000.
+   int roundedValue = 1000 * (int)( ( (double)value + 500.0 ) / 1000.0 );
+   if( value != roundedValue )
+   {
+      itersSld->setValue( roundedValue );
+   }
+}
+
+
+void
 CtrlWidget::disableCtrl()
 {
    // Set the first push button to "Pause" and disable all controls.
    startPauseLayout->setCurrentIndex( 1 );
-   itersVal->setEnabled( 0 );
-   poresVal->setEnabled( 0 );
+   itersSld->setEnabled( 0 );
+   poresSld->setEnabled( 0 );
    seedVal->setEnabled( 0 );
    lspacingSld->setEnabled( 0 );
    rspacingSld->setEnabled( 0 );
@@ -243,10 +249,10 @@ CtrlWidget::resetCtrl()
    // Set the first push button to "Start", reenable all controls, and reset all control values to defaults.
    startPauseLayout->setCurrentIndex( 0 );
    startBtn->setEnabled( 1 );
-   itersVal->setEnabled( 1 );
-   itersVal->setText( QString::number( itersDefault ) );
-   poresVal->setEnabled( 1 );
-   poresVal->setText( QString::number( poresDefault ) );
+   itersSld->setEnabled( 1 );
+   itersSld->setValue( itersDefault );
+   poresSld->setEnabled( 1 );
+   poresSld->setValue( poresDefault );
    seedVal->setEnabled( 1 );
    seedVal->setText( QString::number( time( NULL ) ) );
    lspacingSld->setEnabled( 1 );

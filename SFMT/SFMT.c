@@ -120,7 +120,7 @@ inline static int idxof(int i) {
     return i;
 }
 #endif
-#if 0
+// #if 0
 /**
  * This function simulates SIMD 128-bit right shift by the standard C.
  * The 128-bit integer given in in is shifted by (shift * 8) bits.
@@ -199,7 +199,7 @@ inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
     out->u[2] = (uint32_t)oh;
 }
 #endif
-#endif //0
+// #endif //0
 /**
  * This function represents the recursion formula.
  * @param r output

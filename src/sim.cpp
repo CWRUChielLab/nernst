@@ -43,8 +43,8 @@ NernstSim::NernstSim( struct options *options, QWidget *parent )
       setWindowTitle( "Nernst Potential Simulator | v 0.6.6" );
 
       // Signals
-      connect( gui, SIGNAL( itersChanged( QString ) ), this, SLOT( changeIters( QString ) ) );
-      connect( gui, SIGNAL( poresChanged( QString ) ), this, SLOT( changePores( QString ) ) );
+      connect( gui, SIGNAL( itersChanged( int ) ), this, SLOT( changeIters( int ) ) );
+      connect( gui, SIGNAL( poresChanged( int ) ), this, SLOT( changePores( int ) ) );
       connect( gui, SIGNAL( lspacingChanged( int ) ), this, SLOT( changeLspacing( int ) ) );
       connect( gui, SIGNAL( rspacingChanged( int ) ), this, SLOT( changeRspacing( int ) ) );
       connect( gui, SIGNAL( selectivityChanged( bool ) ), this, SLOT( changeSelectivity( bool ) ) );
@@ -66,16 +66,16 @@ NernstSim::NernstSim( struct options *options, QWidget *parent )
 
 
 void
-NernstSim::changeIters( QString iters )
+NernstSim::changeIters( int iters )
 {
-   o->iters = iters.toInt();
+   o->iters = iters;
 }
 
 
 void
-NernstSim::changePores( QString pores )
+NernstSim::changePores( int pores )
 {
-   o->pores = pores.toInt();
+   o->pores = pores;
 }
 
 

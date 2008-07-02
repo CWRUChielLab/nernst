@@ -22,8 +22,8 @@ class NernstGUI : public QWidget
    public slots:
 
    signals:
-      void itersChanged( QString iters );
-      void poresChanged( QString pores );
+      void itersChanged( int iters );
+      void poresChanged( int pores );
       void lspacingChanged( int lspacing );
       void rspacingChanged( int rspacing );
       void selectivityChanged( bool selectivity );

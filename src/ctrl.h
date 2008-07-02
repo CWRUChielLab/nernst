@@ -27,14 +27,15 @@ class CtrlWidget : public QWidget
       CtrlWidget( struct options *o, QWidget *parent = 0 );
 
    public slots:
+      void roundIters( int value );
       void disableCtrl();
       void reenableCtrl();
       void resetCtrl();
       void finish();
 
    signals:
-      void itersChanged( QString iters );
-      void poresChanged( QString pores );
+      void itersChanged( int iters );
+      void poresChanged( int pores );
       void seedChanged( QString seed );
       void lspacingChanged( int lspacing );
       void rspacingChanged( int rspacing );
@@ -57,10 +58,12 @@ class CtrlWidget : public QWidget
       QLabel *headerLbl;
 
       QLabel *itersLbl;
-      QLineEdit *itersVal;
+      QSlider *itersSld;
+      QLabel *itersVal;
 
       QLabel *poresLbl;
-      QLineEdit *poresVal;
+      QSlider *poresSld;
+      QLabel *poresVal;
 
       QLabel *seedLbl;
       QLineEdit *seedVal;

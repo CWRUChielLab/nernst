@@ -45,10 +45,10 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent )
    setLayout( mainLayout );
 
    // Signals
-   connect( ctrl, SIGNAL( itersChanged( QString ) ), this, SIGNAL( itersChanged( QString ) ) );
+   connect( ctrl, SIGNAL( itersChanged( int ) ), this, SIGNAL( itersChanged( int ) ) );
 
-   connect( ctrl, SIGNAL( poresChanged( QString ) ), canvas, SLOT( changePores( QString ) ) );
-   connect( ctrl, SIGNAL( poresChanged( QString ) ), this, SIGNAL( poresChanged( QString ) ) );
+   connect( ctrl, SIGNAL( poresChanged( int ) ), canvas, SLOT( changePores( int ) ) );
+   connect( ctrl, SIGNAL( poresChanged( int ) ), this, SIGNAL( poresChanged( int ) ) );
 
    connect( ctrl, SIGNAL( lspacingChanged( int ) ), canvas, SLOT( changeLspacing( int ) ) );
    connect( ctrl, SIGNAL( lspacingChanged( int ) ), this, SIGNAL( lspacingChanged( int ) ) );

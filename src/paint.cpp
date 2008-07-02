@@ -45,9 +45,9 @@ PaintWidget::resetPaint()
 
 
 void
-PaintWidget::changePores( QString pores )
+PaintWidget::changePores( int pores )
 {
-   previewPores = pores.toInt();
+   previewPores = pores;
    update();
 }
 
