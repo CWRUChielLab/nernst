@@ -40,7 +40,7 @@ NernstSim::NernstSim( struct options *options, QWidget *parent )
       mainLayout->addWidget( gui );
 
       setLayout( mainLayout );
-      setWindowTitle( "Nernst Potential Simulator | v 0.6.6" );
+      setWindowTitle( "Nernst Potential Simulator | v 0.6.7" );
 
       // Signals
       connect( gui, SIGNAL( itersChanged( int ) ), this, SLOT( changeIters( int ) ) );
