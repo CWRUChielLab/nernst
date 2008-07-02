@@ -223,11 +223,15 @@ CtrlWidget::disableCtrl()
 {
    // Set the first push button to "Pause" and disable all controls.
    startPauseLayout->setCurrentIndex( 1 );
+   itersLbl->setEnabled( 0 );
    itersSld->setEnabled( 0 );
+   itersVal->setEnabled( 0 );
+   poresLbl->setEnabled( 0 );
    poresSld->setEnabled( 0 );
+   poresVal->setEnabled( 0 );
+   seedLbl->setEnabled( 0 );
    seedVal->setEnabled( 0 );
-   lspacingSld->setEnabled( 0 );
-   rspacingSld->setEnabled( 0 );
+   spacingBox->setEnabled( 0 );
    selectivity->setEnabled( 0 );
    electrostatics->setEnabled( 0 );
 }
@@ -249,15 +253,19 @@ CtrlWidget::resetCtrl()
    // Set the first push button to "Start", reenable all controls, and reset all control values to defaults.
    startPauseLayout->setCurrentIndex( 0 );
    startBtn->setEnabled( 1 );
+   itersLbl->setEnabled( 1 );
    itersSld->setEnabled( 1 );
    itersSld->setValue( itersDefault );
+   itersVal->setEnabled( 1 );
+   poresLbl->setEnabled( 1 );
    poresSld->setEnabled( 1 );
    poresSld->setValue( poresDefault );
+   poresVal->setEnabled( 1 );
+   seedLbl->setEnabled( 1 );
    seedVal->setEnabled( 1 );
    seedVal->setText( QString::number( time( NULL ) ) );
-   lspacingSld->setEnabled( 1 );
+   spacingBox->setEnabled( 1 );
    lspacingSld->setValue( lspacingDefault );
-   rspacingSld->setEnabled( 1 );
    rspacingSld->setValue( rspacingDefault );
    selectivity->setEnabled( 1 );
    selectivity->setChecked( selectivityDefault );
