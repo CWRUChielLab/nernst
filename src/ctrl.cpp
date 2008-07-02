@@ -162,13 +162,13 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
    mainLayout->addLayout( ctrlLayout );
    mainLayout->addStretch( 1 );
 
-   startPauseLayout = new QStackedLayout();
-   startPauseLayout->addWidget( startBtn );
-   startPauseLayout->addWidget( pauseBtn );
-   startPauseLayout->addWidget( continueBtn );
-   startPauseLayout->setCurrentIndex( 0 );
+   stackedBtnLayout = new QStackedLayout();
+   stackedBtnLayout->addWidget( startBtn );
+   stackedBtnLayout->addWidget( pauseBtn );
+   stackedBtnLayout->addWidget( continueBtn );
+   stackedBtnLayout->setCurrentWidget( startBtn );
 
-   mainLayout->addLayout( startPauseLayout );
+   mainLayout->addLayout( stackedBtnLayout );
    mainLayout->addWidget( resetBtn );
    mainLayout->addWidget( quitBtn );
 
@@ -222,7 +222,7 @@ void
 CtrlWidget::disableCtrl()
 {
    // Set the first push button to "Pause" and disable all controls.
-   startPauseLayout->setCurrentIndex( 1 );
+   stackedBtnLayout->setCurrentWidget( pauseBtn );
    itersLbl->setEnabled( 0 );
    itersSld->setEnabled( 0 );
    itersVal->setEnabled( 0 );
@@ -241,7 +241,7 @@ void
 CtrlWidget::reenableCtrl()
 {
    // Set the first push button to "Continue" and reenable a few controls.
-   startPauseLayout->setCurrentIndex( 2 );
+   stackedBtnLayout->setCurrentWidget( continueBtn );
    selectivity->setEnabled( 1 );
    electrostatics->setEnabled( 1 );
 }
@@ -251,7 +251,7 @@ void
 CtrlWidget::resetCtrl()
 {
    // Set the first push button to "Start", reenable all controls, and reset all control values to defaults.
-   startPauseLayout->setCurrentIndex( 0 );
+   stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
    itersLbl->setEnabled( 1 );
    itersSld->setEnabled( 1 );
@@ -277,6 +277,6 @@ void
 CtrlWidget::finish()
 {
    // Set the first push button to "Start" and disable it.
-   startPauseLayout->setCurrentIndex( 0 );
+   stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 0 );
 }

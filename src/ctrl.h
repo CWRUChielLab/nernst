@@ -89,7 +89,7 @@ class CtrlWidget : public QWidget
       QGridLayout *ctrlLayout;
       QGroupBox *spacingBox;
       QGridLayout *spacingLayout;
-      QStackedLayout *startPauseLayout;
+      QStackedLayout *stackedBtnLayout;
 };
 
 #endif /* CTRL_H */
