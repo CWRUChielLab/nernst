@@ -5,21 +5,23 @@
 #ifndef GUI_H
 #define GUI_H 
 
-#include <QWidget>
+#include <QMainWindow>
 
 
 class CtrlWidget;
 class PaintWidget;
 
 
-class NernstGUI : public QWidget
+class NernstGUI : public QMainWindow
 {
    Q_OBJECT
 
    public:
-      NernstGUI( struct options *o, QWidget *parent = 0 );
+      NernstGUI( struct options *o, QWidget *parent = 0, Qt::WindowFlags flags = 0 );
  
    public slots:
+      void setStatusMsg( QString msg );
+      void closeEvent( QCloseEvent *event );
 
    signals:
       void itersChanged( int iters );
@@ -33,8 +35,7 @@ class NernstGUI : public QWidget
       void pauseBtnClicked();
       void continueBtnClicked();
       void resetBtnClicked();
-      void quitBtnClicked();
-      void repaint();
+      void repaintWorld();
       void finished();
  
    private:

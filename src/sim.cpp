@@ -22,25 +22,23 @@
 #include "util.h"
 
 
+int initialized;
+int quitting;
+
+
 NernstSim::NernstSim( struct options *options, QWidget *parent )
    : QWidget( parent )
 {
    initWorld();
    o = options;
    maxatomsDefault = o->max_atoms;
-   paused = 0;
-   resetting = 0;
+   initialized = 0;
    quitting = 0;
 
    if( o->use_gui )
    {
       NernstGUI *gui = new NernstGUI( o );
-
-      QVBoxLayout *mainLayout = new QVBoxLayout();
-      mainLayout->addWidget( gui );
-
-      setLayout( mainLayout );
-      setWindowTitle( "Nernst Potential Simulator | v 0.6.7" );
+      gui->show();
 
       // Signals
       connect( gui, SIGNAL( itersChanged( int ) ), this, SLOT( changeIters( int ) ) );
@@ -51,13 +49,13 @@ NernstSim::NernstSim( struct options *options, QWidget *parent )
       connect( gui, SIGNAL( electrostaticsChanged( bool ) ), this, SLOT( changeElectrostatics( bool ) ) );
       connect( gui, SIGNAL( seedChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
 
-      connect( gui, SIGNAL( startBtnClicked() ), this, SLOT( startSim() ) );
+      connect( gui, SIGNAL( startBtnClicked() ), this, SLOT( runSim() ) );
       connect( gui, SIGNAL( pauseBtnClicked() ), this, SLOT( pauseSim() ) );
-      connect( gui, SIGNAL( continueBtnClicked() ), this, SLOT( unpauseSim() ) );
+      connect( gui, SIGNAL( continueBtnClicked() ), this, SLOT( runSim() ) );
       connect( gui, SIGNAL( resetBtnClicked() ), this, SLOT( resetSim() ) );
-      connect( gui, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
 
-      connect( this, SIGNAL( moveCompleted() ), gui, SIGNAL( repaint() ) );
+      connect( this, SIGNAL( moveCompleted() ), gui, SIGNAL( repaintWorld() ) );
+      connect( this, SIGNAL( updateStatus( QString ) ), gui, SLOT( setStatusMsg( QString ) ) );
       connect( this, SIGNAL( finished() ), gui, SIGNAL( finished() ) );
    } else {
       connect( this, SIGNAL( finished() ), qApp, SLOT( quit() ) );
@@ -125,17 +123,24 @@ NernstSim::changeSeed( QString seed )
 
 
 void
-NernstSim::startSim()
+NernstSim::runSim()
 {
-   resetting = 0;
-   initAtoms( o );
-   takeCensus( 0 );
-
-   if( o->progress )
+   if( !initialized )
    {
-      std::cout << "Iteration: 0 of " << o->iters << " | ";
-      std::cout << "0\% complete\r" << std::flush;
+      currentIter = 1;
+      elapsed = 0;
+      initAtoms( o );
+      takeCensus( 0 );
+      if( o->progress )
+      {
+         std::cout << "Iteration: 0 of " << o->iters << " | ";
+         std::cout << "0\% complete\r" << std::flush;
+      }
+      initialized = 1;
    }
+
+   paused = 0;
+   resetting = 0;
 
 #ifdef BLR_USELINUX
    gettimeofday( &tv_start, NULL );
@@ -143,18 +148,27 @@ NernstSim::startSim()
    time( &start );
 #endif
 
-   for( currentIter = 1; currentIter <= o->iters; currentIter++ )
+   for( ; currentIter <= o->iters; currentIter++ )
    {
-      while( o->use_gui && paused )
+      QCoreApplication::processEvents();
+
+      if( o->use_gui && paused )
       {
-         QCoreApplication::processEvents();
-         if( resetting || quitting )
-         {
-            paused = 0;
-            finalizeAtoms();
-            o->max_atoms = maxatomsDefault;
-            return;
-         }
+#ifdef BLR_USELINUX
+         gettimeofday( &tv_stop, NULL );
+         elapsed += ( tv_stop.tv_sec - tv_start.tv_sec ) + ( tv_stop.tv_usec - tv_start.tv_usec ) / 1000000.0;
+#else
+         time( &stop );
+         elapsed += (double)( stop - start );
+#endif
+         emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters )
+               +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
+         return;
+      }
+
+      if( o->use_gui && ( resetting || quitting ) )
+      {
+         return;
       }
 
       moveAtoms( o );
@@ -176,25 +190,31 @@ NernstSim::startSim()
          std::cout << (int)( 100 * (double)currentIter / (double)o->iters ) << "\% complete\r" << std::flush;
       }
 
+      if( o->use_gui && currentIter % 64 == 0 )
+      {
+         emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters ) 
+               +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
+      }
+
       if( o->use_gui )
       {
          sleep( o->sleep );
       }
+   }
 
-      QCoreApplication::processEvents();
-      if( o->use_gui && ( resetting || quitting ) )
-      {
-         paused = 0;
-         finalizeAtoms();
-         o->max_atoms = maxatomsDefault;
-         return;
-      }
+   if( o->use_gui )
+   {
+      currentIter--;
+      emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters ) 
+            +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
    }
 
 #ifdef BLR_USELINUX
    gettimeofday( &tv_stop, NULL );
+   elapsed += ( tv_stop.tv_sec - tv_start.tv_sec ) + ( tv_stop.tv_usec - tv_start.tv_usec ) / 1000000.0;
 #else
    time( &stop );
+   elapsed += (double)( stop - start );
 #endif
 
    finalizeAtoms();
@@ -207,11 +227,6 @@ NernstSim::startSim()
 
    if( o->profiling )
    {
-#ifdef BLR_USELINUX
-      elapsed = ( tv_stop.tv_sec - tv_start.tv_sec ) + ( tv_stop.tv_usec - tv_start.tv_usec ) / 1000000.0;
-#else
-      elapsed = (double)( stop - start );
-#endif
       std::cout << "iters = "            << o->iters
                 << "  seconds = "        << elapsed
                 << "  iters/sec = "      << o->iters / elapsed
@@ -224,6 +239,7 @@ NernstSim::startSim()
    }
 
    emit finished();
+   initialized = 0;
    return;
 }
 
@@ -236,24 +252,15 @@ NernstSim::pauseSim()
 
 
 void
-NernstSim::unpauseSim()
-{
-   paused = 0;
-}
-
-
-void
 NernstSim::resetSim()
 {
    resetting = 1;
+   if( initialized )
+   {
+      finalizeAtoms();
+      initialized = 0;
+   }
    o->max_atoms = maxatomsDefault;
-}
-
-
-void
-NernstSim::closeEvent( QCloseEvent *event )
-{
-   quitting = 1;
-   QWidget::closeEvent( event );
+   emit updateStatus( "Ready" );
 }
 

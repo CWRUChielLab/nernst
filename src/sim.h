@@ -23,14 +23,13 @@ class NernstSim : public QWidget
       void changeSelectivity( bool selectivity );
       void changeElectrostatics( bool electrostatics );
       void changeSeed( QString seed );
-      void startSim();
+      void runSim();
       void pauseSim();
-      void unpauseSim();
       void resetSim();
-      void closeEvent( QCloseEvent *event );
 
    signals:
       void moveCompleted();
+      void updateStatus( QString msg );
       void finished();
  
    private:
@@ -38,7 +37,6 @@ class NernstSim : public QWidget
       long maxatomsDefault;
       int paused;
       int resetting;
-      int quitting;
       double elapsed;
       int currentIter;
 #ifdef BLR_USELINUX

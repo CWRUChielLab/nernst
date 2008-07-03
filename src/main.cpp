@@ -32,10 +32,9 @@ main( int argc, char *argv[] )
       sim.move( x, y );
       */
 
-      sim.show();
       return app.exec();
    } else {
-      sim.startSim();
+      sim.runSim();
       return 0;
    }
 }

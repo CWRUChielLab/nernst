@@ -427,17 +427,17 @@ takeCensus( int iter )
 {
    int x, y;
    int K, Cl;
-   static int isInitialized = 0;
+   static int initialized = 0;
    static FILE *fp;
    if( iter < 0 )
    {
       fclose( fp );
-      isInitialized = 0;
+      initialized = 0;
       return;
    }
-   if( !isInitialized )
+   if( !initialized )
    {
-      isInitialized = 1;
+      initialized = 1;
       fp = fopen( "static.out", "w" );
       fprintf( fp, "T LK LCl RK RCl PK PCl q\n" );
    }

@@ -7,15 +7,22 @@
 #include <QFrame>
 #include <QVBoxLayout>
 #include <QGridLayout>
+#include <QStatusBar>
 
 #include "gui.h"
+#include "sim.h"
 #include "options.h"
 #include "ctrl.h"
 #include "paint.h"
+#include "atom.h"
 
 
-NernstGUI::NernstGUI( struct options *o, QWidget *parent )
-   : QWidget( parent )
+extern int initialized;
+extern int quitting;
+
+
+NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags )
+   : QMainWindow( parent, flags )
 {
    // Initialization controls
    CtrlWidget *ctrl = new CtrlWidget( o );
@@ -42,7 +49,11 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent )
    mainLayout->addWidget( ctrlFrame, 0, 0 );
    mainLayout->addWidget( canvasFrame, 0, 1 );
    mainLayout->setColumnStretch( 1, 1 );
-   setLayout( mainLayout );
+   QWidget *mainWidget = new QWidget();
+   mainWidget->setLayout( mainLayout );
+   setCentralWidget( mainWidget );
+   setWindowTitle( "Nernst Potential Simulator | v 0.6.8" );
+   setStatusMsg( "Ready" );
 
    // Signals
    connect( ctrl, SIGNAL( itersChanged( int ) ), this, SIGNAL( itersChanged( int ) ) );
@@ -71,10 +82,29 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent )
    connect( ctrl, SIGNAL( resetBtnClicked() ), canvas, SLOT( resetPaint() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), this, SIGNAL( resetBtnClicked() ) );
 
-   connect( ctrl, SIGNAL( quitBtnClicked() ), this, SIGNAL( quitBtnClicked() ) );
+   connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
 
-   connect( this, SIGNAL( repaint() ), canvas, SLOT( update() ) );
+   connect( this, SIGNAL( repaintWorld() ), canvas, SLOT( update() ) );
 
    connect( this, SIGNAL( finished() ), ctrl, SLOT( finish() ) );
+}
+
+
+void
+NernstGUI::setStatusMsg( QString msg )
+{
+   statusBar()->showMessage( msg );
+}
+
+
+void
+NernstGUI::closeEvent( QCloseEvent *event )
+{
+   quitting = 1;
+   if( initialized )
+   {
+      finalizeAtoms();
+   }
+   QWidget::closeEvent( event );
 }
 
