@@ -18,10 +18,13 @@ class NernstGUI : public QMainWindow
 
    public:
       NernstGUI( struct options *o, QWidget *parent = 0, Qt::WindowFlags flags = 0 );
+
+   protected:
+      void closeEvent( QCloseEvent *event );
  
    public slots:
+      void about();
       void setStatusMsg( QString msg );
-      void closeEvent( QCloseEvent *event );
 
    signals:
       void itersChanged( int iters );
@@ -41,6 +44,11 @@ class NernstGUI : public QMainWindow
    private:
       CtrlWidget *ctrl;
       PaintWidget *canvas;
+
+      QMenu *fileMenu;
+      QMenu *helpMenu;
+      QAction *quitAct;
+      QAction *aboutAct;
 };
 
 #endif /* GUI_H */

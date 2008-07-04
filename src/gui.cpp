@@ -3,11 +3,17 @@
  * The main application GUI.
  */
 
-
+/*
 #include <QFrame>
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QStatusBar>
+#include <QMenuBar>
+#include <QMenu>
+#include <QAction>
+#include <QMessageBox>
+*/
+#include <QtGui>
 
 #include "gui.h"
 #include "sim.h"
@@ -44,7 +50,7 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    canvasLayout->addWidget( canvas );
    canvasFrame->setLayout( canvasLayout );
 
-   // Main layout
+   // Main window
    QGridLayout *mainLayout = new QGridLayout();
    mainLayout->addWidget( ctrlFrame, 0, 0 );
    mainLayout->addWidget( canvasFrame, 0, 1 );
@@ -52,8 +58,21 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    QWidget *mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v 0.6.8" );
+   setWindowTitle( "Nernst Potential Simulator" );
    setStatusMsg( "Ready" );
+
+   // Menus
+   quitAct = new QAction( "&Quit", this );
+   quitAct->setStatusTip( "Quit the simulator" );
+
+   aboutAct = new QAction( "&About", this );
+   aboutAct->setStatusTip( "Version information" );
+
+   fileMenu = menuBar()->addMenu( "&File" );
+   fileMenu->addAction( quitAct );
+
+   helpMenu = menuBar()->addMenu( "&Help" );
+   helpMenu->addAction( aboutAct );
 
    // Signals
    connect( ctrl, SIGNAL( itersChanged( int ) ), this, SIGNAL( itersChanged( int ) ) );
@@ -85,8 +104,10 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
 
    connect( this, SIGNAL( repaintWorld() ), canvas, SLOT( update() ) );
-
    connect( this, SIGNAL( finished() ), ctrl, SLOT( finish() ) );
+
+   connect( quitAct, SIGNAL( triggered() ), this, SLOT( close() ) );
+   connect( aboutAct, SIGNAL( triggered() ), this, SLOT( about() ) );
 }
 
 
@@ -94,6 +115,23 @@ void
 NernstGUI::setStatusMsg( QString msg )
 {
    statusBar()->showMessage( msg );
+}
+
+
+void
+NernstGUI::about()
+{
+   QMessageBox::about( this, "About | Nernst Potential Simulator",
+      "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,\n"
+      "                  Jocelyn Eckert, and Hillel Chiel\n"
+      "\n"
+      "Version 0.6.9\n"
+      "Released under the GPL version 3 or any later version.\n"
+      "This is free software; see the source for copying conditions. There is NO\n"
+      "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+      "\n"
+      "(Note -- SFMT or dSFMT might also be included -- need to work out the\n"
+      "appropriate copyright notice for that.)" );
 }
 
 

@@ -5,7 +5,6 @@
 
 
 #include <QApplication>
-#include <QVBoxLayout>
 #include <iostream>
 #include <unistd.h>
 #include <time.h>
