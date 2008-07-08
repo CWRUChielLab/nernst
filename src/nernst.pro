@@ -3,7 +3,7 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = nernst
+TARGET = Nernst Potential Simulator
 DEPENDPATH += .
 INCLUDEPATH += ../SFMT
 DEFINES += MEXP=132049
