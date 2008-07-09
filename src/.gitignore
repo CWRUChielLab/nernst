@@ -1,0 +1,8 @@
+# ignore output files
+*.o
+moc_*
+nernst.app
+Makefile
+
+# ignore mac directory information
+.DS_Store

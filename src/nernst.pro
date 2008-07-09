@@ -12,7 +12,7 @@ QMAKE_CFLAGS_RELEASE -= -O2
 QMAKE_CFLAGS_RELEASE += -O3
 QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE += -O3
-CONFIG += warn_on debug
+CONFIG += warn_on 
 QT += opengl
 
 isEmpty( MACTARGET ) {
@@ -26,17 +26,25 @@ unix:!macx {
 }
 
 macx {
-   contains( MACTARGET, ppc ) {
-      message( "Generating makefile for PowerPC Macs." )
-      DEFINES += BLR_USEMAX
-      QMAKE_CFLAGS +=
-      CONFIG += ppc
-   }
    contains( MACTARGET, intel ) {
       message( "Generating makefile for Intel Macs." )
       DEFINES += BLR_USEMAC HAVE_SSE2
       QMAKE_CFLAGS += -msse2
       CONFIG += x86
+   }
+
+   contains( MACTARGET, ppc ) {
+      message( "Generating makefile for PowerPC Macs." )
+      DEFINES += BLR_USEMAC
+      CONFIG += ppc
+
+      # if we're building a universal application, disable SSE (because it 
+      # won't work on PPC) and set the SDK path to the universal SDK
+      contains( MACTARGET, intel ) {
+         DEFINES -= HAVE_SSE2
+         QMAKE_CFLAGS -= -msse2
+         QMAKE_MAC_SDK = /Developer/SDKs/MacOSX10.4u.sdk  
+      }
    }
 }
 

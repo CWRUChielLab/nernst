@@ -431,7 +431,7 @@ takeCensus( int iter )
    static FILE *fp;
    if( iter < 0 )
    {
-      fclose( fp );
+      if (fp) fclose( fp );
       initialized = 0;
       return;
    }
@@ -439,9 +439,10 @@ takeCensus( int iter )
    {
       initialized = 1;
       fp = fopen( "static.out", "w" );
-      fprintf( fp, "T LK LCl RK RCl PK PCl q\n" );
+      
+      if (fp) fprintf( fp, "T LK LCl RK RCl PK PCl q\n" );
    }
-   fprintf( fp, "%d ", iter );
+   if (fp) fprintf( fp, "%d ", iter );
 
    // Count atoms on left half
    for( x = 0, K = 0, Cl = 0; x < WORLD_X / 2; x++ )
@@ -459,7 +460,7 @@ takeCensus( int iter )
          }
       }
    }
-   fprintf( fp, "%d %d ", K, Cl );
+   if (fp) fprintf( fp, "%d %d ", K, Cl );
 
    // Count atoms on right half
    for( x = WORLD_X / 2 + 1, K = 0, Cl = 0; x < WORLD_X; x++ )
@@ -477,7 +478,7 @@ takeCensus( int iter )
          }
       }
    }
-   fprintf( fp, "%d %d ", K, Cl );
+   if (fp) fprintf( fp, "%d %d ", K, Cl );
 
    // Count atoms in pores
    for( K = 0, Cl = 0, y = 0; y < WORLD_Y; y++ )
@@ -492,10 +493,10 @@ takeCensus( int iter )
          }
       }
    }
-   fprintf( fp, "%d %d ", K, Cl );
+   if (fp) fprintf( fp, "%d %d ", K, Cl );
 
    // Output net charge across membrane
-   fprintf( fp, "%d\n", LRcharge );
+   if (fp) fprintf( fp, "%d\n", LRcharge );
 }
 
 
@@ -506,7 +507,7 @@ finalizeAtoms()
    int x, y;
    takeCensus( -1 );
    fp = fopen( "world.out", "w" );
-   fprintf( fp, "ATOM_K? dx dy\n" );
+   if (fp) fprintf( fp, "ATOM_K? dx dy\n" );
    for( x = 0; x < WORLD_X; x++ )
    {
       for( y = 0; y < WORLD_Y; y++ )
@@ -514,13 +515,13 @@ finalizeAtoms()
          if( world[ idx(x,y) ].color == ATOM_K
           || world[ idx(x,y) ].color == ATOM_Cl )
          {
-            fprintf( fp, "%d %d %d\n",
+            if (fp) fprintf( fp, "%d %d %d\n",
             world[ idx( x, y ) ].color == ATOM_K,
             world[ idx( x, y ) ].delta_x,
             world[ idx( x, y ) ].delta_y );
          }
       }
    }
-   fclose( fp );
+   if (fp) fclose( fp );
 }
 
