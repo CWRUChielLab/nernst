@@ -6,3 +6,6 @@ Makefile
 
 # ignore mac directory information
 .DS_Store
+
+# ignore any data files we've created
+*.out
