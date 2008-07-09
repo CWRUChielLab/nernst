@@ -2,7 +2,10 @@
 *.o
 moc_*
 nernst.app
-Makefile
+Makefile*
+debug
+release
+object_script*
 
 # ignore mac directory information
 .DS_Store
