@@ -1,0 +1,15 @@
+# ignore output files
+*.o
+moc_*
+nernst
+nernst.app
+Makefile*
+debug
+release
+object_script*
+
+# ignore mac directory information
+.DS_Store
+
+# ignore any data files we've created
+*.out

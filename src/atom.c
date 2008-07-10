@@ -429,73 +429,85 @@ takeCensus( int iter )
    int K, Cl;
    static int initialized = 0;
    static FILE *fp;
+
    if( iter < 0 )
    {
-      fclose( fp );
+      if( fp )
+      {
+         fclose( fp );
+      }
       initialized = 0;
       return;
    }
+
    if( !initialized )
    {
       initialized = 1;
       fp = fopen( "static.out", "w" );
-      fprintf( fp, "T LK LCl RK RCl PK PCl q\n" );
-   }
-   fprintf( fp, "%d ", iter );
-
-   // Count atoms on left half
-   for( x = 0, K = 0, Cl = 0; x < WORLD_X / 2; x++ )
-   {
-      for( y = 0; y < WORLD_Y; y++ )
+      if( fp )
       {
-         if( world[ idx( x, y ) ].color == ATOM_K )
+         fprintf( fp, "T LK LCl RK RCl PK PCl q\n" );
+      }
+   }
+
+   if( fp )
+   {
+      fprintf( fp, "%d ", iter );
+
+      // Count atoms on left half
+      for( x = 0, K = 0, Cl = 0; x < WORLD_X / 2; x++ )
+      {
+         for( y = 0; y < WORLD_Y; y++ )
+         {
+            if( world[ idx( x, y ) ].color == ATOM_K )
+            {
+               K++;
+            } else {
+               if( world[ idx( x, y ) ].color == ATOM_Cl )
+               {
+                  Cl++;
+               }
+            }
+         }
+      }
+      fprintf( fp, "%d %d ", K, Cl );
+
+      // Count atoms on right half
+      for( x = WORLD_X / 2 + 1, K = 0, Cl = 0; x < WORLD_X; x++ )
+      {
+         for( y = 0; y < WORLD_Y; y++ )
+         {
+            if( world[ idx( x, y ) ].color == ATOM_K )
+            {
+               K++;
+            } else {
+               if( world[ idx( x, y ) ].color == ATOM_Cl )
+               {
+                  Cl++;
+               }
+            }
+         }
+      }
+      fprintf( fp, "%d %d ", K, Cl );
+
+      // Count atoms in pores
+      for( K = 0, Cl = 0, y = 0; y < WORLD_Y; y++ )
+      {
+         if( world[ idx( WORLD_X / 2, y ) ].color == ATOM_K )
          {
             K++;
          } else {
-            if( world[ idx( x, y ) ].color == ATOM_Cl )
+            if( world[ idx( WORLD_X / 2, y ) ].color == ATOM_Cl )
             {
                Cl++;
             }
          }
       }
-   }
-   fprintf( fp, "%d %d ", K, Cl );
+      fprintf( fp, "%d %d ", K, Cl );
 
-   // Count atoms on right half
-   for( x = WORLD_X / 2 + 1, K = 0, Cl = 0; x < WORLD_X; x++ )
-   {
-      for( y = 0; y < WORLD_Y; y++ )
-      {
-         if( world[ idx( x, y ) ].color == ATOM_K )
-         {
-            K++;
-         } else {
-            if( world[ idx( x, y ) ].color == ATOM_Cl )
-            {
-               Cl++;
-            }
-         }
-      }
+      // Output net charge across membrane
+      fprintf( fp, "%d\n", LRcharge );
    }
-   fprintf( fp, "%d %d ", K, Cl );
-
-   // Count atoms in pores
-   for( K = 0, Cl = 0, y = 0; y < WORLD_Y; y++ )
-   {
-      if( world[ idx( WORLD_X / 2, y ) ].color == ATOM_K )
-      {
-         K++;
-      } else {
-         if( world[ idx( WORLD_X / 2, y ) ].color == ATOM_Cl )
-         {
-            Cl++;
-         }
-      }
-   }
-   fprintf( fp, "%d %d ", K, Cl );
-
-   // Output net charge across membrane
-   fprintf( fp, "%d\n", LRcharge );
 }
 
 
@@ -506,21 +518,24 @@ finalizeAtoms()
    int x, y;
    takeCensus( -1 );
    fp = fopen( "world.out", "w" );
-   fprintf( fp, "ATOM_K? dx dy\n" );
-   for( x = 0; x < WORLD_X; x++ )
+   if( fp )
    {
-      for( y = 0; y < WORLD_Y; y++ )
+      fprintf( fp, "ATOM_K? dx dy\n" );
+      for( x = 0; x < WORLD_X; x++ )
       {
-         if( world[ idx(x,y) ].color == ATOM_K
-          || world[ idx(x,y) ].color == ATOM_Cl )
+         for( y = 0; y < WORLD_Y; y++ )
          {
-            fprintf( fp, "%d %d %d\n",
-            world[ idx( x, y ) ].color == ATOM_K,
-            world[ idx( x, y ) ].delta_x,
-            world[ idx( x, y ) ].delta_y );
+            if( world[ idx(x,y) ].color == ATOM_K
+             || world[ idx(x,y) ].color == ATOM_Cl )
+            {
+               fprintf( fp, "%d %d %d\n",
+                  world[ idx( x, y ) ].color == ATOM_K,
+                  world[ idx( x, y ) ].delta_x,
+                  world[ idx( x, y ) ].delta_y );
+            }
          }
       }
+      fclose( fp );
    }
-   fclose( fp );
 }
 
