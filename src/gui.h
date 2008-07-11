@@ -8,8 +8,8 @@
 #include <QMainWindow>
 
 
-class CtrlWidget;
-class PaintWidget;
+class NernstCtrl;
+class NernstPainter;
 
 
 class NernstGUI : public QMainWindow
@@ -42,8 +42,8 @@ class NernstGUI : public QMainWindow
       void finished();
  
    private:
-      CtrlWidget *ctrl;
-      PaintWidget *canvas;
+      NernstCtrl *ctrl;
+      NernstPainter *canvas;
 
       QMenu *fileMenu;
       QMenu *helpMenu;

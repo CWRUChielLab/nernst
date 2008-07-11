@@ -31,7 +31,7 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    : QMainWindow( parent, flags )
 {
    // Initialization controls
-   CtrlWidget *ctrl = new CtrlWidget( o );
+   NernstCtrl *ctrl = new NernstCtrl( o );
 
    QFrame *ctrlFrame = new QFrame();
    ctrlFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
@@ -41,7 +41,7 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    ctrlFrame->setLayout( ctrlLayout );
 
    // World visualization
-   PaintWidget *canvas = new PaintWidget( o );
+   NernstPainter *canvas = new NernstPainter( o );
 
    QFrame *canvasFrame = new QFrame();
    canvasFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );

@@ -24,7 +24,7 @@
 #include "world.h"
 
 
-CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
+NernstCtrl::NernstCtrl( struct options *o, QWidget *parent )
    : QWidget( parent )
 {
    // Default values
@@ -207,7 +207,7 @@ CtrlWidget::CtrlWidget( struct options *o, QWidget *parent )
 
 
 void
-CtrlWidget::roundIters( int value )
+NernstCtrl::roundIters( int value )
 {
    // Round any value set on itersSld to the nearest multiple of 1000.
    int roundedValue = 1000 * (int)( ( (double)value + 500.0 ) / 1000.0 );
@@ -219,7 +219,7 @@ CtrlWidget::roundIters( int value )
 
 
 void
-CtrlWidget::disableCtrl()
+NernstCtrl::disableCtrl()
 {
    // Set the first push button to "Pause" and disable all controls.
    stackedBtnLayout->setCurrentWidget( pauseBtn );
@@ -238,7 +238,7 @@ CtrlWidget::disableCtrl()
 
 
 void
-CtrlWidget::reenableCtrl()
+NernstCtrl::reenableCtrl()
 {
    // Set the first push button to "Continue" and reenable a few controls.
    stackedBtnLayout->setCurrentWidget( continueBtn );
@@ -248,7 +248,7 @@ CtrlWidget::reenableCtrl()
 
 
 void
-CtrlWidget::resetCtrl()
+NernstCtrl::resetCtrl()
 {
    // Set the first push button to "Start", reenable all controls, and reset all control values to defaults.
    stackedBtnLayout->setCurrentWidget( startBtn );
@@ -274,9 +274,10 @@ CtrlWidget::resetCtrl()
 }
 
 void
-CtrlWidget::finish()
+NernstCtrl::finish()
 {
    // Set the first push button to "Start" and disable it.
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 0 );
 }
+

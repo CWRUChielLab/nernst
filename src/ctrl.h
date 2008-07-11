@@ -19,12 +19,12 @@ class QGroupBox;
 class QStackedLayout;
 
 
-class CtrlWidget : public QWidget
+class NernstCtrl : public QWidget
 {
    Q_OBJECT
 
    public:
-      CtrlWidget( struct options *o, QWidget *parent = 0 );
+      NernstCtrl( struct options *o, QWidget *parent = 0 );
 
    public slots:
       void roundIters( int value );
