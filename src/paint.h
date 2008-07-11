@@ -10,12 +10,12 @@
 #include <QGLWidget>
 
 
-class PaintWidget : public QGLWidget
+class NernstPainter : public QGLWidget
 {
    Q_OBJECT
 
    public:
-      PaintWidget( struct options *o, QGLWidget *parent = 0 );
+      NernstPainter( struct options *o, QGLWidget *parent = 0 );
 
    public slots:
       void startPaint();

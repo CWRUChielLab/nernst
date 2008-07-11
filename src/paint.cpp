@@ -11,7 +11,7 @@
 #include "sim.h"
 
 
-PaintWidget::PaintWidget( struct options *o, QGLWidget *parent ) 
+NernstPainter::NernstPainter( struct options *o, QGLWidget *parent ) 
 	: QGLWidget( parent )
 {
    previewPores = o->pores;
@@ -29,7 +29,7 @@ PaintWidget::PaintWidget( struct options *o, QGLWidget *parent )
 
 
 void
-PaintWidget::startPaint()
+NernstPainter::startPaint()
 {
    running = 1;
    update();
@@ -37,7 +37,7 @@ PaintWidget::startPaint()
 
 
 void
-PaintWidget::resetPaint()
+NernstPainter::resetPaint()
 {
    running = 0;
    update();
@@ -45,7 +45,7 @@ PaintWidget::resetPaint()
 
 
 void
-PaintWidget::changePores( int pores )
+NernstPainter::changePores( int pores )
 {
    previewPores = pores;
    update();
@@ -53,7 +53,7 @@ PaintWidget::changePores( int pores )
 
 
 void
-PaintWidget::changeLspacing( int lspacing )
+NernstPainter::changeLspacing( int lspacing )
 {
    previewLspacing = lspacing;
    update();
@@ -61,7 +61,7 @@ PaintWidget::changeLspacing( int lspacing )
 
 
 void
-PaintWidget::changeRspacing( int rspacing )
+NernstPainter::changeRspacing( int rspacing )
 {
    previewRspacing = rspacing;
    update();
@@ -69,7 +69,7 @@ PaintWidget::changeRspacing( int rspacing )
 
 
 void
-PaintWidget::initializeGL()
+NernstPainter::initializeGL()
 {
    qglClearColor( Qt::white );
    glShadeModel( GL_FLAT );
@@ -79,7 +79,7 @@ PaintWidget::initializeGL()
 
 
 void
-PaintWidget::resizeGL( int width, int height )
+NernstPainter::resizeGL( int width, int height )
 {
    glViewport( 0, 0, width, height );
    glMatrixMode( GL_PROJECTION );
@@ -92,7 +92,7 @@ PaintWidget::resizeGL( int width, int height )
 
 
 void
-PaintWidget::paintGL()
+NernstPainter::paintGL()
 {
    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
    draw();
@@ -100,7 +100,7 @@ PaintWidget::paintGL()
 
 
 void
-PaintWidget::draw()
+NernstPainter::draw()
 {
    /*
    static const GLfloat P1[ 3 ] = { 0.0, -1.0, +2.0 };
