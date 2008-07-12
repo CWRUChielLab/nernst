@@ -27,20 +27,21 @@ class NernstCtrl : public QWidget
       NernstCtrl( struct options *o, QWidget *parent = 0 );
 
    public slots:
-      void roundIters( int value );
+      void changeIters( int iters );
+      void changePores( int pores );
+      void changeSeed( QString seed );
+      void changeLspacing( int lspacing );
+      void changeRspacing( int rspacing );
+      void changeSelectivity( bool selectivity );
+      void changeElectrostatics( bool electrostatics );
+
       void disableCtrl();
       void reenableCtrl();
       void resetCtrl();
       void finish();
 
    signals:
-      void itersChanged( int iters );
-      void poresChanged( int pores );
-      void seedChanged( QString seed );
-      void lspacingChanged( int lspacing );
-      void rspacingChanged( int rspacing );
-      void selectivityChanged( bool selectivity );
-      void electrostaticsChanged( bool electrostatics );
+      void updatePreview();
       void startBtnClicked();
       void pauseBtnClicked();
       void continueBtnClicked();
@@ -48,6 +49,7 @@ class NernstCtrl : public QWidget
       void quitBtnClicked();
  
    private:
+      struct options *o;
       int itersDefault;
       int poresDefault;
       int lspacingDefault;

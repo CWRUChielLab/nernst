@@ -36,88 +36,22 @@ NernstSim::NernstSim( struct options *options, QWidget *parent )
 
    if( o->use_gui )
    {
-      NernstGUI *gui = new NernstGUI( o );
+      gui = new NernstGUI( o, this );
       gui->show();
 
       // Signals
-      connect( gui, SIGNAL( itersChanged( int ) ), this, SLOT( changeIters( int ) ) );
-      connect( gui, SIGNAL( poresChanged( int ) ), this, SLOT( changePores( int ) ) );
-      connect( gui, SIGNAL( lspacingChanged( int ) ), this, SLOT( changeLspacing( int ) ) );
-      connect( gui, SIGNAL( rspacingChanged( int ) ), this, SLOT( changeRspacing( int ) ) );
-      connect( gui, SIGNAL( selectivityChanged( bool ) ), this, SLOT( changeSelectivity( bool ) ) );
-      connect( gui, SIGNAL( electrostaticsChanged( bool ) ), this, SLOT( changeElectrostatics( bool ) ) );
-      connect( gui, SIGNAL( seedChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
-
       connect( gui, SIGNAL( startBtnClicked() ), this, SLOT( runSim() ) );
       connect( gui, SIGNAL( pauseBtnClicked() ), this, SLOT( pauseSim() ) );
       connect( gui, SIGNAL( continueBtnClicked() ), this, SLOT( runSim() ) );
       connect( gui, SIGNAL( resetBtnClicked() ), this, SLOT( resetSim() ) );
 
-      connect( this, SIGNAL( moveCompleted() ), gui, SIGNAL( repaintWorld() ) );
+      connect( this, SIGNAL( moveCompleted( int ) ), gui, SIGNAL( repaintWorld() ) );
+      connect( this, SIGNAL( moveCompleted( int ) ), gui, SLOT( updatePlots( int ) ) );
       connect( this, SIGNAL( updateStatus( QString ) ), gui, SLOT( setStatusMsg( QString ) ) );
       connect( this, SIGNAL( finished() ), gui, SIGNAL( finished() ) );
    } else {
       connect( this, SIGNAL( finished() ), qApp, SLOT( quit() ) );
    }
-}
-
-
-void
-NernstSim::changeIters( int iters )
-{
-   o->iters = iters;
-}
-
-
-void
-NernstSim::changePores( int pores )
-{
-   o->pores = pores;
-}
-
-
-void
-NernstSim::changeLspacing( int lspacing )
-{
-   o->lspacing = lspacing;
-}
-
-
-void
-NernstSim::changeRspacing( int rspacing )
-{
-   o->rspacing = rspacing;
-}
-
-
-void
-NernstSim::changeSelectivity( bool selectivity )
-{
-   if( selectivity )
-   {
-      o->selectivity = 1;
-   } else {
-      o->selectivity = 0;
-   }
-}
-
-
-void
-NernstSim::changeElectrostatics( bool electrostatics )
-{
-   if( electrostatics )
-   {
-      o->electrostatics = 1;
-   } else {
-      o->electrostatics = 0;
-   }
-}
-
-
-void
-NernstSim::changeSeed( QString seed )
-{
-   o->randseed = seed.toInt();
 }
 
 
@@ -174,7 +108,7 @@ NernstSim::runSim()
 
       if( o->use_gui )
       {
-         emit moveCompleted();
+         emit moveCompleted( currentIter );
       }
 
       if( currentIter % 4 == 0 )

@@ -10,6 +10,11 @@
 
 class NernstCtrl;
 class NernstPainter;
+class QVBoxLayout;
+class QGridLayout;
+class QFrame;
+class QwtPlot;
+class QwtPlotCurve;
 
 
 class NernstGUI : public QMainWindow
@@ -25,19 +30,14 @@ class NernstGUI : public QMainWindow
    public slots:
       void about();
       void setStatusMsg( QString msg );
+      void updatePlots( int currentIter );
 
    signals:
-      void itersChanged( int iters );
-      void poresChanged( int pores );
-      void lspacingChanged( int lspacing );
-      void rspacingChanged( int rspacing );
-      void selectivityChanged( bool selectivity );
-      void electrostaticsChanged( bool electrostatics );
-      void seedChanged( QString seed );
       void startBtnClicked();
       void pauseBtnClicked();
       void continueBtnClicked();
       void resetBtnClicked();
+
       void repaintWorld();
       void finished();
  
@@ -45,10 +45,22 @@ class NernstGUI : public QMainWindow
       NernstCtrl *ctrl;
       NernstPainter *canvas;
 
+      QFrame *ctrlFrame;
+      QVBoxLayout *ctrlLayout;
+
+      QFrame *canvasFrame;
+      QVBoxLayout *canvasLayout;
+
+      QGridLayout *mainLayout;
+      QWidget *mainWidget;
+
       QMenu *fileMenu;
       QMenu *helpMenu;
       QAction *quitAct;
       QAction *aboutAct;
+
+      QwtPlot *voltsPlot;
+      QwtPlotCurve *voltsCurve;
 };
 
 #endif /* GUI_H */

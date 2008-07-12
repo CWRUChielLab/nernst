@@ -3,17 +3,10 @@
  * The main application GUI.
  */
 
-/*
-#include <QFrame>
-#include <QVBoxLayout>
-#include <QGridLayout>
-#include <QStatusBar>
-#include <QMenuBar>
-#include <QMenu>
-#include <QAction>
-#include <QMessageBox>
-*/
+
 #include <QtGui>
+#include <qwt_plot.h>
+#include <qwt_plot_curve.h>
 
 #include "gui.h"
 #include "sim.h"
@@ -23,39 +16,53 @@
 #include "atom.h"
 
 
+extern int LRcharge;
 extern int initialized;
 extern int quitting;
+double t[ 50000 ], v[ 50000 ];
 
 
 NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags )
    : QMainWindow( parent, flags )
 {
    // Initialization controls
-   NernstCtrl *ctrl = new NernstCtrl( o );
+   ctrl = new NernstCtrl( o, this );
 
-   QFrame *ctrlFrame = new QFrame();
+   ctrlFrame = new QFrame();
    ctrlFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
 
-   QVBoxLayout *ctrlLayout = new QVBoxLayout();
+   ctrlLayout = new QVBoxLayout();
    ctrlLayout->addWidget( ctrl );
    ctrlFrame->setLayout( ctrlLayout );
 
    // World visualization
-   NernstPainter *canvas = new NernstPainter( o );
+   canvas = new NernstPainter( o, this );
 
-   QFrame *canvasFrame = new QFrame();
+   canvasFrame = new QFrame();
    canvasFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
 
-   QVBoxLayout *canvasLayout = new QVBoxLayout();
+   canvasLayout = new QVBoxLayout();
    canvasLayout->addWidget( canvas );
    canvasFrame->setLayout( canvasLayout );
 
+   // Graphs
+   voltsPlot = new QwtPlot();
+   voltsPlot->setTitle( "Test Plot" );
+   voltsCurve = new QwtPlotCurve( "LRcharge" );
+
+   t[ 0 ] = 0;
+   v[ 0 ] = 0;
+
+   voltsCurve->setData( t, v, 0 );
+   voltsCurve->attach( voltsPlot );
+
    // Main window
-   QGridLayout *mainLayout = new QGridLayout();
+   mainLayout = new QGridLayout();
    mainLayout->addWidget( ctrlFrame, 0, 0 );
    mainLayout->addWidget( canvasFrame, 0, 1 );
-   mainLayout->setColumnStretch( 1, 1 );
-   QWidget *mainWidget = new QWidget();
+   mainLayout->addWidget( voltsPlot, 0, 2 );
+   mainLayout->setColumnStretch( 2, 1 );
+   mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
    setWindowTitle( "Nernst Potential Simulator" );
@@ -75,21 +82,7 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    helpMenu->addAction( aboutAct );
 
    // Signals
-   connect( ctrl, SIGNAL( itersChanged( int ) ), this, SIGNAL( itersChanged( int ) ) );
-
-   connect( ctrl, SIGNAL( poresChanged( int ) ), canvas, SLOT( changePores( int ) ) );
-   connect( ctrl, SIGNAL( poresChanged( int ) ), this, SIGNAL( poresChanged( int ) ) );
-
-   connect( ctrl, SIGNAL( lspacingChanged( int ) ), canvas, SLOT( changeLspacing( int ) ) );
-   connect( ctrl, SIGNAL( lspacingChanged( int ) ), this, SIGNAL( lspacingChanged( int ) ) );
-   
-   connect( ctrl, SIGNAL( rspacingChanged( int ) ), canvas, SLOT( changeRspacing( int ) ) );
-   connect( ctrl, SIGNAL( rspacingChanged( int ) ), this, SIGNAL( rspacingChanged( int ) ) );
-
-   connect( ctrl, SIGNAL( selectivityChanged( bool ) ), this, SIGNAL( selectivityChanged( bool ) ) );
-   connect( ctrl, SIGNAL( electrostaticsChanged( bool ) ), this, SIGNAL( electrostaticsChanged( bool ) ) );
-
-   connect( ctrl, SIGNAL( seedChanged( QString ) ), this, SIGNAL( seedChanged( QString ) ) );
+   connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( update() ) );
 
    connect( ctrl, SIGNAL( startBtnClicked() ), canvas, SLOT( startPaint() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), this, SIGNAL( startBtnClicked() ) );
@@ -125,13 +118,23 @@ NernstGUI::about()
       "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,\n"
       "                  Jocelyn Eckert, and Hillel Chiel\n"
       "\n"
-      "Version 0.6.9\n"
+      "Version 0.7.0\n"
       "Released under the GPL version 3 or any later version.\n"
       "This is free software; see the source for copying conditions. There is NO\n"
       "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
       "\n"
       "(Note -- SFMT or dSFMT might also be included -- need to work out the\n"
       "appropriate copyright notice for that.)" );
+}
+
+
+void
+NernstGUI::updatePlots( int currentIter )
+{
+   t[ currentIter ] = currentIter;
+   v[ currentIter ] = LRcharge;
+   voltsCurve->setData( t, v, currentIter );
+   voltsPlot->replot();
 }
 
 

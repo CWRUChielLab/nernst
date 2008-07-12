@@ -4,30 +4,19 @@
  */
 
 
-#include <QApplication>
-#include <QPushButton>
-#include <QLabel>
-#include <QLineEdit>
-#include <QValidator>
-#include <QSlider>
-#include <QCheckBox>
-#include <QPushButton>
-#include <QGridLayout>
-#include <QVBoxLayout>
-#include <QGroupBox>
-#include <QStackedLayout>
+#include <QtGui>
 #include <time.h>
-#include <math.h>
 
 #include "ctrl.h"
 #include "options.h"
 #include "world.h"
 
 
-NernstCtrl::NernstCtrl( struct options *o, QWidget *parent )
+NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    : QWidget( parent )
 {
    // Default values
+   o = options;
    itersDefault = o->iters;
    poresDefault = o->pores;
    lspacingDefault = o->lspacing;
@@ -175,23 +164,13 @@ NernstCtrl::NernstCtrl( struct options *o, QWidget *parent )
    setLayout( mainLayout );
 
    // Signals
-   connect( itersSld, SIGNAL( valueChanged( int ) ), itersVal, SLOT( setNum( int ) ) );
-   connect( itersSld, SIGNAL( valueChanged( int ) ), this, SIGNAL( itersChanged( int ) ) );
-   connect( itersSld, SIGNAL( valueChanged( int ) ), this, SLOT( roundIters( int ) ) );
-
-   connect( poresSld, SIGNAL( valueChanged( int ) ), poresVal, SLOT( setNum( int ) ) );
-   connect( poresSld, SIGNAL( valueChanged( int ) ), this, SIGNAL( poresChanged( int ) ) );
-
-   connect( seedVal, SIGNAL( textChanged( QString ) ), this, SIGNAL( seedChanged( QString ) ) );
-
-   connect( lspacingSld, SIGNAL( valueChanged( int ) ), lspacingVal, SLOT( setNum( int ) ) );
-   connect( lspacingSld, SIGNAL( valueChanged( int ) ), this, SIGNAL( lspacingChanged( int ) ) );
-
-   connect( rspacingSld, SIGNAL( valueChanged( int ) ), rspacingVal, SLOT( setNum( int ) ) );
-   connect( rspacingSld, SIGNAL( valueChanged( int ) ), this, SIGNAL( rspacingChanged( int ) ) );
-
-   connect( selectivity, SIGNAL( toggled( bool ) ), this, SIGNAL( selectivityChanged( bool ) ) );
-   connect( electrostatics, SIGNAL( toggled ( bool ) ), this, SIGNAL( electrostaticsChanged( bool ) ) );
+   connect( itersSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeIters( int ) ) );
+   connect( poresSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePores( int ) ) );
+   connect( seedVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
+   connect( lspacingSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLspacing( int ) ) );
+   connect( rspacingSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRspacing( int ) ) );
+   connect( selectivity, SIGNAL( toggled( bool ) ), this, SLOT( changeSelectivity( bool ) ) );
+   connect( electrostatics, SIGNAL( toggled ( bool ) ), this, SLOT( changeElectrostatics( bool ) ) );
 
    connect( startBtn, SIGNAL( clicked() ), this, SIGNAL( startBtnClicked() ) );
    connect( pauseBtn, SIGNAL( clicked() ), this, SIGNAL( pauseBtnClicked() ) );
@@ -207,13 +186,74 @@ NernstCtrl::NernstCtrl( struct options *o, QWidget *parent )
 
 
 void
-NernstCtrl::roundIters( int value )
+NernstCtrl::changeIters( int iters )
 {
    // Round any value set on itersSld to the nearest multiple of 1000.
-   int roundedValue = 1000 * (int)( ( (double)value + 500.0 ) / 1000.0 );
-   if( value != roundedValue )
+   int roundedIters = 1000 * (int)( ( (double)iters + 500.0 ) / 1000.0 );
+   roundedIters = ( roundedIters > 0 ? roundedIters : 1 );
+   if( iters != roundedIters )
    {
-      itersSld->setValue( roundedValue );
+      itersSld->setValue( roundedIters );
+   }
+   itersVal->setNum( roundedIters );
+   o->iters = roundedIters;
+}
+
+
+void
+NernstCtrl::changePores( int pores )
+{
+   poresVal->setNum( pores );
+   o->pores = pores;
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changeSeed( QString seed )
+{
+   o->randseed = seed.toInt();
+}
+
+
+void
+NernstCtrl::changeLspacing( int lspacing )
+{
+   lspacingVal->setNum( lspacing );
+   o->lspacing = lspacing;
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changeRspacing( int rspacing )
+{
+   rspacingVal->setNum( rspacing );
+   o->rspacing = rspacing;
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changeSelectivity( bool selectivity )
+{
+   if( selectivity )
+   {
+      o->selectivity = 1;
+   } else {
+      o->selectivity = 0;
+   }
+}
+
+
+void
+NernstCtrl::changeElectrostatics( bool electrostatics )
+{
+   if( electrostatics )
+   {
+      o->electrostatics = 1;
+   } else {
+      o->electrostatics = 0;
    }
 }
 
@@ -223,15 +263,20 @@ NernstCtrl::disableCtrl()
 {
    // Set the first push button to "Pause" and disable all controls.
    stackedBtnLayout->setCurrentWidget( pauseBtn );
+
    itersLbl->setEnabled( 0 );
    itersSld->setEnabled( 0 );
    itersVal->setEnabled( 0 );
+
    poresLbl->setEnabled( 0 );
    poresSld->setEnabled( 0 );
    poresVal->setEnabled( 0 );
+
    seedLbl->setEnabled( 0 );
    seedVal->setEnabled( 0 );
+
    spacingBox->setEnabled( 0 );
+
    selectivity->setEnabled( 0 );
    electrostatics->setEnabled( 0 );
 }
@@ -242,6 +287,7 @@ NernstCtrl::reenableCtrl()
 {
    // Set the first push button to "Continue" and reenable a few controls.
    stackedBtnLayout->setCurrentWidget( continueBtn );
+
    selectivity->setEnabled( 1 );
    electrostatics->setEnabled( 1 );
 }
@@ -253,20 +299,25 @@ NernstCtrl::resetCtrl()
    // Set the first push button to "Start", reenable all controls, and reset all control values to defaults.
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
+
    itersLbl->setEnabled( 1 );
    itersSld->setEnabled( 1 );
    itersSld->setValue( itersDefault );
    itersVal->setEnabled( 1 );
+
    poresLbl->setEnabled( 1 );
    poresSld->setEnabled( 1 );
    poresSld->setValue( poresDefault );
    poresVal->setEnabled( 1 );
+
    seedLbl->setEnabled( 1 );
    seedVal->setEnabled( 1 );
    seedVal->setText( QString::number( time( NULL ) ) );
+
    spacingBox->setEnabled( 1 );
    lspacingSld->setValue( lspacingDefault );
    rspacingSld->setValue( rspacingDefault );
+
    selectivity->setEnabled( 1 );
    selectivity->setChecked( selectivityDefault );
    electrostatics->setEnabled( 1 );

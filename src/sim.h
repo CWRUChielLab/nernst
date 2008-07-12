@@ -8,6 +8,9 @@
 #include <QWidget>
 
 
+class NernstGUI;
+
+
 class NernstSim : public QWidget
 {
    Q_OBJECT
@@ -16,23 +19,17 @@ class NernstSim : public QWidget
       NernstSim( struct options *options, QWidget *parent = 0 );
  
    public slots:
-      void changeIters( int iters );
-      void changePores( int pores );
-      void changeLspacing( int lspacing );
-      void changeRspacing( int rspacing );
-      void changeSelectivity( bool selectivity );
-      void changeElectrostatics( bool electrostatics );
-      void changeSeed( QString seed );
       void runSim();
       void pauseSim();
       void resetSim();
 
    signals:
-      void moveCompleted();
+      void moveCompleted( int currentIter );
       void updateStatus( QString msg );
       void finished();
  
    private:
+      NernstGUI *gui;
       struct options *o;
       long maxatomsDefault;
       int paused;
