@@ -9,9 +9,6 @@
 #include <unistd.h>
 #include <time.h>
 #include <assert.h>
-#ifdef BLR_USELINUX
-#include <sys/time.h>
-#endif
 
 #include "sim.h"
 #include "options.h"
@@ -52,6 +49,7 @@ NernstSim::NernstSim( struct options *options, QWidget *parent )
    } else {
       connect( this, SIGNAL( finished() ), qApp, SLOT( quit() ) );
    }
+   qtime = new QTime();
 }
 
 
@@ -74,12 +72,7 @@ NernstSim::runSim()
 
    paused = 0;
    resetting = 0;
-
-#ifdef BLR_USELINUX
-   gettimeofday( &tv_start, NULL );
-#else
-   time( &start );
-#endif
+   qtime->start();
 
    for( ; currentIter <= o->iters; currentIter++ )
    {
@@ -87,13 +80,7 @@ NernstSim::runSim()
 
       if( o->use_gui && paused )
       {
-#ifdef BLR_USELINUX
-         gettimeofday( &tv_stop, NULL );
-         elapsed += ( tv_stop.tv_sec - tv_start.tv_sec ) + ( tv_stop.tv_usec - tv_start.tv_usec ) / 1000000.0;
-#else
-         time( &stop );
-         elapsed += (double)( stop - start );
-#endif
+	 elapsed += qtime->elapsed()/1000.0;
          emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters )
                +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
          return;
@@ -141,14 +128,7 @@ NernstSim::runSim()
       emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters ) 
             +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
    }
-
-#ifdef BLR_USELINUX
-   gettimeofday( &tv_stop, NULL );
-   elapsed += ( tv_stop.tv_sec - tv_start.tv_sec ) + ( tv_stop.tv_usec - tv_start.tv_usec ) / 1000000.0;
-#else
-   time( &stop );
-   elapsed += (double)( stop - start );
-#endif
+   elapsed += qtime->elapsed()/1000.0;
 
    finalizeAtoms();
 

@@ -6,7 +6,7 @@
 #define SIM_H 
 
 #include <QWidget>
-
+#include <QTime>
 
 class NernstGUI;
 
@@ -36,11 +36,7 @@ class NernstSim : public QWidget
       int resetting;
       double elapsed;
       int currentIter;
-#ifdef BLR_USELINUX
-      struct timeval tv_start, tv_stop;
-#else
-      time_t start, stop;
-#endif
+      QTime *qtime;
 };
 
 #endif /* SIM_H */
