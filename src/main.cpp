@@ -4,6 +4,7 @@
 
 
 #include <QApplication>
+#include <QCoreApplication>
 
 #include "options.h"
 #include "sim.h"
@@ -12,19 +13,19 @@
 int
 main( int argc, char *argv[] )
 {
-   QApplication app( argc, argv );
+   struct options *o=NULL;
+   QCoreApplication *app=NULL;
 
-   struct options *o;
    o = parseOptions( argc, argv );
-   
-   NernstSim sim( o );
 
    if( o->use_gui )
    {
-      return app.exec();
+      app = new QApplication( argc, argv );
    } else {
-      sim.runSim();
-      return 0;
+      app = new QCoreApplication( argc, argv );
    }
+
+   NernstSim sim( o );
+   return app->exec();
 }
 
