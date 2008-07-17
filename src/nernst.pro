@@ -5,9 +5,8 @@
 TEMPLATE = app
 TARGET = nernst
 DEPENDPATH += .
-INCLUDEPATH += ../SFMT /usr/include/qwt-qt4
+INCLUDEPATH += ../SFMT
 DEFINES += MEXP=132049
-LIBS += -lqwt-qt4
 
 QMAKE_CFLAGS_RELEASE -= -O2
 QMAKE_CFLAGS_RELEASE += -O3
@@ -20,9 +19,17 @@ isEmpty( MACTARGET ) {
    MACTARGET = intel
 }
 
+!contains( CONFIG, static ) {
+   !contains( CONFIG, shared ) {
+      CONFIG += shared
+   }
+}
+
 unix:!macx {
    message( "Generating makefile for Linux systems." )
+   INCLUDEPATH += /usr/include/qwt-qt4
    DEFINES += BLR_USELINUX HAVE_SSE2
+   LIBS += -lqwt-qt4
    QMAKE_CFLAGS += -msse2
 }
 
@@ -51,7 +58,16 @@ macx {
 
 win32 {
    message( "Generating makefile for Windows." )
+   contains( CONFIG, static ) {
+      INCLUDEPATH += "C:\Qwt\static\src"
+      QMAKE_LIBDIR += "C:\Qwt\static\lib"
+   }
+   contains( CONFIG, shared ) {
+      INCLUDEPATH += "C:\Qwt\shared\src"
+      QMAKE_LIBDIR += "C:\Qwt\shared\lib"
+   }
    DEFINES += BLR_USEWIN
+   LIBS += -lqwt
 }
 
 # Input
