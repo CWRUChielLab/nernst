@@ -8,6 +8,7 @@
 
 #include "options.h"
 #include "sim.h"
+#include "xsim.h"
 
 
 int
@@ -21,11 +22,13 @@ main( int argc, char *argv[] )
    if( o->use_gui )
    {
       app = new QApplication( argc, argv );
+      XNernstSim xsim( o, NULL );
+      return app->exec();
    } else {
       app = new QCoreApplication( argc, argv );
+      NernstSim sim( o );
+      sim.runSim();
    }
 
-   NernstSim sim( o );
-   return app->exec();
 }
 
