@@ -4,27 +4,31 @@
 
 
 #include <QApplication>
+#include <QCoreApplication>
 
 #include "options.h"
 #include "sim.h"
+#include "xsim.h"
 
 
 int
 main( int argc, char *argv[] )
 {
-   QApplication app( argc, argv );
+   struct options *o=NULL;
+   QCoreApplication *app=NULL;
 
-   struct options *o;
    o = parseOptions( argc, argv );
-   
-   NernstSim sim( o );
 
    if( o->use_gui )
    {
-      return app.exec();
+      app = new QApplication( argc, argv );
+      XNernstSim xsim( o, NULL );
+      return app->exec();
    } else {
+      app = new QCoreApplication( argc, argv );
+      NernstSim sim( o );
       sim.runSim();
-      return 0;
    }
+
 }
 
