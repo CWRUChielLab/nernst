@@ -11,13 +11,10 @@
 #include "sim.h"
 
 
-NernstPainter::NernstPainter( struct options *o, QGLWidget *parent ) 
+NernstPainter::NernstPainter( struct options *options, QWidget *parent ) 
 	: QGLWidget( parent )
 {
-   previewPores = o->pores;
-   previewLspacing = o->lspacing;
-   previewRspacing = o->rspacing;
-   previewMaxatoms = o->max_atoms;
+   o = options;
    running = 0;
 
    setFormat( QGLFormat( QGL::DoubleBuffer | QGL::DepthBuffer ) );
@@ -40,30 +37,6 @@ void
 NernstPainter::resetPaint()
 {
    running = 0;
-   update();
-}
-
-
-void
-NernstPainter::changePores( int pores )
-{
-   previewPores = pores;
-   update();
-}
-
-
-void
-NernstPainter::changeLspacing( int lspacing )
-{
-   previewLspacing = lspacing;
-   update();
-}
-
-
-void
-NernstPainter::changeRspacing( int rspacing )
-{
-   previewRspacing = rspacing;
    update();
 }
 
@@ -178,7 +151,7 @@ NernstPainter::draw()
          glVertex3f( (GLfloat)0.0, (GLfloat)y / (GLfloat)WORLD_Y, (GLfloat)0.0 );
 
          // Central membrane with pores
-         if( y != (int)( ( (double)WORLD_Y / (double)( previewPores + 1 ) ) * (double)( i + 1 ) ) )
+         if( y != (int)( ( (double)WORLD_Y / (double)( o->pores + 1 ) ) * (double)( i + 1 ) ) )
          {
             glVertex3f( (GLfloat)0.5, (GLfloat)y / (GLfloat)WORLD_Y, (GLfloat)0.0 );
          } else {
@@ -191,9 +164,9 @@ NernstPainter::draw()
 
       int atomBit = 0, nAtoms = 0;
 
-      for( int y = 0; ( y < WORLD_Y ) && ( nAtoms < previewMaxatoms ); y += previewLspacing )
+      for( int y = 0; ( y < WORLD_Y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
       {
-         for( int x = 1; ( x < WORLD_X / 2 ) && ( nAtoms < previewMaxatoms ); x += previewLspacing )
+         for( int x = 1; ( x < WORLD_X / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
          {
             if( atomBit )
             {
@@ -209,9 +182,9 @@ NernstPainter::draw()
          }
       }
 
-      for( int y = 0; ( y < WORLD_Y ) && ( nAtoms < previewMaxatoms ); y += previewRspacing )
+      for( int y = 0; ( y < WORLD_Y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
       {
-         for( int x = WORLD_X / 2 + 1; ( x < WORLD_X - 1 ) && ( nAtoms < previewMaxatoms ); x += previewRspacing )
+         for( int x = WORLD_X / 2 + 1; ( x < WORLD_X - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
          {
             if( atomBit )
             {

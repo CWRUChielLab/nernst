@@ -4,38 +4,32 @@
 
 
 #include <QApplication>
-// #include <QDesktopWidget>
+#include <QCoreApplication>
 
 #include "options.h"
 #include "sim.h"
+#include "xsim.h"
 
 
 int
 main( int argc, char *argv[] )
 {
-   QApplication app( argc, argv );
+   struct options *o = NULL;
+   QCoreApplication *app = NULL;
 
-   struct options *o;
    o = parseOptions( argc, argv );
-   
-   NernstSim sim( o );
 
    if( o->use_gui )
    {
-      // sim.setFixedSize( 831, 574 );
-
-      /*
-      // Center the GUI on the screen
-      QRect desktop( QApplication::desktop()->screenGeometry() );
-      int x = desktop.width() / 2 - sim.width() / 2;
-      int y = desktop.height() / 2 - sim.height() / 2;
-      sim.move( x, y );
-      */
-
-      return app.exec();
+      app = new QApplication( argc, argv );
+      XNernstSim xsim( o );
+      return app->exec();
    } else {
+      app = new QCoreApplication( argc, argv );
+      NernstSim sim( o );
       sim.runSim();
       return 0;
    }
+
 }
 

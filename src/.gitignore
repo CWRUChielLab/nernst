@@ -1,5 +1,6 @@
 # ignore output files
 *.o
+*~
 moc_*
 nernst
 nernst.app

@@ -15,14 +15,11 @@ class NernstPainter : public QGLWidget
    Q_OBJECT
 
    public:
-      NernstPainter( struct options *o, QGLWidget *parent = 0 );
+      NernstPainter( struct options *o, QWidget *parent = 0 );
 
    public slots:
       void startPaint();
       void resetPaint();
-      void changePores( int pores );
-      void changeLspacing( int lspacing );
-      void changeRspacing( int rspacing );
 
    signals:
       void finished();
@@ -33,10 +30,7 @@ class NernstPainter : public QGLWidget
       void paintGL();
 
    private:
-      int previewPores;
-      int previewLspacing;
-      int previewRspacing;
-      int previewMaxatoms;
+      struct options *o;
       int running;
 
       GLfloat rotationX;
