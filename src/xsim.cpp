@@ -11,6 +11,7 @@
 #include "xsim.h"
 #include "options.h"
 #include "gui.h"
+#include "util.h"
 
 
 int initialized;
