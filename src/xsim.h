@@ -14,7 +14,8 @@
 class NernstGUI;
 
 
-class XNernstSim : public QWidget, public NernstSim {
+class XNernstSim : public QWidget, public NernstSim
+{
    Q_OBJECT
 
    public:
@@ -23,6 +24,7 @@ class XNernstSim : public QWidget, public NernstSim {
    public slots:
       void runSim();
       void pauseSim();
+      void unpauseSim();
       void resetSim();
 
    signals:
@@ -31,17 +33,16 @@ class XNernstSim : public QWidget, public NernstSim {
       void finished();
 
    protected:
-
  
    private:
       NernstGUI *gui;
-      //struct options *o;
-      //long maxatomsDefault;
+      // struct options *o;
+      // long maxatomsDefault;
       int paused;
       int resetting;
-      //double elapsed;
-      //int currentIter;
-      //QTime *qtime;
+      // double elapsed;
+      // int currentIter;
+      // QTime *qtime;
       void initNernstSim();
       int preIter();
       void Iter();

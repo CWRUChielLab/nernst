@@ -1,6 +1,6 @@
 /* sim.cpp
  *
- * The engine of the simulation.
+ * The engine of the simulation without GUI support.
  */
 
 
@@ -15,8 +15,6 @@
 #include "util.h"
 
 
-
-
 NernstSim::NernstSim( struct options *options )
 {
    initWorld();
@@ -26,50 +24,58 @@ NernstSim::NernstSim( struct options *options )
 }
 
 
-
-
 void
-NernstSim::initNernstSim(){
-	currentIter = 1;
-	elapsed = 0;
-	initAtoms( o );
-	takeCensus( 0 );
-	if( o->progress )
+NernstSim::initNernstSim()
+{
+   currentIter = 1;
+   elapsed = 0;
+   initAtoms( o );
+   takeCensus( 0 );
+
+   if( o->progress )
 	{
-	 std::cout << "Iteration: 0 of " << o->iters << " | ";
-	 std::cout << "0\% complete\r" << std::flush;
-	}
-	qtime->start();
+      std::cout << "Iteration: 0 of " << o->iters << " | ";
+      std::cout << "0\% complete\r" << std::flush;
+   }
+   qtime->start();
 }
+
 
 int 
-NernstSim::preIter(){
-	return 0;
+NernstSim::preIter()
+{
+   return 0;
 }
 
+
 void 
-NernstSim::Iter(){
-      moveAtoms( o );
+NernstSim::Iter()
+{
+   moveAtoms( o );
 }
 
-void 
-NernstSim::postIter(){
-      if( currentIter % 4 == 0 )
-      {
-         takeCensus( currentIter );
-      }
 
-      if( o->progress && currentIter % 256 == 0 )
-      {
-         std::cout << "                                                                    \r" << std::flush;
-         std::cout << "Iteration: " << currentIter << " of " << o->iters << " | ";
-         std::cout << (int)( 100 * (double)currentIter / (double)o->iters ) << "\% complete\r" << std::flush;
-      }
+void 
+NernstSim::postIter()
+{
+   if( currentIter % 4 == 0 )
+   {
+      takeCensus( currentIter );
+   }
+
+   if( o->progress && currentIter % 256 == 0 )
+   {
+      std::cout << "                                                                    \r" << std::flush;
+      std::cout << "Iteration: " << currentIter << " of " << o->iters << " | ";
+      std::cout << (int)( 100 * (double)currentIter / (double)o->iters ) << "\% complete\r" << std::flush;
+   }
 }
 
+
 void 
-NernstSim::completeNernstSim(){
-   elapsed += qtime->elapsed()/1000.0;
+NernstSim::completeNernstSim()
+{
+   elapsed += qtime->elapsed() / 1000.0;
 
    finalizeAtoms();
 
@@ -93,14 +99,17 @@ NernstSim::completeNernstSim(){
    }
 }
 
+
 void
 NernstSim::runSim()
 {
-        initNernstSim();
-        for( ; currentIter <= o->iters; currentIter++ ){
-                preIter();
-                Iter();
-                postIter();
-        }
-        completeNernstSim();
+   initNernstSim();
+   for( ; currentIter <= o->iters; currentIter++ )
+   {
+      preIter();
+      Iter();
+      postIter();
+   }
+   completeNernstSim();
 }
+

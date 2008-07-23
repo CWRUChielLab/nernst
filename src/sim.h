@@ -7,11 +7,13 @@
 
 #include <QTime>
 
+
 class NernstSim 
 {
    public:
       NernstSim( struct options *options );
       void runSim();
+
    protected:
       struct options *o;
       long maxatomsDefault;
