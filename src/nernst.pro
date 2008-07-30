@@ -34,6 +34,10 @@ unix:!macx {
 }
 
 macx {
+   INCLUDEPATH += /usr/local/qwt-5.1.1/include
+   QMAKE_LIBDIR += /usr/local/qwt-5.1.1/lib
+   LIBS += -lqwt
+
    contains( MACTARGET, intel ) {
       message( "Generating makefile for Intel Macs." )
       DEFINES += BLR_USEMAC HAVE_SSE2

@@ -4,7 +4,6 @@
 
 
 #include <QApplication>
-#include <QCoreApplication>
 
 #include "options.h"
 #include "sim.h"
@@ -14,9 +13,9 @@
 int
 main( int argc, char *argv[] )
 {
-   struct options *o = NULL;
-   QCoreApplication *app = NULL;
+   QCoreApplication *app;
 
+   struct options *o;
    o = parseOptions( argc, argv );
 
    if( o->use_gui )
@@ -30,6 +29,5 @@ main( int argc, char *argv[] )
       sim.runSim();
       return 0;
    }
-
 }
 

@@ -26,6 +26,7 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 #include <time.h>
+#include <string.h>
 
 #include "options.h"
 #include "world.h"
@@ -38,7 +39,7 @@ char
    "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Hillel Chiel",
    "",
-   "Version 0.7.1",
+   "Version 0.7.2",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
@@ -202,11 +203,28 @@ dump_options( struct options *o )
 struct options *
 parseOptions(int argc, char **argv)
 {
+   // When running the application on a Mac through Finder or "open" in Terminal, an extra option is
+   // added that looks something like "-psn_0_58333".  This option needs to be removed when we parse
+   // our options, so here we duplicate argc and argv, removing the unwanted argument.
+   char **argv2 = malloc( sizeof( char* ) * argc );
+   int i, rmParams, argc2;
+   for( i = 0, rmParams = 0, argc2 = argc; i < argc; i++ )
+   {
+      if( !strncmp( argv[ i ], "-psn", 4 ) )
+      {
+         argv2[ i - rmParams ] = malloc( sizeof( char ) * ( strlen( argv[ i ] ) + 1 ) );
+         strcpy( argv2[ i - rmParams ], argv[ i ] );
+      } else {
+         argc2--;
+         rmParams++;
+      }
+   }
+
    // This is gratefully stolen, as always, from the sample code found in man -S3 getopt.
    int option_index = 0, c;
    struct option long_options[] =
    {
-   // { "long_option_name", "noarg(0), requiredarg(1), optarg(2)", NULL, retval}
+   // { "long_option_name", "noarg(0), requiredarg(1), optarg(2)", NULL, retval }
 
    // Keep this ordered by short opt name.
       { "max-atoms",         1, 0, 'a' },
@@ -239,7 +257,7 @@ parseOptions(int argc, char **argv)
    set_defaults( options );
    while( 1 )
    {
-      c = getopt_long( argc, argv, "a:eEgGhi:l:L:o:pPr:R:sSt:vVx:y:", long_options, &option_index );
+      c = getopt_long( argc2, argv2, "a:eEgGhi:l:L:o:pPr:R:sSt:vVx:y:", long_options, &option_index );
       if( c == -1 )
       {
          break;
