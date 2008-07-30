@@ -39,7 +39,7 @@ char
    "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Hillel Chiel",
    "",
-   "Version 0.7.2",
+   "Version 0.7.3",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
@@ -210,7 +210,7 @@ parseOptions(int argc, char **argv)
    int i, rmParams, argc2;
    for( i = 0, rmParams = 0, argc2 = argc; i < argc; i++ )
    {
-      if( !strncmp( argv[ i ], "-psn", 4 ) )
+      if( strncmp( argv[ i ], "-psn", 4 ) != 0 )
       {
          argv2[ i - rmParams ] = malloc( sizeof( char ) * ( strlen( argv[ i ] ) + 1 ) );
          strcpy( argv2[ i - rmParams ], argv[ i ] );

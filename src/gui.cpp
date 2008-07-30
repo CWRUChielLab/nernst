@@ -65,7 +65,7 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v 0.7.2" );
+   setWindowTitle( "Nernst Potential Simulator | v0.7.3" );
    setStatusMsg( "Ready" );
 
    // Menus
@@ -118,7 +118,7 @@ NernstGUI::about()
       "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,\n"
       "                  Jocelyn Eckert, and Hillel Chiel\n"
       "\n"
-      "Version 0.7.2\n"
+      "Version 0.7.3\n"
       "Released under the GPL version 3 or any later version.\n"
       "This is free software; see the source for copying conditions. There is NO\n"
       "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
