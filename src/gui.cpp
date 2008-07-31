@@ -19,7 +19,7 @@
 extern int LRcharge;
 extern int initialized;
 extern int quitting;
-double t[ 50000 ], v[ 50000 ];
+double t[ 500000 ], v[ 500000 ];
 
 
 NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags )
@@ -47,7 +47,9 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
 
    // Graphs
    voltsPlot = new QwtPlot();
-   voltsPlot->setTitle( "Test Plot" );
+   voltsPlot->setTitle( "Evolution of Charge Buildup" );
+   voltsPlot->setAxisTitle( 0, "Net Charge of Intracellular Space (ions)" );
+   voltsPlot->setAxisTitle( 2, "Time (iters)" );
    voltsCurve = new QwtPlotCurve( "LRcharge" );
 
    t[ 0 ] = 0;
@@ -61,11 +63,12 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    mainLayout->addWidget( ctrlFrame, 0, 0 );
    mainLayout->addWidget( canvasFrame, 0, 1 );
    mainLayout->addWidget( voltsPlot, 0, 2 );
+   mainLayout->setColumnMinimumWidth( 2, 350 );
    mainLayout->setColumnStretch( 2, 1 );
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.7.4" );
+   setWindowTitle( "Nernst Potential Simulator | v0.7.5" );
    setStatusMsg( "Ready" );
 
    // Menus
@@ -118,7 +121,7 @@ NernstGUI::about()
       "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,\n"
       "                  Jocelyn Eckert, and Hillel Chiel\n"
       "\n"
-      "Version 0.7.4\n"
+      "Version 0.7.5\n"
       "Released under the GPL version 3 or any later version.\n"
       "This is free software; see the source for copying conditions. There is NO\n"
       "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"

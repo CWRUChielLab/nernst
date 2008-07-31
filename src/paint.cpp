@@ -167,6 +167,7 @@ NernstPainter::draw()
 
       int atomBit = 0, nAtoms = 0;
 
+      // LHS
       for( int y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
       {
          for( int x = 1; ( x < o->x / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
@@ -185,8 +186,13 @@ NernstPainter::draw()
          }
       }
 
+      // RHS
       for( int y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
       {
+         // The RHS will always have an even number of squares per row, and so in order to produce
+         // a checkered pattern of K and Cl ions when a spacing of 1 is used, we need to switch
+         // atomBit every time we start a new row.
+         atomBit = !atomBit;
          for( int x = o->x / 2 + 1; ( x < o->x - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
          {
             if( atomBit )

@@ -39,7 +39,7 @@ char
    "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Hillel Chiel",
    "",
-   "Version 0.7.4",
+   "Version 0.7.5",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
@@ -84,8 +84,8 @@ char
    "-v, --verbose             Print debugging information (occasionally",
    "                             implemented).",
    "-V, --version             Print version information.",
-   "-x, --x                   Horizontal size.  Default=WORLD_X.",
-   "-y, --y                   Vertical size.  Default=WORLD_Y.",
+   "-x, --x                   Horizontal size.  Default=512.",
+   "-y, --y                   Vertical size.  Default=512.",
    NULL
 };
 
