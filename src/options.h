@@ -12,8 +12,8 @@ struct options
 {
    // world options
                         // x & y dimensions of the world
-   int x;               // -x[=WORLD_X]
-   int y;               // -y[=WORLD_Y]
+   int x;               // -x[=512]
+   int y;               // -y[=512]
    int iters;           // --iters[=50000]
 
    // atom options

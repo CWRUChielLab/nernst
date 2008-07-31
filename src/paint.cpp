@@ -21,7 +21,8 @@ NernstPainter::NernstPainter( struct options *options, QWidget *parent )
    rotationX = 0.0;
    rotationY = 0.0;
    rotationZ = 0.0;
-   setFixedSize( WORLD_X, WORLD_Y );
+
+   setFixedSize( o->x, o->y );
 }
 
 
@@ -75,6 +76,8 @@ NernstPainter::paintGL()
 void
 NernstPainter::draw()
 {
+   setFixedSize( o->x, o->y );
+
    /*
    static const GLfloat P1[ 3 ] = { 0.0, -1.0, +2.0 };
    static const GLfloat P2[ 3 ] = { +1.73205081, -1.0, -1.0 };
@@ -111,9 +114,9 @@ NernstPainter::draw()
    if( running )
    {
       glBegin( GL_POINTS );
-      for( int y = 0; y < WORLD_Y; y++ )
+      for( int y = 0; y < o->y; y++ )
       {
-         for( int x = 0; x < WORLD_X; x++ )
+         for( int x = 0; x < o->x; x++ )
          {
             switch( world[ idx( x, y ) ].color )
             {
@@ -132,7 +135,7 @@ NernstPainter::draw()
                   glColor3f( 0.f, 1.f, 0.f );
                   break;
             }
-            glVertex3f( (GLfloat)x / (GLfloat)WORLD_X, (GLfloat)y / (GLfloat)WORLD_Y, (GLfloat)0.0 );
+            glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          }
       }
       glEnd();
@@ -143,30 +146,30 @@ NernstPainter::draw()
 
       int i = 0;
 
-      for( int y = 0; y < WORLD_Y; y++ )
+      for( int y = 0; y < o->y; y++ )
       {
          glColor3f( 0.f, 0.f, 0.f );
 
          // Left membrane
-         glVertex3f( (GLfloat)0.0, (GLfloat)y / (GLfloat)WORLD_Y, (GLfloat)0.0 );
+         glVertex3f( (GLfloat)0.0, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
 
          // Central membrane with pores
-         if( y != (int)( ( (double)WORLD_Y / (double)( o->pores + 1 ) ) * (double)( i + 1 ) ) )
+         if( y != (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)( i + 1 ) ) )
          {
-            glVertex3f( (GLfloat)0.5, (GLfloat)y / (GLfloat)WORLD_Y, (GLfloat)0.0 );
+            glVertex3f( (GLfloat)0.5, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          } else {
             i++;
          }
 
          // Right membrane
-         glVertex3f( (GLfloat)( WORLD_X - 1 ) / (GLfloat)WORLD_X, (GLfloat)y / (GLfloat)WORLD_Y, (GLfloat)0.0 );
+         glVertex3f( (GLfloat)( o->x - 1 ) / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
       }
 
       int atomBit = 0, nAtoms = 0;
 
-      for( int y = 0; ( y < WORLD_Y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
+      for( int y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
       {
-         for( int x = 1; ( x < WORLD_X / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
+         for( int x = 1; ( x < o->x / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
          {
             if( atomBit )
             {
@@ -176,15 +179,15 @@ NernstPainter::draw()
                // ATOM_Cl
                glColor3f( 0.f, 0.f, 1.f );
             }
-            glVertex3f( (GLfloat)x / (GLfloat)WORLD_X, (GLfloat)y / (GLfloat)WORLD_Y, (GLfloat)0.0 );
+            glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
             atomBit = !atomBit;
             nAtoms++;
          }
       }
 
-      for( int y = 0; ( y < WORLD_Y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
+      for( int y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
       {
-         for( int x = WORLD_X / 2 + 1; ( x < WORLD_X - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
+         for( int x = o->x / 2 + 1; ( x < o->x - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
          {
             if( atomBit )
             {
@@ -194,7 +197,7 @@ NernstPainter::draw()
                // ATOM_Cl
                glColor3f( 0.f, 0.f, 1.f );
             }
-            glVertex3f( (GLfloat)x / (GLfloat)WORLD_X, (GLfloat)y / (GLfloat)WORLD_Y, (GLfloat)0.0 );
+            glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
             atomBit = !atomBit;
             nAtoms++;
          }

@@ -6,6 +6,7 @@
 
 #include <QtGui>
 #include <time.h>
+#include <math.h>
 
 #include "ctrl.h"
 #include "options.h"
@@ -18,6 +19,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    // Default values
    o = options;
    itersDefault = o->iters;
+   xDefault = o->x;
+   yDefault = o->y;
    poresDefault = o->pores;
    lspacingDefault = o->lspacing;
    rspacingDefault = o->rspacing;
@@ -44,15 +47,45 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    itersVal = new QLabel( QString::number( itersDefault ) );
    itersVal->setAlignment( Qt::AlignRight );
 
+   // World width control
+   xLbl = new QLabel( "&Width" );
+   xLbl->setToolTip( "Set the width of the world." );
+
+   xSld = new QSlider( Qt::Horizontal );
+   xSld->setMinimumWidth( 100 );
+   xSld->setRange( 4, 9 );
+   xSld->setValue( (int)( log( xDefault ) / log( 2 ) ) );
+   xSld->setToolTip( "Set the width of the world." );
+
+   xLbl->setBuddy( xSld );
+
+   xVal = new QLabel( QString::number( xDefault ) );
+   xVal->setAlignment( Qt::AlignRight );
+
+   // World height control
+   yLbl = new QLabel( "&Height" );
+   yLbl->setToolTip( "Set the height of the world." );
+
+   ySld = new QSlider( Qt::Horizontal );
+   ySld->setMinimumWidth( 100 );
+   ySld->setRange( 4, 9 );
+   ySld->setValue( (int)( log( yDefault ) / log( 2 ) ) );
+   ySld->setToolTip( "Set the height of the world." );
+
+   yLbl->setBuddy( ySld );
+
+   yVal = new QLabel( QString::number( yDefault ) );
+   yVal->setAlignment( Qt::AlignRight );
+
    // Pores control
    poresLbl = new QLabel( "P&ores" );
-   poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( WORLD_Y ) + "." );
+   poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
 
    poresSld = new QSlider( Qt::Horizontal );
    poresSld->setMinimumWidth( 100 );
-   poresSld->setRange( 0, WORLD_Y );
+   poresSld->setRange( 0, o->y );
    poresSld->setValue( poresDefault );
-   poresSld->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( WORLD_Y ) + "." );
+   poresSld->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
 
    poresLbl->setBuddy( poresSld );
 
@@ -117,19 +150,27 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    ctrlLayout = new QGridLayout();
 
    ctrlLayout->addWidget( headerLbl, 0, 0, 1, 3 );
-  
+
    ctrlLayout->addWidget( itersLbl, 1, 0 );
    ctrlLayout->addWidget( itersSld, 1, 1 );
    ctrlLayout->addWidget( itersVal, 1, 2 );
 
-   ctrlLayout->addWidget( poresLbl, 2, 0 );
-   ctrlLayout->addWidget( poresSld, 2, 1 );
-   ctrlLayout->addWidget( poresVal, 2, 2 );
+   ctrlLayout->addWidget( xLbl, 2, 0 );
+   ctrlLayout->addWidget( xSld, 2, 1 );
+   ctrlLayout->addWidget( xVal, 2, 2 );
+
+   ctrlLayout->addWidget( yLbl, 3, 0 );
+   ctrlLayout->addWidget( ySld, 3, 1 );
+   ctrlLayout->addWidget( yVal, 3, 2 );
+  
+   ctrlLayout->addWidget( poresLbl, 4, 0 );
+   ctrlLayout->addWidget( poresSld, 4, 1 );
+   ctrlLayout->addWidget( poresVal, 4, 2 );
 
    ctrlLayout->setColumnMinimumWidth( 2, 50 );
 
-   ctrlLayout->addWidget( seedLbl, 3, 0 );
-   ctrlLayout->addWidget( seedVal, 3, 1, 1, 2 );
+   ctrlLayout->addWidget( seedLbl, 5, 0 );
+   ctrlLayout->addWidget( seedVal, 5, 1, 1, 2 );
 
    spacingBox = new QGroupBox( "Initial Ionic Spacing" );
    spacingLayout = new QGridLayout( spacingBox );
@@ -143,10 +184,10 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    spacingLayout->addWidget( rspacingVal, 1, 2);
 
    spacingLayout->setColumnMinimumWidth( 2, 16 );
-   ctrlLayout->addWidget( spacingBox, 4, 0, 1, 3 );
+   ctrlLayout->addWidget( spacingBox, 6, 0, 1, 3 );
 
-   ctrlLayout->addWidget( selectivity, 5, 0, 1, 3 );
-   ctrlLayout->addWidget( electrostatics, 6, 0, 1, 3 );
+   ctrlLayout->addWidget( selectivity, 7, 0, 1, 3 );
+   ctrlLayout->addWidget( electrostatics, 8, 0, 1, 3 );
 
    mainLayout->addLayout( ctrlLayout );
    mainLayout->addStretch( 1 );
@@ -165,6 +206,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    // Signals
    connect( itersSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeIters( int ) ) );
+   connect( xSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeX( int ) ) );
+   connect( ySld, SIGNAL( valueChanged( int ) ), this, SLOT( changeY( int ) ) );
    connect( poresSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePores( int ) ) );
    connect( seedVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
    connect( lspacingSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLspacing( int ) ) );
@@ -195,16 +238,38 @@ NernstCtrl::changeIters( int iters )
    {
       itersSld->setValue( roundedIters );
    }
-   itersVal->setNum( roundedIters );
    o->iters = roundedIters;
+   itersVal->setNum( o->iters );
+}
+
+
+void
+NernstCtrl::changeX( int xpow )
+{
+   o->x = pow( 2, xpow );
+   xVal->setNum( o->x );
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changeY( int ypow )
+{
+   o->y = pow( 2, ypow );
+   yVal->setNum( o->y );
+
+   poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
+   poresSld->setRange( 0, o->y );
+   poresSld->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
+   emit updatePreview();
 }
 
 
 void
 NernstCtrl::changePores( int pores )
 {
-   poresVal->setNum( pores );
    o->pores = pores;
+   poresVal->setNum( o->pores );
    emit updatePreview();
 }
 
@@ -219,8 +284,8 @@ NernstCtrl::changeSeed( QString seed )
 void
 NernstCtrl::changeLspacing( int lspacing )
 {
-   lspacingVal->setNum( lspacing );
    o->lspacing = lspacing;
+   lspacingVal->setNum( o->lspacing );
    emit updatePreview();
 }
 
@@ -228,8 +293,8 @@ NernstCtrl::changeLspacing( int lspacing )
 void
 NernstCtrl::changeRspacing( int rspacing )
 {
-   rspacingVal->setNum( rspacing );
    o->rspacing = rspacing;
+   rspacingVal->setNum( o->rspacing );
    emit updatePreview();
 }
 
@@ -263,6 +328,14 @@ NernstCtrl::disableCtrl()
 {
    // Set the first push button to "Pause" and disable all controls.
    stackedBtnLayout->setCurrentWidget( pauseBtn );
+
+   xLbl->setEnabled( 0 );
+   xSld->setEnabled( 0 );
+   xVal->setEnabled( 0 );
+
+   yLbl->setEnabled( 0 );
+   ySld->setEnabled( 0 );
+   yVal->setEnabled( 0 );
 
    itersLbl->setEnabled( 0 );
    itersSld->setEnabled( 0 );
@@ -299,6 +372,16 @@ NernstCtrl::resetCtrl()
    // Set the first push button to "Start", reenable all controls, and reset all control values to defaults.
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
+
+   xLbl->setEnabled( 1 );
+   xSld->setEnabled( 1 );
+   xSld->setValue( (int)( log( xDefault ) / log( 2 ) ) );
+   xVal->setEnabled( 1 );
+
+   yLbl->setEnabled( 1 );
+   ySld->setEnabled( 1 );
+   ySld->setValue( (int)( log( yDefault ) / log( 2 ) ) );
+   yVal->setEnabled( 1 );
 
    itersLbl->setEnabled( 1 );
    itersSld->setEnabled( 1 );

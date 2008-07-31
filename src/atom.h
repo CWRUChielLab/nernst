@@ -23,8 +23,8 @@ struct atom
 unsigned long int  idx( int x, int y );
 int getX( unsigned long int pos );
 int getY( unsigned long int pos );
-void initAtoms( struct options *o );
-void moveAtoms( struct options *o );
+void initAtoms( struct options *options );
+void moveAtoms( void );
 void finalizeAtoms( void );
 void takeCensus( int iter );
 

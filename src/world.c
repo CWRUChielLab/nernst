@@ -18,6 +18,7 @@
 #define __USE_XOPEN2K      //Needed for posix_memalign on louder -- why?
 #endif
 #include <stdlib.h>
+#include <stdio.h>
 #include "options.h"
 #include "atom.h"
 #include "world.h"
@@ -30,18 +31,22 @@ unsigned char *direction;
 
 
 void
-initWorld()
+initWorld( struct options *o )
 {
    int rc = 0;
 
    // Test that the size of the world is a power of 2.
-   assert( !( (WORLD_X*WORLD_Y)  &  ( (WORLD_X*WORLD_Y) - 1 ) ) );
+   if( ( o->x * o->y )  &  ( ( o->x * o->y ) - 1 ) )
+   {
+      fprintf( stderr, "ERROR: World size must be a power of 2.\n" );
+      assert( !( ( o->x * o->y )  &  ( ( o->x * o->y ) - 1 ) ) );
+   }
 
-   world   = calloc( sizeof( struct atom   ) * WORLD_X * WORLD_Y, 1 );
-   claimed = calloc( sizeof( unsigned char ) * WORLD_X * WORLD_Y, 1 );
+   world   = calloc( sizeof( struct atom   ) * o->x * o->y, 1 );
+   claimed = calloc( sizeof( unsigned char ) * o->x * o->y, 1 );
 
    //Lay out the memory for the direction array.
-   for( direction_sz64 = get_min_array_size64() * 8; direction_sz64 < WORLD_X * WORLD_Y; direction_sz64 *= 2 );
+   for( direction_sz64 = get_min_array_size64() * 8; direction_sz64 < (unsigned int)( o->x * o->y ); direction_sz64 *= 2 );
 
 #ifdef BLR_USELINUX
    rc = posix_memalign( (void**)&direction, getpagesize(), direction_sz64 );

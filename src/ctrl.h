@@ -28,6 +28,8 @@ class NernstCtrl : public QWidget
 
    public slots:
       void changeIters( int iters );
+      void changeX( int xpow );
+      void changeY( int ypow );
       void changePores( int pores );
       void changeSeed( QString seed );
       void changeLspacing( int lspacing );
@@ -51,6 +53,8 @@ class NernstCtrl : public QWidget
    private:
       struct options *o;
       int itersDefault;
+      int xDefault;
+      int yDefault;
       int poresDefault;
       int lspacingDefault;
       int rspacingDefault;
@@ -62,6 +66,14 @@ class NernstCtrl : public QWidget
       QLabel *itersLbl;
       QSlider *itersSld;
       QLabel *itersVal;
+
+      QLabel *xLbl;
+      QSlider *xSld;
+      QLabel *xVal;
+
+      QLabel *yLbl;
+      QSlider *ySld;
+      QLabel *yVal;
 
       QLabel *poresLbl;
       QSlider *poresSld;

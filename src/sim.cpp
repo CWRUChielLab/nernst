@@ -17,7 +17,6 @@
 
 NernstSim::NernstSim( struct options *options )
 {
-   initWorld();
    o = options;
    maxatomsDefault = o->max_atoms;
    qtime = new QTime();
@@ -29,6 +28,7 @@ NernstSim::initNernstSim()
 {
    currentIter = 1;
    elapsed = 0;
+   initWorld( o );
    initAtoms( o );
    takeCensus( 0 );
 
@@ -51,7 +51,7 @@ NernstSim::preIter()
 void 
 NernstSim::Iter()
 {
-   moveAtoms( o );
+   moveAtoms();
 }
 
 

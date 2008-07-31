@@ -39,7 +39,7 @@ char
    "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Hillel Chiel",
    "",
-   "Version 0.7.3",
+   "Version 0.7.4",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
@@ -148,8 +148,8 @@ print_version()
 void
 set_defaults( struct options *o )
 {
-   o->x              = WORLD_X;
-   o->y              = WORLD_Y;
+   o->x              = 512;
+   o->y              = 512;
    o->iters          = 50000;
    o->max_atoms      = LONG_MAX;
    o->pores          = 7;
@@ -324,14 +324,10 @@ parseOptions(int argc, char **argv)
             exit( 0 );
             break;
          case 'x':
-            fprintf( stderr, "x and y values are compile-time options.\n" );
-            assert( 0 );
-            // options->x = safe_strtol( optarg );
+            options->x = safe_strtol( optarg );
             break;
          case 'y':
-            fprintf( stderr, "x and y values are compile-time options.\n" );
-            assert( 0 );
-            // options->y = safe_strtol( optarg );
+            options->y = safe_strtol( optarg );
             break;
          default:
             fprintf( stderr, "Unknown option.  Try --help for a full list.\n" );

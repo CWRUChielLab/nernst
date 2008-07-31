@@ -24,30 +24,34 @@
 #include "util.h"
 
 
+struct options *o;
 static int WORLD_SZ_MASK;
 unsigned int WORLD_COUNTER;
 int LRcharge;           // Net charge on left minus net charge on right
+
+signed int off_n, off_s, off_e, off_w, off_ne, off_nw, off_se, off_sw;
+signed int *dir2offset;
 
 
 unsigned long int
 idx( int x, int y )
 {
    // Mask takes care of wrapping in the torus
-   return( ( y * WORLD_X + x ) & WORLD_SZ_MASK );
+   return( ( y * o->x + x ) & WORLD_SZ_MASK );
 }
 
 
 int
 getX( unsigned long int pos )
 {
-   return( (int)( pos % WORLD_X ) );
+   return( (int)( pos % o->x ) );
 }
 
 
 int
 getY( unsigned long int pos )
 {
-   return( (int)( pos / WORLD_X ) );
+   return( (int)( pos / o->x ) );
 }
 
 
@@ -80,6 +84,7 @@ enum
 };
 
 
+/*
 enum
 {
    OFF_N  = ( -WORLD_X   ),
@@ -107,6 +112,7 @@ dir2offset[ 8 ] =
 {
    OFF_N, OFF_S, OFF_E, OFF_W, OFF_NE, OFF_NW, OFF_SE, OFF_SW
 };
+*/
 
 
 /*
@@ -169,8 +175,8 @@ static int
 chargeFlux(unsigned int from, unsigned int to)
 {
    // If the moving atom is entering a pore from the left or exiting a pore to the right
-   if( ( getX( to ) == WORLD_X / 2 && getX( from ) < WORLD_X / 2 ) ||
-       ( getX( from ) == WORLD_X / 2 && getX( to ) > WORLD_X / 2 ) )
+   if( ( getX( to ) == o->x / 2 && getX( from ) < o->x / 2 ) ||
+       ( getX( from ) == o->x / 2 && getX( to ) > o->x / 2 ) )
    {
       if( world[ from ].color == ATOM_K )
       {
@@ -180,8 +186,8 @@ chargeFlux(unsigned int from, unsigned int to)
       }
    } else {
       // If the moving atom is entering a pore from the right or exiting a pore to the left
-      if( ( getX( to ) == WORLD_X / 2 && getX( from ) > WORLD_X / 2 ) ||
-          ( getX( from ) == WORLD_X / 2 && getX( to ) < WORLD_X / 2 ) )
+      if( ( getX( to ) == o->x / 2 && getX( from ) > o->x / 2 ) ||
+          ( getX( from ) == o->x / 2 && getX( to ) < o->x / 2 ) )
       {
          if( world[ from ].color == ATOM_K )
          {
@@ -210,13 +216,13 @@ dirPore( unsigned int from )
 
    // Assuming world temp is ~300K for now.
    // Using direction[from] as a random number, not a random direction.
-   if( direction[ from ] % 256 <= 16 * exp( -309.544 * LRcharge * q / ( 0.8 * WORLD_Y ) ) )
+   if( direction[ from ] % 256 <= 16 * exp( -309.544 * LRcharge * q / ( 0.8 * o->y ) ) )
    {
       dir = -1;
    } else {
       if ( direction[ from ] % 256 <=
-               16 * exp( -309.544 * LRcharge * q / ( 0.8 * WORLD_Y ) )
-             + 16 * exp(  309.544 * LRcharge * q / ( 0.8 * WORLD_Y ) ) )
+               16 * exp( -309.544 * LRcharge * q / ( 0.8 * o->y ) )
+             + 16 * exp(  309.544 * LRcharge * q / ( 0.8 * o->y ) ) )
       {
          dir = 1;
       } else {
@@ -228,28 +234,49 @@ dirPore( unsigned int from )
 
 
 void
-initAtoms( struct options *o )
+initAtoms( struct options *options )
 {
    // Walk through the array of atoms and assign each a position and color.
+
+   o = options;
+
+   off_n  = ( -o->x     );
+   off_s  = (  o->x     );
+   off_e  = (         1 );
+   off_w  = (        -1 );
+   off_ne = ( -o->x + 1 );
+   off_nw = ( -o->x - 1 );
+   off_se = (  o->x + 1 );
+   off_sw = (  o->x - 1 );
+
+   dir2offset = malloc( sizeof( unsigned int ) * 8 );
+   dir2offset[ 0 ] = off_n;
+   dir2offset[ 1 ] = off_s;
+   dir2offset[ 2 ] = off_e;
+   dir2offset[ 3 ] = off_w;
+   dir2offset[ 4 ] = off_ne;
+   dir2offset[ 5 ] = off_nw;
+   dir2offset[ 6 ] = off_se;
+   dir2offset[ 7 ] = off_sw;
 
    int x = 0, y = 0, i, current_idx = 0, nAtoms = 0, atomBit = 0;
 
    // Initialize the Mersenne twister random number generator.
    init_gen_rand( (uint32_t)(o->randseed) );
 
-   WORLD_SZ_MASK = WORLD_X * WORLD_Y - 1;
+   WORLD_SZ_MASK = o->x * o->y - 1;
    LRcharge = 0;
 
    //Set up the solvent.
-   for( i = 0; i < WORLD_X * WORLD_Y; i++ )
+   for( i = 0; i < o->x * o->y; i++ )
    {
       world[ i ].color = SOLVENT;
    }
 
    // Initialize LHS atoms.
-   for( y = 0; ( y < WORLD_Y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
+   for( y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
    {
-      for( x = 1; ( x < WORLD_X / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
+      for( x = 1; ( x < o->x / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
       {
          current_idx = idx( x, y );
          world[ current_idx ].delta_x = 0;
@@ -269,9 +296,9 @@ initAtoms( struct options *o )
    }
 
    // Initialize RHS atoms.
-   for( y = 0; ( y < WORLD_Y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
+   for( y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
    {
-      for( x = WORLD_X / 2 + 1; ( x < WORLD_X - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
+      for( x = o->x / 2 + 1; ( x < o->x - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
       {
          current_idx = idx( x, y );
          world[ current_idx ].delta_x = 0;
@@ -291,20 +318,20 @@ initAtoms( struct options *o )
    }
 
    // Set up the membrane.
-   for( y = 0; y < WORLD_Y; y++ )
+   for( y = 0; y < o->y; y++ )
    {
-      current_idx = idx( WORLD_X / 2, y );
+      current_idx = idx( o->x / 2, y );
       world[ current_idx ].color = (uint8_t) MEMBRANE;
       current_idx = idx( 0, y );
       world[ current_idx ].color = (uint8_t) MEMBRANE;
-      current_idx = idx( WORLD_X - 1, y );
+      current_idx = idx( o->x - 1, y );
       world[ current_idx ].color = (uint8_t) MEMBRANE;
    }
 
    // Punch holes in the membrane for pores.
    for( i = 0; i < o->pores; i++ )
    {
-      world[ idx( WORLD_X / 2, (int)( ( (double)WORLD_Y / (double)( o->pores + 1 ) ) * (double)( i + 1 ) ) ) ].color = SOLVENT;
+      world[ idx( o->x / 2, (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)( i + 1 ) ) ) ].color = SOLVENT;
    }
 
    o->max_atoms = nAtoms;  //record this to print out later.
@@ -312,26 +339,26 @@ initAtoms( struct options *o )
 
 
 void
-moveAtoms( struct options *o )
+moveAtoms()
 {
    unsigned int dir = 0, off = 0, from = 0, to = 0;
    int atomCount = 0, chargeTemp = LRcharge;
 
    // Only need to clear out claimed.
-   memset( claimed, 0, WORLD_X * WORLD_Y );
+   memset( claimed, 0, o->x * o->y );
 
    // Get new set of directions.
    fill_array64( (uint64_t*)(direction), direction_sz64/8 );
 
    // Stake our claims for next turn.
-   for( from = 0; from < WORLD_X * WORLD_Y; from++ )
+   for( from = 0; from < (unsigned int)( o->x * o->y ); from++ )
    {
       if( world[ from ].color == ATOM_K
       ||  world[ from ].color == ATOM_Cl )
       {                                            // If there's an atom present,
          if( o->electrostatics )
          {
-            if( getX( from ) == WORLD_X/2 )
+            if( getX( from ) == o->x/2 )
             {
                claimed[ from ]++;			         // block anyone from moving here,
                to = idx(
@@ -369,7 +396,7 @@ moveAtoms( struct options *o )
    }
 
    // Move those that are eligible.
-   for( from = 0; from < WORLD_X*WORLD_Y; from++ )
+   for( from = 0; from < (unsigned int)( o->x * o->y ); from++ )
    {
       // Can get rid of this "if" statement with a -1 + !.
       if( claimed[ from ] == 1
@@ -378,7 +405,7 @@ moveAtoms( struct options *o )
       {                                      // If there's an atom present,
          if( o->electrostatics )                // If using electrostatics,
          {
-            if( getX( from ) == WORLD_X/2 )
+            if( getX( from ) == o->x/2 )
             {
                to = idx(
                   getX( from ) + dirPore( from ),
@@ -400,7 +427,7 @@ moveAtoms( struct options *o )
          if( o->selectivity )                   // If only allowing K atoms through pores.
          {
             if( claimed[ to ] == 1
-               && (world[ from ].color == ATOM_K || getX( to ) != WORLD_X/2 ) )
+               && (world[ from ].color == ATOM_K || getX( to ) != o->x/2 ) )
             {
                chargeTemp += chargeFlux( from, to );
                copyAtom( from, to, dir2dx[ dir ], dir2dy[ dir ] );
@@ -455,9 +482,9 @@ takeCensus( int iter )
       fprintf( fp, "%d ", iter );
 
       // Count atoms on left half
-      for( x = 0, K = 0, Cl = 0; x < WORLD_X / 2; x++ )
+      for( x = 0, K = 0, Cl = 0; x < o->x / 2; x++ )
       {
-         for( y = 0; y < WORLD_Y; y++ )
+         for( y = 0; y < o->y; y++ )
          {
             if( world[ idx( x, y ) ].color == ATOM_K )
             {
@@ -473,9 +500,9 @@ takeCensus( int iter )
       fprintf( fp, "%d %d ", K, Cl );
 
       // Count atoms on right half
-      for( x = WORLD_X / 2 + 1, K = 0, Cl = 0; x < WORLD_X; x++ )
+      for( x = o->x / 2 + 1, K = 0, Cl = 0; x < o->x; x++ )
       {
-         for( y = 0; y < WORLD_Y; y++ )
+         for( y = 0; y < o->y; y++ )
          {
             if( world[ idx( x, y ) ].color == ATOM_K )
             {
@@ -491,13 +518,13 @@ takeCensus( int iter )
       fprintf( fp, "%d %d ", K, Cl );
 
       // Count atoms in pores
-      for( K = 0, Cl = 0, y = 0; y < WORLD_Y; y++ )
+      for( K = 0, Cl = 0, y = 0; y < o->y; y++ )
       {
-         if( world[ idx( WORLD_X / 2, y ) ].color == ATOM_K )
+         if( world[ idx( o->x / 2, y ) ].color == ATOM_K )
          {
             K++;
          } else {
-            if( world[ idx( WORLD_X / 2, y ) ].color == ATOM_Cl )
+            if( world[ idx( o->x / 2, y ) ].color == ATOM_Cl )
             {
                Cl++;
             }
@@ -521,9 +548,9 @@ finalizeAtoms()
    if( fp )
    {
       fprintf( fp, "ATOM_K? dx dy\n" );
-      for( x = 0; x < WORLD_X; x++ )
+      for( x = 0; x < o->x; x++ )
       {
-         for( y = 0; y < WORLD_Y; y++ )
+         for( y = 0; y < o->y; y++ )
          {
             if( world[ idx(x,y) ].color == ATOM_K
              || world[ idx(x,y) ].color == ATOM_Cl )
