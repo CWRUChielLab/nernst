@@ -22,12 +22,14 @@
 #include "atom.h"
 #include "world.h"
 #include "util.h"
+#include "const.h"
 
 
 struct options *o;
 static int WORLD_SZ_MASK;
 unsigned int WORLD_COUNTER;
 int LRcharge;           // Net charge on left minus net charge on right
+int initLHS_K, initRHS_K, initLHS_Cl, initRHS_Cl;  // Initial ion counts
 
 signed int off_n, off_s, off_e, off_w, off_ne, off_nw, off_se, off_sw;
 signed int *dir2offset;
@@ -206,23 +208,32 @@ static int
 dirPore( unsigned int from )
 {
    // Return a -1 for move left, a 1 for move right, or 0 for don't move.
+
+   const double constant = e * e / ( 2 * k * t * c * a );
+
    signed int q, dir;
-   if( world[ from ].color == ATOM_K )
+
+   switch( world[ from ].color )
    {
-      q = 1;
-   } else {
-      q = -1;
+      case ATOM_K:
+         q = 1;
+         break;
+      case ATOM_Cl:
+         q = -1;
+         break;
+      default:
+         q = 0;
+         break;
    }
 
-   // Assuming world temp is ~300K for now.
-   // Using direction[from] as a random number, not a random direction.
-   if( direction[ from ] % 256 <= 16 * exp( -309.544 * LRcharge * q / ( 0.8 * o->y ) ) )
+   // Using direction[ from ] as a random number, not a random direction.
+   if( direction[ from ] % 256 <= 16 * exp( constant * LRcharge * -q / o->y ) )
    {
       dir = -1;
    } else {
       if ( direction[ from ] % 256 <=
-               16 * exp( -309.544 * LRcharge * q / ( 0.8 * o->y ) )
-             + 16 * exp(  309.544 * LRcharge * q / ( 0.8 * o->y ) ) )
+               16 * exp( constant * LRcharge * -q / o->y )
+             + 16 * exp( constant * LRcharge *  q / o->y ) )
       {
          dir = 1;
       } else {
@@ -266,6 +277,10 @@ initAtoms( struct options *options )
 
    WORLD_SZ_MASK = o->x * o->y - 1;
    LRcharge = 0;
+   initLHS_K = 0;
+   initRHS_K = 0;
+   initLHS_Cl = 0;
+   initRHS_Cl = 0;
 
    //Set up the solvent.
    for( i = 0; i < o->x * o->y; i++ )
@@ -286,9 +301,11 @@ initAtoms( struct options *options )
          {
             world[ current_idx ].color = ATOM_K;
             LRcharge++;
+            initLHS_K++;
          } else {
             world[ current_idx ].color = ATOM_Cl;
             LRcharge--;
+            initLHS_Cl++;
          }
          atomBit = !atomBit;
          nAtoms++;
@@ -312,9 +329,11 @@ initAtoms( struct options *options )
          {
             world[ current_idx ].color = ATOM_K;
             LRcharge--;
+            initRHS_K++;
          } else {
             world[ current_idx ].color = ATOM_Cl;
             LRcharge++;
+            initRHS_Cl++;
          }
          atomBit = !atomBit;
          nAtoms++;

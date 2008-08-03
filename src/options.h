@@ -3,6 +3,9 @@
  */
 
 
+#ifndef OPTIONS_H
+#define OPTIONS_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,7 +23,7 @@ struct options
    long max_atoms;      // --max-atoms[=LONG_MAX]
    int lspacing;        // --lspacing[=4]
    int rspacing;        // --rspacing[=12]
-   int pores;           // --pores[=7]
+   int pores;           // --pores[=12]
    int selectivity;     // --selectivity[=1]
    int electrostatics;  // -- electrostatics[=1]
 
@@ -52,3 +55,6 @@ void dump_options( struct options *o );
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* OPTIONS_H */
+

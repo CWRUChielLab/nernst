@@ -3,6 +3,9 @@
  */
 
 
+#ifndef ATOM_H
+#define ATOM_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10,6 +13,8 @@ extern "C" {
 extern int nAtoms;
 extern int WORLD_T;
 extern unsigned int WORLD_COUNTER;
+extern int LRcharge;
+extern int initLHS_K, initRHS_K, initLHS_Cl, initRHS_Cl;
 // extern struct atom *atom;
 
 struct atom
@@ -42,3 +47,6 @@ enum
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* ATOM_H */
+

@@ -48,6 +48,7 @@ XNernstSim::initNernstSim()
    paused = 0;
    resetting = 0;
    NernstSim::initNernstSim();
+   gui->updatePlots( 0 );
    initialized = 1;
 }
 

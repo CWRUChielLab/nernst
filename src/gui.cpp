@@ -7,6 +7,7 @@
 #include <QtGui>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
+#include <math.h>
 
 #include "gui.h"
 #include "sim.h"
@@ -14,17 +15,19 @@
 #include "ctrl.h"
 #include "paint.h"
 #include "atom.h"
+#include "const.h"
 
 
-extern int LRcharge;
 extern int initialized;
 extern int quitting;
-double t[ 500000 ], v[ 500000 ];
+double x_iters[ 500000 ], y_volts[ 500000 ], y_nernst[ 500000 ];
 
 
-NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags )
+NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags flags )
    : QMainWindow( parent, flags )
 {
+   o = options;
+
    // Initialization controls
    ctrl = new NernstCtrl( o, this );
 
@@ -45,18 +48,20 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    canvasLayout->addWidget( canvas );
    canvasFrame->setLayout( canvasLayout );
 
-   // Graphs
+   // Potential plot
    voltsPlot = new QwtPlot();
-   voltsPlot->setTitle( "Evolution of Charge Buildup" );
-   voltsPlot->setAxisTitle( 0, "Net Charge of Intracellular Space (ions)" );
+   voltsPlot->setTitle( "Electric Potential" );
+   voltsPlot->setAxisTitle( 0, "Potential (mV)" );
    voltsPlot->setAxisTitle( 2, "Time (iters)" );
-   voltsCurve = new QwtPlotCurve( "LRcharge" );
 
-   t[ 0 ] = 0;
-   v[ 0 ] = 0;
-
-   voltsCurve->setData( t, v, 0 );
+   voltsCurve = new QwtPlotCurve( "Membrane Potential" );
+   voltsCurve->setData( x_iters, y_volts, 0 );
    voltsCurve->attach( voltsPlot );
+
+   nernstCurve = new QwtPlotCurve( "Nernst Potential" );
+   nernstCurve->setPen( QColor( Qt::red ) );
+   nernstCurve->setData( x_iters, y_nernst, 0 );
+   nernstCurve->attach( voltsPlot );
 
    // Main window
    mainLayout = new QGridLayout();
@@ -68,7 +73,7 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.7.5" );
+   setWindowTitle( "Nernst Potential Simulator | v0.7.6" );
    setStatusMsg( "Ready" );
 
    // Menus
@@ -95,6 +100,7 @@ NernstGUI::NernstGUI( struct options *o, QWidget *parent, Qt::WindowFlags flags 
    connect( ctrl, SIGNAL( continueBtnClicked() ), this, SIGNAL( continueBtnClicked() ) );
 
    connect( ctrl, SIGNAL( resetBtnClicked() ), canvas, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( resetPlots() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), this, SIGNAL( resetBtnClicked() ) );
 
    connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
@@ -121,7 +127,7 @@ NernstGUI::about()
       "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,\n"
       "                  Jocelyn Eckert, and Hillel Chiel\n"
       "\n"
-      "Version 0.7.5\n"
+      "Version 0.7.6\n"
       "Released under the GPL version 3 or any later version.\n"
       "This is free software; see the source for copying conditions. There is NO\n"
       "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
@@ -134,9 +140,25 @@ NernstGUI::about()
 void
 NernstGUI::updatePlots( int currentIter )
 {
-   t[ currentIter ] = currentIter;
-   v[ currentIter ] = LRcharge;
-   voltsCurve->setData( t, v, currentIter );
+   // Potential plot
+   x_iters[ currentIter ] = currentIter;
+
+   y_volts[ currentIter ] = LRcharge * e / ( c * a * o->y ) * 1000;                             // Membrane potential (mV)
+   voltsCurve->setData( x_iters, y_volts, currentIter );
+
+   y_nernst[ currentIter ] = R * t / F * log( (double)initRHS_K / (double)initLHS_K ) * 1000;   // Equilibrium potential (mV)
+   nernstCurve->setData( x_iters, y_nernst, currentIter );
+
+   voltsPlot->replot();
+}
+
+
+void
+NernstGUI::resetPlots()
+{
+   voltsCurve->setData( x_iters, y_volts, 0 );
+   nernstCurve->setData( x_iters, y_nernst, 0 );
+
    voltsPlot->replot();
 }
 

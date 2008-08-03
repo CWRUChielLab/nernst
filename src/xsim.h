@@ -36,13 +36,8 @@ class XNernstSim : public QWidget, public NernstSim
  
    private:
       NernstGUI *gui;
-      // struct options *o;
-      // long maxatomsDefault;
       int paused;
       int resetting;
-      // double elapsed;
-      // int currentIter;
-      // QTime *qtime;
       void initNernstSim();
       int preIter();
       void Iter();

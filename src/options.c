@@ -39,7 +39,7 @@ char
    "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Hillel Chiel",
    "",
-   "Version 0.7.5",
+   "Version 0.7.6",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
@@ -67,7 +67,7 @@ char
    "                             Default=0.",
    "-L, --lspacing            Horizontal and vertical gap between atoms in the",
    "                             left partition. Default=4.",
-   "-o, --pores               Number of pores in the membrane. Default=7.",
+   "-o, --pores               Number of pores in the membrane. Default=12.",
    "-p, --profiling           Output performance information and some",
    "                             settings.",
    "-P, --progress            Print the percentage complete periodically.",
@@ -152,7 +152,7 @@ set_defaults( struct options *o )
    o->y              = 512;
    o->iters          = 50000;
    o->max_atoms      = LONG_MAX;
-   o->pores          = 7;
+   o->pores          = 12;
    o->selectivity    = 1;
    o->electrostatics = 1;
    o->use_gui        = 1;

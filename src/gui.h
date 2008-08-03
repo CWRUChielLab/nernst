@@ -22,7 +22,7 @@ class NernstGUI : public QMainWindow
    Q_OBJECT
 
    public:
-      NernstGUI( struct options *o, QWidget *parent = 0, Qt::WindowFlags flags = 0 );
+      NernstGUI( struct options *options, QWidget *parent = 0, Qt::WindowFlags flags = 0 );
 
    protected:
       void closeEvent( QCloseEvent *event );
@@ -31,6 +31,7 @@ class NernstGUI : public QMainWindow
       void about();
       void setStatusMsg( QString msg );
       void updatePlots( int currentIter );
+      void resetPlots();
 
    signals:
       void startBtnClicked();
@@ -42,6 +43,8 @@ class NernstGUI : public QMainWindow
       void finished();
  
    private:
+      struct options *o;
+
       NernstCtrl *ctrl;
       NernstPainter *canvas;
 
@@ -61,6 +64,7 @@ class NernstGUI : public QMainWindow
 
       QwtPlot *voltsPlot;
       QwtPlotCurve *voltsCurve;
+      QwtPlotCurve *nernstCurve;
 };
 
 #endif /* GUI_H */

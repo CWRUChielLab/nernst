@@ -3,6 +3,9 @@
  */
 
 
+#ifndef UTIL_H
+#define UTIL_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,3 +22,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* UTIL_H */
+

@@ -3,6 +3,9 @@
  */
 
 
+#ifndef WORLD_H
+#define WORLD_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,3 +21,6 @@ void initWorld( struct options *o );
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* WORLD_H */
+
