@@ -73,7 +73,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.7.8" );
+   setWindowTitle( "Nernst Potential Simulator | v0.7.9" );
    setWindowIcon( QIcon( ":/img/darwin.png" ) );
    setStatusMsg( "Ready" );
 
@@ -91,7 +91,9 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    helpMenu->addAction( aboutAct );
 
    // Signals
-   connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( update() ) );
+   connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( cleanUpdate() ) );
+   connect( canvas, SIGNAL( previewRedrawn() ), this, SLOT( fixRedraw() ) );
+   connect( ctrl, SIGNAL( worldShrunk() ), this, SLOT( shrinkWindow() ) );
 
    connect( ctrl, SIGNAL( startBtnClicked() ), canvas, SLOT( startPaint() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), this, SIGNAL( startBtnClicked() ) );
@@ -128,7 +130,7 @@ NernstGUI::about()
       "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,\n"
       "                  Jocelyn Eckert, and Hillel Chiel\n"
       "\n"
-      "Version 0.7.8\n"
+      "Version 0.7.9\n"
       "Released under the GPL version 3 or any later version.\n"
       "This is free software; see the source for copying conditions. There is NO\n"
       "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
@@ -166,6 +168,26 @@ NernstGUI::resetPlots()
    nernstCurve->setData( x_iters, y_nernst, 0 );
 
    voltsPlot->replot();
+}
+
+
+void
+NernstGUI::fixRedraw()
+{
+   // Fixes a redraw issue whenever the world size is changed in Windows.
+   canvasFrame->hide();
+   canvasFrame->show();
+}
+
+
+void
+NernstGUI::shrinkWindow()
+{
+   // Shrinks the window to a managable size if it was enlarged too much.
+   if( !isMaximized() )
+   {
+      resize( sizeHint() );
+   }
 }
 
 

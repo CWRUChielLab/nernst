@@ -18,11 +18,12 @@ class NernstPainter : public QGLWidget
       NernstPainter( struct options *o, QWidget *parent = 0 );
 
    public slots:
+      void cleanUpdate();
       void startPaint();
       void resetPaint();
 
    signals:
-      void finished();
+      void previewRedrawn();
 
    protected:
       void initializeGL();
@@ -32,6 +33,7 @@ class NernstPainter : public QGLWidget
    private:
       struct options *o;
       int running;
+      int cleanRedraw;
 
       GLfloat rotationX;
       GLfloat rotationY;

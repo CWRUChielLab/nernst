@@ -53,7 +53,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    xSld = new QSlider( Qt::Horizontal );
    xSld->setMinimumWidth( 100 );
-   xSld->setRange( 4, 9 );
+   xSld->setRange( 4, 11 );
    xSld->setValue( (int)( log( xDefault ) / log( 2 ) ) );
    xSld->setToolTip( "Set the width of the world." );
 
@@ -68,7 +68,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    ySld = new QSlider( Qt::Horizontal );
    ySld->setMinimumWidth( 100 );
-   ySld->setRange( 4, 9 );
+   ySld->setRange( 4, 11 );
    ySld->setValue( (int)( log( yDefault ) / log( 2 ) ) );
    ySld->setToolTip( "Set the height of the world." );
 
@@ -246,22 +246,36 @@ NernstCtrl::changeIters( int iters )
 void
 NernstCtrl::changeX( int xpow )
 {
+   int oldx = o->x;
+
    o->x = (int)pow( 2, xpow );
    xVal->setNum( o->x );
    emit updatePreview();
+
+   if( o->x < oldx )
+   {
+      emit worldShrunk();
+   }
 }
 
 
 void
 NernstCtrl::changeY( int ypow )
 {
+   int oldy = o->y;
+
    o->y = (int)pow( 2, ypow );
    yVal->setNum( o->y );
+   emit updatePreview();
 
    poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
    poresSld->setRange( 0, o->y );
    poresSld->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
-   emit updatePreview();
+
+   if( o->y < oldy )
+   {
+      emit worldShrunk();
+   }
 }
 
 

@@ -44,6 +44,7 @@ class NernstCtrl : public QWidget
 
    signals:
       void updatePreview();
+      void worldShrunk();
       void startBtnClicked();
       void pauseBtnClicked();
       void continueBtnClicked();

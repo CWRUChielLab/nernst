@@ -4,6 +4,8 @@
  */
 
 
+#include <QApplication>
+
 #include "paint.h"
 #include "options.h"
 #include "atom.h"
@@ -16,6 +18,7 @@ NernstPainter::NernstPainter( struct options *options, QWidget *parent )
 {
    o = options;
    running = 0;
+   cleanRedraw = 0;
 
    setFormat( QGLFormat( QGL::DoubleBuffer | QGL::DepthBuffer ) );
    rotationX = 0.0;
@@ -23,6 +26,14 @@ NernstPainter::NernstPainter( struct options *options, QWidget *parent )
    rotationZ = 0.0;
 
    setFixedSize( o->x, o->y );
+}
+
+
+void
+NernstPainter::cleanUpdate()
+{
+   cleanRedraw = 1;
+   update();
 }
 
 
@@ -170,6 +181,14 @@ NernstPainter::draw()
       // LHS
       for( int y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
       {
+         // Ensure that we always have a checkered pattern of ions.
+         int totalColumns = ( o->x / 2 ) - 1;
+         int filledColumns = 1 + ( ( totalColumns - 1 ) / o->lspacing );
+         if( filledColumns % 2 == 0  )
+         {
+            atomBit = !atomBit;
+         }
+
          for( int x = 1; ( x < o->x / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
          {
             if( atomBit )
@@ -189,10 +208,14 @@ NernstPainter::draw()
       // RHS
       for( int y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
       {
-         // The RHS will always have an even number of squares per row, and so in order to produce
-         // a checkered pattern of K and Cl ions when a spacing of 1 is used, we need to switch
-         // atomBit every time we start a new row.
-         atomBit = !atomBit;
+         // Ensure that we always have a checkered pattern of ions.
+         int totalColumns = o->x - ( o->x / 2 ) - 2;
+         int filledColumns = 1 + ( ( totalColumns - 1 ) / o->rspacing );
+         if( filledColumns % 2 == 0  )
+         {
+            atomBit = !atomBit;
+         }
+
          for( int x = o->x / 2 + 1; ( x < o->x - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
          {
             if( atomBit )
@@ -210,6 +233,12 @@ NernstPainter::draw()
       }
 
       glEnd();
+
+      if( cleanRedraw )
+      {
+         cleanRedraw = 0;
+         emit previewRedrawn();
+      }
    }
 }
 

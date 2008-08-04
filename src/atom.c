@@ -291,6 +291,14 @@ initAtoms( struct options *options )
    // Initialize LHS atoms.
    for( y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
    {
+      // Ensure that we always have a checkered pattern of ions.
+      int totalColumns = ( o->x / 2 ) - 1;
+      int filledColumns = 1 + ( ( totalColumns - 1 ) / o->lspacing );
+      if( filledColumns % 2 == 0  )
+      {
+         atomBit = !atomBit;
+      }
+
       for( x = 1; ( x < o->x / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
       {
          current_idx = idx( x, y );
@@ -315,10 +323,13 @@ initAtoms( struct options *options )
    // Initialize RHS atoms.
    for( y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
    {
-      // The RHS will always have an even number of squares per row, and so in order to produce
-      // a checkered pattern of K and Cl ions when a spacing of 1 is used, we need to switch
-      // atomBit every time we start a new row.
-      atomBit = !atomBit;
+      // Ensure that we always have a checkered pattern of ions.
+      int totalColumns = o->x - ( o->x / 2 ) - 2;
+      int filledColumns = 1 + ( ( totalColumns - 1 ) / o->rspacing );
+      if( filledColumns % 2 == 0  )
+      {
+         atomBit = !atomBit;
+      }
 
       for( x = o->x / 2 + 1; ( x < o->x - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
       {

@@ -32,6 +32,8 @@ class NernstGUI : public QMainWindow
       void setStatusMsg( QString msg );
       void updatePlots( int currentIter );
       void resetPlots();
+      void fixRedraw();
+      void shrinkWindow();
 
    signals:
       void startBtnClicked();
