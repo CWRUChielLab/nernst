@@ -44,6 +44,7 @@ macx {
       DEFINES += BLR_USEMAC HAVE_SSE2
       QMAKE_CFLAGS += -msse2
       CONFIG += x86
+      ICON = img/darwin.icns
    }
 
    contains( MACTARGET, ppc ) {
