@@ -1,10 +1,11 @@
 # ignore output files
+Makefile*
 *.o
 *~
 moc_*
-nernst
-nernst.app
-Makefile*
+qrc_resources.cpp
+Nernst Potential Simulator
+Nernst Potential Simulator.app
 debug
 release
 object_script*

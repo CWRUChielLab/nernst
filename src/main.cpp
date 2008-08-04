@@ -6,7 +6,6 @@
 #include <QApplication>
 
 #include "options.h"
-#include "const.h"
 #include "sim.h"
 #include "xsim.h"
 
@@ -18,8 +17,6 @@ main( int argc, char *argv[] )
 
    struct options *o;
    o = parseOptions( argc, argv );
-
-   initConst();
 
    if( o->use_gui )
    {

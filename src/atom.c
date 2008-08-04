@@ -22,7 +22,6 @@
 #include "atom.h"
 #include "world.h"
 #include "util.h"
-#include "const.h"
 
 
 struct options *o;
@@ -174,29 +173,41 @@ copyAtom( unsigned int from, unsigned int to, int dx, int dy )
 
 
 static int
-chargeFlux(unsigned int from, unsigned int to)
+ionCharge( uint8_t type )
 {
+   int q;
+   switch( type )
+   {
+      case ATOM_K:
+         q = 1;
+         break;
+      case ATOM_Cl:
+         q = -1;
+         break;
+      default:
+         q = 0;
+         break;
+   }
+   return q;
+}
+
+
+static int
+chargeFlux( unsigned int from, unsigned int to )
+{
+   int q = ionCharge( world[ from ].color );
+
    // If the moving atom is entering a pore from the left or exiting a pore to the right
    if( ( getX( to ) == o->x / 2 && getX( from ) < o->x / 2 ) ||
        ( getX( from ) == o->x / 2 && getX( to ) > o->x / 2 ) )
    {
-      if( world[ from ].color == ATOM_K )
-      {
-         return( -1 );
-      } else {
-         return( 1 );
-      }
+      return( -q );
    } else {
       // If the moving atom is entering a pore from the right or exiting a pore to the left
       if( ( getX( to ) == o->x / 2 && getX( from ) > o->x / 2 ) ||
           ( getX( from ) == o->x / 2 && getX( to ) < o->x / 2 ) )
       {
-         if( world[ from ].color == ATOM_K )
-         {
-            return( 1 );
-         } else {
-            return( -1 );
-         }
+         return( q );
       } else {
          return( 0 );
       }
@@ -211,20 +222,9 @@ dirPore( unsigned int from )
 
    const double constant = e * e / ( 2 * k * t * c * a );
 
-   signed int q, dir;
+   int q, dir;
 
-   switch( world[ from ].color )
-   {
-      case ATOM_K:
-         q = 1;
-         break;
-      case ATOM_Cl:
-         q = -1;
-         break;
-      default:
-         q = 0;
-         break;
-   }
+   q = ionCharge( world[ from ].color );
 
    // Using direction[ from ] as a random number, not a random direction.
    if( direction[ from ] % 256 <= 16 * exp( constant * LRcharge * -q / o->y ) )
@@ -319,6 +319,7 @@ initAtoms( struct options *options )
       // a checkered pattern of K and Cl ions when a spacing of 1 is used, we need to switch
       // atomBit every time we start a new row.
       atomBit = !atomBit;
+
       for( x = o->x / 2 + 1; ( x < o->x - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
       {
          current_idx = idx( x, y );
@@ -344,17 +345,20 @@ initAtoms( struct options *options )
    for( y = 0; y < o->y; y++ )
    {
       current_idx = idx( o->x / 2, y );
-      world[ current_idx ].color = (uint8_t) MEMBRANE;
+      world[ current_idx ].color = MEMBRANE;
       current_idx = idx( 0, y );
-      world[ current_idx ].color = (uint8_t) MEMBRANE;
+      world[ current_idx ].color = MEMBRANE;
       current_idx = idx( o->x - 1, y );
-      world[ current_idx ].color = (uint8_t) MEMBRANE;
+      world[ current_idx ].color = MEMBRANE;
    }
 
    // Punch holes in the membrane for pores.
    for( i = 0; i < o->pores; i++ )
    {
-      world[ idx( o->x / 2, (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)( i + 1 ) ) ) ].color = SOLVENT;
+      world[ idx( o->x / 2,
+                  (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)( i + 1 ) )
+                )
+           ].color = SOLVENT;
    }
 
    o->max_atoms = nAtoms;  //record this to print out later.
@@ -371,17 +375,16 @@ moveAtoms()
    memset( claimed, 0, o->x * o->y );
 
    // Get new set of directions.
-   fill_array64( (uint64_t*)(direction), direction_sz64/8 );
+   fill_array64( (uint64_t*)(direction), direction_sz64 / 8 );
 
    // Stake our claims for next turn.
    for( from = 0; from < (unsigned int)( o->x * o->y ); from++ )
    {
-      if( world[ from ].color == ATOM_K
-      ||  world[ from ].color == ATOM_Cl )
+      if( world[ from ].color != SOLVENT && world[ from ].color != MEMBRANE )
       {                                            // If there's an atom present,
          if( o->electrostatics )
          {
-            if( getX( from ) == o->x/2 )
+            if( getX( from ) == o->x / 2 )
             {
                claimed[ from ]++;			         // block anyone from moving here,
                to = idx(
@@ -422,13 +425,11 @@ moveAtoms()
    for( from = 0; from < (unsigned int)( o->x * o->y ); from++ )
    {
       // Can get rid of this "if" statement with a -1 + !.
-      if( claimed[ from ] == 1
-      &&( world[ from ].color == ATOM_K
-        ||world[ from ].color == ATOM_Cl ) )
+      if( claimed[ from ] == 1 && world[ from ].color != SOLVENT && world[ from ].color != MEMBRANE )
       {                                      // If there's an atom present,
          if( o->electrostatics )                // If using electrostatics,
          {
-            if( getX( from ) == o->x/2 )
+            if( getX( from ) == o->x / 2 )
             {
                to = idx(
                   getX( from ) + dirPore( from ),
@@ -450,7 +451,7 @@ moveAtoms()
          if( o->selectivity )                   // If only allowing K atoms through pores.
          {
             if( claimed[ to ] == 1
-               && (world[ from ].color == ATOM_K || getX( to ) != o->x/2 ) )
+               && ( world[ from ].color == ATOM_K || getX( to ) != o->x / 2 ) )
             {
                chargeTemp += chargeFlux( from, to );
                copyAtom( from, to, dir2dx[ dir ], dir2dy[ dir ] );
@@ -575,8 +576,7 @@ finalizeAtoms()
       {
          for( y = 0; y < o->y; y++ )
          {
-            if( world[ idx(x,y) ].color == ATOM_K
-             || world[ idx(x,y) ].color == ATOM_Cl )
+            if( world[ idx( x, y ) ].color != SOLVENT && world[ idx( x, y ) ].color != MEMBRANE )
             {
                fprintf( fp, "%d %d %d\n",
                   world[ idx( x, y ) ].color == ATOM_K,

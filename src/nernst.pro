@@ -3,7 +3,8 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = nernst
+TARGET = "Nernst Potential Simulator"
+RESOURCES = resources.qrc
 DEPENDPATH += .
 INCLUDEPATH += ../SFMT
 DEFINES += MEXP=132049
@@ -62,19 +63,13 @@ macx {
 
 win32 {
    message( "Generating makefile for Windows." )
-   contains( CONFIG, static ) {
-      INCLUDEPATH += "C:\Qwt\static\src"
-      QMAKE_LIBDIR += "C:\Qwt\static\lib"
-   }
-   contains( CONFIG, shared ) {
-      INCLUDEPATH += "C:\Qwt\shared\src"
-      QMAKE_LIBDIR += "C:\Qwt\shared\lib"
-   }
+   INCLUDEPATH += "C:\Qwt\shared\src"
+   QMAKE_LIBDIR += "C:\Qwt\shared\lib"
    DEFINES += BLR_USEWIN
    LIBS += -lqwt
 }
 
 # Input
-HEADERS += atom.h const.h ctrl.h gui.h options.h paint.h sim.h util.h world.h xsim.h
-SOURCES += atom.c const.c ctrl.cpp gui.cpp main.cpp options.c paint.cpp sim.cpp world.c xsim.cpp ../SFMT/SFMT.c
+HEADERS += atom.h ctrl.h gui.h options.h paint.h sim.h util.h world.h xsim.h
+SOURCES += atom.c ctrl.cpp gui.cpp main.cpp options.c paint.cpp sim.cpp world.c xsim.cpp ../SFMT/SFMT.c
 

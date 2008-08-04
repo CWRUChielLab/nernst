@@ -13,7 +13,6 @@
 #include "atom.h"
 #include "world.h"
 #include "util.h"
-#include "const.h"
 
 
 NernstSim::NernstSim( struct options *options )

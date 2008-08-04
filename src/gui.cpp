@@ -15,7 +15,7 @@
 #include "ctrl.h"
 #include "paint.h"
 #include "atom.h"
-#include "const.h"
+#include "world.h"
 
 
 extern int initialized;
@@ -73,7 +73,8 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.7.6" );
+   setWindowTitle( "Nernst Potential Simulator | v0.7.7" );
+   setWindowIcon( QIcon( ":/img/icon.svg" ) );
    setStatusMsg( "Ready" );
 
    // Menus
@@ -123,11 +124,11 @@ NernstGUI::setStatusMsg( QString msg )
 void
 NernstGUI::about()
 {
-   QMessageBox::about( this, "About | Nernst Potential Simulator",
+   QMessageBox::about( this, "Nernst Potential Simulator",
       "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,\n"
       "                  Jocelyn Eckert, and Hillel Chiel\n"
       "\n"
-      "Version 0.7.6\n"
+      "Version 0.7.7\n"
       "Released under the GPL version 3 or any later version.\n"
       "This is free software; see the source for copying conditions. There is NO\n"
       "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
@@ -143,10 +144,15 @@ NernstGUI::updatePlots( int currentIter )
    // Potential plot
    x_iters[ currentIter ] = currentIter;
 
-   y_volts[ currentIter ] = LRcharge * e / ( c * a * o->y ) * 1000;                             // Membrane potential (mV)
+   y_volts[ currentIter ] = LRcharge * e / ( c * a * o->y ) * 1000;                                // Membrane potential (mV)
    voltsCurve->setData( x_iters, y_volts, currentIter );
 
-   y_nernst[ currentIter ] = R * t / F * log( (double)initRHS_K / (double)initLHS_K ) * 1000;   // Equilibrium potential (mV)
+   if( o->pores == 0 )
+   {
+      y_nernst[ currentIter ] = 0;
+   } else {
+      y_nernst[ currentIter ] = R * t / F * log( (double)initRHS_K / (double)initLHS_K ) * 1000;   // Equilibrium potential (mV)
+   }
    nernstCurve->setData( x_iters, y_nernst, currentIter );
 
    voltsPlot->replot();
