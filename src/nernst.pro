@@ -63,10 +63,11 @@ macx {
 
 win32 {
    message( "Generating makefile for Windows." )
-   INCLUDEPATH += "C:\Qwt\shared\src"
-   QMAKE_LIBDIR += "C:\Qwt\shared\lib"
+   INCLUDEPATH += "C:\Qwt\static\src"
+   QMAKE_LIBDIR += "C:\Qwt\static\lib"
    DEFINES += BLR_USEWIN
    LIBS += -lqwt
+   RC_FILE = win32_resources.rc
 }
 
 # Input

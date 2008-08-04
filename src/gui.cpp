@@ -74,7 +74,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
    setWindowTitle( "Nernst Potential Simulator | v0.7.7" );
-   setWindowIcon( QIcon( ":/img/icon.svg" ) );
+   setWindowIcon( QIcon( ":/img/darwin.png" ) );
    setStatusMsg( "Ready" );
 
    // Menus

@@ -246,7 +246,7 @@ NernstCtrl::changeIters( int iters )
 void
 NernstCtrl::changeX( int xpow )
 {
-   o->x = pow( 2, xpow );
+   o->x = (int)pow( 2, xpow );
    xVal->setNum( o->x );
    emit updatePreview();
 }
@@ -255,7 +255,7 @@ NernstCtrl::changeX( int xpow )
 void
 NernstCtrl::changeY( int ypow )
 {
-   o->y = pow( 2, ypow );
+   o->y = (int)pow( 2, ypow );
    yVal->setNum( o->y );
 
    poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
