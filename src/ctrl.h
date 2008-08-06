@@ -43,16 +43,18 @@ class NernstCtrl : public QWidget
       void finish();
 
    signals:
-      void updatePreview();
-      void worldShrunk();
       void startBtnClicked();
       void pauseBtnClicked();
       void continueBtnClicked();
       void resetBtnClicked();
       void quitBtnClicked();
+
+      void updatePreview();
+      void worldShrunk();
  
    private:
       struct options *o;
+
       int itersDefault;
       int xDefault;
       int yDefault;

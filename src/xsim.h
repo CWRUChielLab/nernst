@@ -26,6 +26,7 @@ class XNernstSim : public QWidget, public NernstSim
       void pauseSim();
       void unpauseSim();
       void resetSim();
+      void quitSim();
 
    signals:
       void moveCompleted( int currentIter );
@@ -35,9 +36,11 @@ class XNernstSim : public QWidget, public NernstSim
    protected:
  
    private:
-      NernstGUI *gui;
+      int initialized;
       int paused;
       int resetting;
+      int quitting;
+
       void initNernstSim();
       int preIter();
       void Iter();

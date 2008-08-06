@@ -16,8 +16,9 @@
 NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    : QWidget( parent )
 {
-   // Default values
    o = options;
+
+   // Default values
    itersDefault = o->iters;
    xDefault = o->x;
    yDefault = o->y;

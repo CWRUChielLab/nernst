@@ -38,13 +38,13 @@ macx {
    INCLUDEPATH += /usr/local/qwt-5.1.1/include
    QMAKE_LIBDIR += /usr/local/qwt-5.1.1/lib
    LIBS += -lqwt
+   ICON = img/nernst.icns
 
    contains( MACTARGET, intel ) {
       message( "Generating makefile for Intel Macs." )
       DEFINES += BLR_USEMAC HAVE_SSE2
       QMAKE_CFLAGS += -msse2
       CONFIG += x86
-      ICON = img/darwin.icns
    }
 
    contains( MACTARGET, ppc ) {

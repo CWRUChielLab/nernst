@@ -20,12 +20,12 @@ class NernstSim
       double elapsed;
       int currentIter;
       QTime *qtime;
+
       void initNernstSim();
       int preIter();
       void Iter();
       void postIter();
       void completeNernstSim();
-
 };
 
 #endif /* SIM_H */

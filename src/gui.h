@@ -8,6 +8,7 @@
 #include <QMainWindow>
 
 
+class XNernstSim;
 class NernstCtrl;
 class NernstPainter;
 class QVBoxLayout;
@@ -36,23 +37,19 @@ class NernstGUI : public QMainWindow
       void shrinkWindow();
 
    signals:
-      void startBtnClicked();
-      void pauseBtnClicked();
-      void continueBtnClicked();
-      void resetBtnClicked();
-
       void repaintWorld();
       void finished();
  
    private:
       struct options *o;
 
-      NernstCtrl *ctrl;
-      NernstPainter *canvas;
+      XNernstSim *sim;
 
+      NernstCtrl *ctrl;
       QFrame *ctrlFrame;
       QVBoxLayout *ctrlLayout;
 
+      NernstPainter *canvas;
       QFrame *canvasFrame;
       QVBoxLayout *canvasLayout;
 

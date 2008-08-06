@@ -9,13 +9,9 @@
 #include <unistd.h>
 
 #include "xsim.h"
-#include "options.h"
 #include "gui.h"
+#include "options.h"
 #include "util.h"
-
-
-int initialized;
-int quitting;
 
 
 XNernstSim::XNernstSim( struct options *options, QWidget *parent )
@@ -25,20 +21,6 @@ XNernstSim::XNernstSim( struct options *options, QWidget *parent )
    paused      = 0;
    resetting   = 0;
    quitting    = 0;
-
-   gui = new NernstGUI( options, this );
-   gui->show();
-
-   // Signals
-   connect( gui, SIGNAL( startBtnClicked() ), this, SLOT( runSim() ) );
-   connect( gui, SIGNAL( pauseBtnClicked() ), this, SLOT( pauseSim() ) );
-   connect( gui, SIGNAL( continueBtnClicked() ), this, SLOT( unpauseSim() ) );
-   connect( gui, SIGNAL( resetBtnClicked() ), this, SLOT( resetSim() ) );
-
-   connect( this, SIGNAL( moveCompleted( int ) ), gui, SIGNAL( repaintWorld() ) );
-   connect( this, SIGNAL( moveCompleted( int ) ), gui, SLOT( updatePlots( int ) ) );
-   connect( this, SIGNAL( updateStatus( QString ) ), gui, SLOT( setStatusMsg( QString ) ) );
-   connect( this, SIGNAL( finished() ), gui, SIGNAL( finished() ) );
 }
 
 
@@ -48,7 +30,7 @@ XNernstSim::initNernstSim()
    paused = 0;
    resetting = 0;
    NernstSim::initNernstSim();
-   gui->updatePlots( 0 );
+   emit moveCompleted( 0 );
    initialized = 1;
 }
 
@@ -88,7 +70,7 @@ XNernstSim::postIter()
    NernstSim::postIter();
    emit moveCompleted( currentIter );
 
-   if( currentIter % 64 == 0 )
+   if( currentIter % 8 == 0 )
    {
       emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters ) 
             +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
@@ -161,11 +143,18 @@ XNernstSim::resetSim()
    {
       completeNernstSim();
    }
-   if( initialized )
-   {
-      initialized = 0;
-   }
+   initialized = 0;
    o->max_atoms = maxatomsDefault;
    emit updateStatus( "Ready" );
 }
 
+
+void
+XNernstSim::quitSim()
+{
+   quitting = 1;
+   if( paused )
+   {
+      completeNernstSim();
+   }
+}

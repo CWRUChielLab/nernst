@@ -1,6 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-   <file>img/darwin.ico</file>
-   <file>img/darwin.png</file>
+   <file>img/nernst.png</file>
 </qresource>
 </RCC>
