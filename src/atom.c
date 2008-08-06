@@ -381,6 +381,7 @@ moveAtoms()
 {
    unsigned int dir = 0, off = 0, from = 0, to = 0;
    int atomCount = 0, chargeTemp = LRcharge;
+   unsigned int WORLD_SZ = o->x * o->y;
 
    // Only need to clear out claimed.
    memset( claimed, 0, o->x * o->y );
@@ -389,7 +390,7 @@ moveAtoms()
    fill_array64( (uint64_t*)(direction), direction_sz64 / 8 );
 
    // Stake our claims for next turn.
-   for( from = 0; from < (unsigned int)( o->x * o->y ); from++ )
+   for( from = 0; from < WORLD_SZ; from++ )
    {
       if( world[ from ].color != SOLVENT && world[ from ].color != MEMBRANE )
       {                                            // If there's an atom present,
@@ -433,7 +434,7 @@ moveAtoms()
    }
 
    // Move those that are eligible.
-   for( from = 0; from < (unsigned int)( o->x * o->y ); from++ )
+   for( from = 0; from < WORLD_SZ; from++ )
    {
       // Can get rid of this "if" statement with a -1 + !.
       if( claimed[ from ] == 1 && world[ from ].color != SOLVENT && world[ from ].color != MEMBRANE )
