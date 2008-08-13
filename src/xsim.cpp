@@ -9,7 +9,6 @@
 #include <unistd.h>
 
 #include "xsim.h"
-#include "gui.h"
 #include "options.h"
 #include "util.h"
 
@@ -84,13 +83,6 @@ void
 XNernstSim::completeNernstSim()
 {
    NernstSim::completeNernstSim();
-   if( !resetting && !quitting )
-   {
-      emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters ) 
-            +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
-      emit finished();
-      initialized = 0;
-   }
 }
 
 
@@ -101,6 +93,7 @@ XNernstSim::runSim()
    {
       initNernstSim();
    }
+
    for( ; currentIter <= o->iters; currentIter++ )
    {
       if( preIter() )
@@ -111,10 +104,12 @@ XNernstSim::runSim()
       postIter();
    }
 
-   if( !paused )
+   if( currentIter > o->iters )
    {
-      currentIter--;
-      completeNernstSim();
+      currentIter = o->iters;
+      emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters ) 
+            +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
+      emit finished();
    }
 }
 
@@ -139,11 +134,11 @@ void
 XNernstSim::resetSim()
 {
    resetting = 1;
-   if( paused )
+   if( initialized )
    {
       completeNernstSim();
+      initialized = 0;
    }
-   initialized = 0;
    o->max_atoms = maxatomsDefault;
    emit updateStatus( "Ready" );
 }
@@ -153,8 +148,9 @@ void
 XNernstSim::quitSim()
 {
    quitting = 1;
-   if( paused )
+   if( initialized )
    {
       completeNernstSim();
+      initialized = 0;
    }
 }

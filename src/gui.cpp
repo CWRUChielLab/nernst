@@ -18,7 +18,7 @@
 #include "world.h"
 
 
-double x_iters[ 500000 ], y_volts[ 500000 ], y_nernst[ 500000 ];
+double x_iters[ 100000 ], y_volts[ 100000 ], y_nernst[ 100000 ];
 
 
 NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags flags )
@@ -75,7 +75,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.7.11" );
+   setWindowTitle( "Nernst Potential Simulator | v0.7.12" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    setStatusMsg( "Ready" );
 
@@ -96,10 +96,11 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    helpMenu->addAction( aboutAct );
 
    // Signals
+   connect( sim, SIGNAL( moveCompleted( int ) ), ctrl, SLOT( updateIter( int ) ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), canvas, SLOT( update() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updatePlots( int ) ) );
    connect( sim, SIGNAL( updateStatus( QString ) ), this, SLOT( setStatusMsg( QString ) ) );
-   connect( sim, SIGNAL( finished() ), ctrl, SLOT( finish() ) );
+   connect( sim, SIGNAL( finished() ), ctrl, SLOT( reenableCtrl() ) );
 
    connect( ctrl, SIGNAL( startBtnClicked() ), canvas, SLOT( startPaint() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), sim, SLOT( runSim() ) );
@@ -109,8 +110,12 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( resetBtnClicked() ), canvas, SLOT( resetPaint() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( resetPlots() ) );
    connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
-   connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( cleanUpdate() ) );
    connect( ctrl, SIGNAL( worldShrunk() ), this, SLOT( shrinkWindow() ) );
+#ifdef BLR_USELINUX
+   connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( update() ) );
+#else
+   connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( cleanUpdate() ) );
+#endif
 
    connect( canvas, SIGNAL( previewRedrawn() ), this, SLOT( fixRedraw() ) );
 }
@@ -130,7 +135,7 @@ NernstGUI::about()
       "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,\n"
       "                  Jocelyn Eckert, and Hillel Chiel\n"
       "\n"
-      "Version 0.7.11\n"
+      "Version 0.7.12\n"
       "Released under the GPL version 3 or any later version.\n"
       "This is free software; see the source for copying conditions. There is NO\n"
       "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"

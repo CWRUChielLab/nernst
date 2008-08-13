@@ -27,6 +27,7 @@ class NernstCtrl : public QWidget
       NernstCtrl( struct options *o, QWidget *parent = 0 );
 
    public slots:
+      void updateIter( int iter );
       void changeIters( int iters );
       void changeX( int xpow );
       void changeY( int ypow );
@@ -40,7 +41,6 @@ class NernstCtrl : public QWidget
       void disableCtrl();
       void reenableCtrl();
       void resetCtrl();
-      void finish();
 
    signals:
       void startBtnClicked();
@@ -55,6 +55,7 @@ class NernstCtrl : public QWidget
    private:
       struct options *o;
 
+      int currentIter;
       int itersDefault;
       int xDefault;
       int yDefault;

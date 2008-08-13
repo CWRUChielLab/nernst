@@ -26,10 +26,15 @@ struct atom
 };
 
 unsigned long int  idx( int x, int y );
-int getX( unsigned long int pos );
-int getY( unsigned long int pos );
+int getX( unsigned int position );
+int getY( unsigned int position );
+int ionCharge( uint8_t type );
+int isMembrane( unsigned int position );
+int isPore( unsigned int position );
+int isPermeable( uint8_t type );
 void initAtoms( struct options *options );
 void moveAtoms( void );
+void redistributePores( void );
 void finalizeAtoms( void );
 void takeCensus( int iter );
 
@@ -41,6 +46,11 @@ enum
    ATOM_K,
    ATOM_Cl,
    MEMBRANE
+};
+
+enum
+{
+   DIR_MASK = 0x7
 };
 
 

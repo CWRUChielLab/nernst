@@ -155,7 +155,7 @@ NernstPainter::draw()
       // World preview visualization
       glBegin( GL_POINTS );
 
-      int i = 0;
+      int i = 1;
 
       for( int y = 0; y < o->y; y++ )
       {
@@ -165,7 +165,7 @@ NernstPainter::draw()
          glVertex3f( (GLfloat)0.0, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
 
          // Central membrane with pores
-         if( y != (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)( i + 1 ) ) )
+         if( y != (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)i ) )
          {
             glVertex3f( (GLfloat)0.5, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          } else {

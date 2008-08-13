@@ -113,3 +113,10 @@ NernstSim::runSim()
    completeNernstSim();
 }
 
+
+int
+NernstSim::getCurrentIter()
+{
+   return currentIter;
+}
+

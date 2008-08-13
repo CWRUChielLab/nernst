@@ -39,7 +39,7 @@ char
    "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Hillel Chiel",
    "",
-   "Version 0.7.11",
+   "Version 0.7.12",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",

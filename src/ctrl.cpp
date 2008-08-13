@@ -10,6 +10,7 @@
 
 #include "ctrl.h"
 #include "options.h"
+#include "atom.h"
 #include "world.h"
 
 
@@ -17,6 +18,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    : QWidget( parent )
 {
    o = options;
+   currentIter = 0;
 
    // Default values
    itersDefault = o->iters;
@@ -34,14 +36,14 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    // Iterations control
    itersLbl = new QLabel( "&Iterations" );
-   itersLbl->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 1,000,000." );
+   itersLbl->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 100,000." );
 
    itersSld = new QSlider( Qt::Horizontal );
    itersSld->setMinimumWidth( 100 );
-   itersSld->setRange( 1, 1000000 );
+   itersSld->setRange( 1, 100000 );
    itersSld->setPageStep( 1000 );
    itersSld->setValue( itersDefault );
-   itersSld->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 1,000,000." );
+   itersSld->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 100,000." );
 
    itersLbl->setBuddy( itersSld );
 
@@ -180,9 +182,9 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    spacingLayout->addWidget( lspacingSld, 0, 1 );
    spacingLayout->addWidget( lspacingVal, 0, 2 );
 
-   spacingLayout->addWidget( rspacingLbl, 1, 0);
-   spacingLayout->addWidget( rspacingSld, 1, 1);
-   spacingLayout->addWidget( rspacingVal, 1, 2);
+   spacingLayout->addWidget( rspacingLbl, 1, 0 );
+   spacingLayout->addWidget( rspacingSld, 1, 1 );
+   spacingLayout->addWidget( rspacingVal, 1, 2 );
 
    spacingLayout->setColumnMinimumWidth( 2, 16 );
    ctrlLayout->addWidget( spacingBox, 6, 0, 1, 3 );
@@ -230,8 +232,16 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
 
 void
+NernstCtrl::updateIter( int iter )
+{
+   currentIter = iter + 1;
+}
+
+
+void
 NernstCtrl::changeIters( int iters )
 {
+   /*
    // Round any value set on itersSld to the nearest multiple of 1000.
    int roundedIters = 1000 * (int)( ( (double)iters + 500.0 ) / 1000.0 );
    roundedIters = ( roundedIters > 0 ? roundedIters : 1 );
@@ -240,6 +250,10 @@ NernstCtrl::changeIters( int iters )
       itersSld->setValue( roundedIters );
    }
    o->iters = roundedIters;
+   itersVal->setNum( o->iters );
+   */
+
+   o->iters = iters;
    itersVal->setNum( o->iters );
 }
 
@@ -285,6 +299,7 @@ NernstCtrl::changePores( int pores )
 {
    o->pores = pores;
    poresVal->setNum( o->pores );
+   redistributePores();
    emit updatePreview();
 }
 
@@ -376,6 +391,15 @@ NernstCtrl::reenableCtrl()
    // Set the first push button to "Continue" and reenable a few controls.
    stackedBtnLayout->setCurrentWidget( continueBtn );
 
+   itersLbl->setEnabled( 1 );
+   itersSld->setEnabled( 1 );
+   itersSld->setMinimum( currentIter );
+   itersVal->setEnabled( 1 );
+
+   poresLbl->setEnabled( 1 );
+   poresSld->setEnabled( 1 );
+   poresVal->setEnabled( 1 );
+
    selectivity->setEnabled( 1 );
    electrostatics->setEnabled( 1 );
 }
@@ -400,6 +424,7 @@ NernstCtrl::resetCtrl()
 
    itersLbl->setEnabled( 1 );
    itersSld->setEnabled( 1 );
+   itersSld->setMinimum( 1 );
    itersSld->setValue( itersDefault );
    itersVal->setEnabled( 1 );
 
@@ -420,13 +445,5 @@ NernstCtrl::resetCtrl()
    selectivity->setChecked( selectivityDefault );
    electrostatics->setEnabled( 1 );
    electrostatics->setChecked( electrostaticsDefault );
-}
-
-void
-NernstCtrl::finish()
-{
-   // Set the first push button to "Start" and disable it.
-   stackedBtnLayout->setCurrentWidget( startBtn );
-   startBtn->setEnabled( 0 );
 }
 
