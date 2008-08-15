@@ -40,19 +40,12 @@ XNernstSim::preIter()
    NernstSim::preIter();
    QCoreApplication::processEvents();
 
-   if( paused )
-   {
-      elapsed += qtime->elapsed() / 1000.0;
-      emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters )
-            +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
-      return 1;
-   }
-
-   if( resetting || quitting )
+   if( paused || resetting || quitting )
    {
       return 1;
+   } else {
+      return 0;
    }
-   return 0;
 }
 
 
@@ -69,10 +62,9 @@ XNernstSim::postIter()
    NernstSim::postIter();
    emit moveCompleted( currentIter );
 
-   if( currentIter % 8 == 0 )
+   if( currentIter % 128 == 0 )
    {
-      emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters ) 
-            +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
+      emit updateVoltsStatus( currentIter, 1 );
    }
 
    sleep( o->sleep );
@@ -94,6 +86,8 @@ XNernstSim::runSim()
       initNernstSim();
    }
 
+   qtime->start();
+
    for( ; currentIter <= o->iters; currentIter++ )
    {
       if( preIter() )
@@ -104,11 +98,17 @@ XNernstSim::runSim()
       postIter();
    }
 
+   elapsed += qtime->elapsed() / 1000.0;
+
+   emit updateVoltsStatus( currentIter - 1, 0 );
+
    if( currentIter > o->iters )
    {
       currentIter = o->iters;
-      emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters ) 
-            +  " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
+   }
+
+   if( currentIter == o->iters )
+   {
       emit finished();
    }
 }
@@ -140,7 +140,7 @@ XNernstSim::resetSim()
       initialized = 0;
    }
    o->max_atoms = maxatomsDefault;
-   emit updateStatus( "Ready" );
+   emit updateVoltsStatus( 0, 0 );
 }
 
 

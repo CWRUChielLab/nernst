@@ -57,7 +57,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    xSld = new QSlider( Qt::Horizontal );
    xSld->setMinimumWidth( 100 );
    xSld->setRange( 4, 11 );
-   xSld->setValue( (int)( log( xDefault ) / log( 2 ) ) );
+   xSld->setValue( (int)( log( xDefault ) / log( 2 ) + 0.5 ) );
    xSld->setToolTip( "Set the width of the world." );
 
    xLbl->setBuddy( xSld );
@@ -72,7 +72,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    ySld = new QSlider( Qt::Horizontal );
    ySld->setMinimumWidth( 100 );
    ySld->setRange( 4, 11 );
-   ySld->setValue( (int)( log( yDefault ) / log( 2 ) ) );
+   ySld->setValue( (int)( log( yDefault ) / log( 2 ) + 0.5 ) );
    ySld->setToolTip( "Set the height of the world." );
 
    yLbl->setBuddy( ySld );
@@ -350,6 +350,21 @@ NernstCtrl::changeElectrostatics( bool electrostatics )
    } else {
       o->electrostatics = 0;
    }
+}
+
+
+void
+NernstCtrl::reloadSettings()
+{
+   itersSld->setValue( o->iters );
+   xSld->setValue( (int)( log( o->x ) / log( 2 ) + 0.5 ) );
+   ySld->setValue( (int)( log( o->y ) / log( 2 ) + 0.5 ) );
+   poresSld->setValue( o->pores );
+   seedVal->setText( QString::number( o->randseed ) );
+   lspacingSld->setValue( o->lspacing );
+   rspacingSld->setValue( o->rspacing );
+   selectivity->setChecked( o->selectivity );
+   electrostatics->setChecked( o->electrostatics );
 }
 
 

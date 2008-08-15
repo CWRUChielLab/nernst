@@ -14,6 +14,8 @@ class NernstPainter;
 class QVBoxLayout;
 class QGridLayout;
 class QFrame;
+class QLabel;
+class QProgressBar;
 class QwtPlot;
 class QwtPlotCurve;
 
@@ -30,13 +32,21 @@ class NernstGUI : public QMainWindow
  
    public slots:
       void about();
-      void setStatusMsg( QString msg );
+      void aboutSFMT();
+      void saveInit();
+      void loadInit();
+      void updateProgress( int currentIter );
+      void recalcProgress();
+      void resetProgress();
+      void recalcNernst();
       void updatePlots( int currentIter );
       void resetPlots();
+      void updateVoltsStatus( int currentIter, int avg );
       void fixRedraw();
       void shrinkWindow();
 
    signals:
+      void settingsLoaded();
       void repaintWorld();
       void finished();
  
@@ -55,11 +65,17 @@ class NernstGUI : public QMainWindow
 
       QGridLayout *mainLayout;
       QWidget *mainWidget;
+      QProgressBar *progressBar;
+      QLabel *voltsLbl;
 
       QMenu *fileMenu;
       QMenu *helpMenu;
+      QAction *saveInitAct;
+      QAction *loadInitAct;
       QAction *quitAct;
       QAction *aboutAct;
+      QAction *aboutSFMTAct;
+      QAction *aboutQtAct;
 
       QwtPlot *voltsPlot;
       QwtPlotCurve *voltsCurve;

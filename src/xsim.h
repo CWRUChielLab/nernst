@@ -30,7 +30,7 @@ class XNernstSim : public QWidget, public NernstSim
 
    signals:
       void moveCompleted( int currentIter );
-      void updateStatus( QString msg );
+      void updateVoltsStatus( int currentIter, int avg );
       void finished();
 
    protected:

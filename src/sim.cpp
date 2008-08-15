@@ -37,7 +37,6 @@ NernstSim::initNernstSim()
       std::cout << "Iteration: 0 of " << o->iters << " | ";
       std::cout << "0\% complete\r" << std::flush;
    }
-   qtime->start();
 }
 
 
@@ -75,8 +74,6 @@ NernstSim::postIter()
 void 
 NernstSim::completeNernstSim()
 {
-   elapsed += qtime->elapsed() / 1000.0;
-
    finalizeAtoms();
 
    if( o->progress )
@@ -104,19 +101,18 @@ void
 NernstSim::runSim()
 {
    initNernstSim();
+
+   qtime->start();
+
    for( ; currentIter <= o->iters; currentIter++ )
    {
       preIter();
       Iter();
       postIter();
    }
+
+   elapsed += qtime->elapsed()/ 1000.0;
+
    completeNernstSim();
-}
-
-
-int
-NernstSim::getCurrentIter()
-{
-   return currentIter;
 }
 

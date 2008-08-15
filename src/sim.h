@@ -13,7 +13,6 @@ class NernstSim
    public:
       NernstSim( struct options *options );
       void runSim();
-      int getCurrentIter();
 
    protected:
       struct options *o;

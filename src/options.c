@@ -36,16 +36,13 @@ char
 *version[] =
 {
    "Nernst potential simulator.",
-   "(C) 2008  Barry Rountree, Jeff Gill, Kendrick Shaw, Catherine Kehl,",
-   "          Jocelyn Eckert, and Hillel Chiel",
+   "(C) 2008  Jeff Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
+   "          Jocelyn Eckert, and Dr. Hillel J. Chiel",
    "",
-   "Version 0.7.12",
+   "Version 0.8.0",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
-   "",
-   "(Note -- SFMT or dSFMT might also be included -- need to work out the",
-   "appropriate copyright notice for that.)",
    NULL
 };
 

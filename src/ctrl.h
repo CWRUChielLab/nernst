@@ -37,6 +37,7 @@ class NernstCtrl : public QWidget
       void changeRspacing( int rspacing );
       void changeSelectivity( bool selectivity );
       void changeElectrostatics( bool electrostatics );
+      void reloadSettings();
 
       void disableCtrl();
       void reenableCtrl();
