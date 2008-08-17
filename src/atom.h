@@ -15,7 +15,8 @@ extern int WORLD_T;
 extern unsigned int WORLD_COUNTER;
 extern int LRcharge;
 extern int initLHS_K, initRHS_K, initLHS_Cl, initRHS_Cl;
-// extern struct atom *atom;
+extern unsigned int *positionsLHS;
+extern unsigned int *positionsRHS;
 
 struct atom
 {
@@ -32,6 +33,7 @@ int ionCharge( uint8_t type );
 int isMembrane( unsigned int position );
 int isPore( unsigned int position );
 int isPermeable( uint8_t type );
+void randomizePositions( struct options *options );
 void initAtoms( struct options *options );
 void moveAtoms( void );
 void redistributePores( void );

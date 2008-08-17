@@ -76,7 +76,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.8.0" );
+   setWindowTitle( "Nernst Potential Simulator | v0.8.1" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
 
    // Status bar
@@ -123,7 +123,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
 
    helpMenu = menuBar()->addMenu( "&Help" );
    helpMenu->addAction( aboutAct );
-   helpMenu->addAction( aboutSFMTAct );
+   // helpMenu->addAction( aboutSFMTAct );
    helpMenu->addAction( aboutQtAct );
 
    // Signals
@@ -187,7 +187,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.8.0<br>"
+      "Version 0.8.1<br>"
       "Copyright " + QString( 0x00A9 ) + " 2008  "
       "Jeff Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -272,8 +272,8 @@ NernstGUI::saveInit()
    out << o->y;               endl( out );
    out << o->pores;           endl( out );
    out << o->randseed;        endl( out );
-   out << o->lspacing;        endl( out );
-   out << o->rspacing;        endl( out );
+   out << o->lconc;           endl( out );
+   out << o->rconc;           endl( out );
    out << o->selectivity;     endl( out );
    out << o->electrostatics;  endl( out );
 
@@ -303,7 +303,7 @@ NernstGUI::loadInit()
    }
 
    QTextStream in( &file );
-   int iters, x, y, pores, randseed, lspacing, rspacing, selectivity, electrostatics;
+   int iters, x, y, pores, randseed, lconc, rconc, selectivity, electrostatics;
 
    // Begin reading file
    in >> iters;
@@ -311,8 +311,8 @@ NernstGUI::loadInit()
    in >> y;
    in >> pores;
    in >> randseed;
-   in >> lspacing;
-   in >> rspacing;
+   in >> lconc;
+   in >> rconc;
    in >> selectivity;
    in >> electrostatics;
 
@@ -321,8 +321,8 @@ NernstGUI::loadInit()
    o->y = y;
    o->pores = pores;
    o->randseed = randseed;
-   o->lspacing = lspacing;
-   o->rspacing = rspacing;
+   o->lconc = lconc;
+   o->rconc = rconc;
    o->selectivity = selectivity;
    o->electrostatics = electrostatics;
 
@@ -376,8 +376,6 @@ NernstGUI::recalcNernst()
          }
       }
    }
-
-   // Pores?
 }
 
 

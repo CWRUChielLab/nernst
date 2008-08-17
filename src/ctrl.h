@@ -33,8 +33,8 @@ class NernstCtrl : public QWidget
       void changeY( int ypow );
       void changePores( int pores );
       void changeSeed( QString seed );
-      void changeLspacing( int lspacing );
-      void changeRspacing( int rspacing );
+      void changeLconc( int lconc );
+      void changeRconc( int rconc );
       void changeSelectivity( bool selectivity );
       void changeElectrostatics( bool electrostatics );
       void reloadSettings();
@@ -61,8 +61,8 @@ class NernstCtrl : public QWidget
       int xDefault;
       int yDefault;
       int poresDefault;
-      int lspacingDefault;
-      int rspacingDefault;
+      int lconcDefault;
+      int rconcDefault;
       int selectivityDefault;
       int electrostaticsDefault;
 
@@ -87,13 +87,13 @@ class NernstCtrl : public QWidget
       QLabel *seedLbl;
       QLineEdit *seedVal;
 
-      QLabel *lspacingLbl;
-      QSlider *lspacingSld;
-      QLabel *lspacingVal;
+      QLabel *lconcLbl;
+      QSlider *lconcSld;
+      QLabel *lconcVal;
 
-      QLabel *rspacingLbl;
-      QSlider *rspacingSld;
-      QLabel *rspacingVal;
+      QLabel *rconcLbl;
+      QSlider *rconcSld;
+      QLabel *rconcVal;
 
       QCheckBox *selectivity;
       QCheckBox *electrostatics;
@@ -106,8 +106,8 @@ class NernstCtrl : public QWidget
 
       QVBoxLayout *mainLayout;
       QGridLayout *ctrlLayout;
-      QGroupBox *spacingBox;
-      QGridLayout *spacingLayout;
+      QGroupBox *concBox;
+      QGridLayout *concLayout;
       QStackedLayout *stackedBtnLayout;
 };
 

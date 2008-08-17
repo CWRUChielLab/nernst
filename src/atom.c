@@ -33,6 +33,9 @@ int initLHS_K, initRHS_K, initLHS_Cl, initRHS_Cl;  // Initial ion counts
 signed int off_n, off_s, off_e, off_w, off_ne, off_nw, off_se, off_sw;
 signed int *dir2offset;
 
+unsigned int *positionsLHS;
+unsigned int *positionsRHS;
+
 
 unsigned long int
 idx( int x, int y )
@@ -175,9 +178,9 @@ dir2dy[] =
 static void
 copyAtom( unsigned int from, unsigned int to, int dx, int dy )
 {
-   world[ to ].delta_x   = world[ from ].delta_x + dx;
-   world[ to ].delta_y   = world[ from ].delta_y + dy;
-   world[ to ].color     = world[ from ].color;
+   world[ to ].delta_x = world[ from ].delta_x + dx;
+   world[ to ].delta_y = world[ from ].delta_y + dy;
+   world[ to ].color   = world[ from ].color;
    if( isMembrane( from ) )
    {
       world[ from ].delta_x = MEMBRANE;
@@ -244,6 +247,59 @@ dirPore( unsigned int from )
 
 
 void
+randomizePositions( struct options *o )
+{
+   static int initialized = 0;
+   unsigned int i, highest, lowest, range, rand, temp;
+
+   if( !initialized )
+   {
+      positionsLHS = malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 1 ) * ( MAX_Y ) );
+      positionsRHS = malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 2 ) * ( MAX_Y ) );
+
+      assert( positionsLHS && positionsRHS );
+      initialized = 1;
+   }
+
+   // Initialize the position arrays
+   for( i = 0; i < (unsigned int)( ( o->x / 2 - 1 ) * ( o->y ) ); i++ )
+   {
+      positionsLHS[ i ] = i;
+   }
+
+   for( i = 0; i < (unsigned int)( ( o->x / 2 - 2 ) * ( o->y ) ); i++ )
+   {
+      positionsRHS[ i ] = i;
+   }
+
+   // Shuffle the position arrays
+   init_gen_rand( (uint32_t)(o->randseed) );
+
+   highest = ( o->x / 2 - 1 ) * ( o->y ) - 1;
+   for( i = 0; i < highest; i++ )
+   {
+      lowest = i + 1;
+      range = highest - lowest + 1;
+      rand = ( gen_rand32() % range ) + lowest;
+      temp = positionsLHS[ i ];
+      positionsLHS[ i ] = positionsLHS[ rand ];
+      positionsLHS[ rand ] = temp;
+   }
+
+   highest = ( o->x / 2 - 2 ) * ( o->y ) - 1;
+   for( i = 0; i < highest; i++ )
+   {
+      lowest = i + 1;
+      range = highest - lowest + 1;
+      rand = ( gen_rand32() % range ) + lowest;
+      temp = positionsRHS[ i ];
+      positionsRHS[ i ] = positionsRHS[ rand ];
+      positionsRHS[ rand ] = temp;
+   }
+}
+
+
+void
 initAtoms( struct options *options )
 {
    // Walk through the array of atoms and assign each a position and color.
@@ -269,7 +325,7 @@ initAtoms( struct options *options )
    dir2offset[ 6 ] = off_se;
    dir2offset[ 7 ] = off_sw;
 
-   int x = 0, y = 0, i, current_idx = 0, nAtoms = 0, atomBit = 0;
+   int x, y, i, numIons, atomBit, current_idx = 0, placed = 0;
 
    // Initialize the Mersenne twister random number generator.
    init_gen_rand( (uint32_t)(o->randseed) );
@@ -288,67 +344,61 @@ initAtoms( struct options *options )
    }
 
    // Initialize LHS atoms.
-   for( y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
+   atomBit = 1;
+   numIons = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) * (double)( o->lconc ) / (double)MAX_CONC + 0.5 );
+   for( i = 0; i < numIons && placed < o->max_atoms; i++ )
    {
-      // Ensure that we always have a checkered pattern of ions.
-      int totalColumns = ( o->x / 2 ) - 1;
-      int filledColumns = 1 + ( ( totalColumns - 1 ) / o->lspacing );
-      if( filledColumns % 2 == 0  )
-      {
-         atomBit = !atomBit;
-      }
+      placed++;
 
-      for( x = 1; ( x < o->x / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
-      {
-         current_idx = idx( x, y );
-         world[ current_idx ].delta_x = 0;
-         world[ current_idx ].delta_y = 0;
+      x = ( positionsLHS[ i ] % ( o->x / 2 - 1 ) ) + 1;
+      y = positionsLHS[ i ] / ( o->x / 2 - 1 );
+      current_idx = idx( x, y );
 
-         if( atomBit )
-         {
-            world[ current_idx ].color = ATOM_K;
-            LRcharge++;
-            initLHS_K++;
-         } else {
-            world[ current_idx ].color = ATOM_Cl;
-            LRcharge--;
-            initLHS_Cl++;
-         }
-         atomBit = !atomBit;
-         nAtoms++;
+      world[ current_idx ].delta_x = 0;
+      world[ current_idx ].delta_y = 0;
+
+      if( atomBit )
+      {
+         // ATOM_K
+         world[ current_idx ].color = ATOM_K;
+         LRcharge++;
+         initLHS_K++;
+      } else {
+         // ATOM_Cl
+         world[ current_idx ].color = ATOM_Cl;
+         LRcharge--;
+         initLHS_Cl++;
       }
+      atomBit = !atomBit;
    }
 
    // Initialize RHS atoms.
-   for( y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
+   atomBit = 1;
+   numIons = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) * (double)( o->rconc ) / (double)MAX_CONC + 0.5 );
+   for( i = 0; i < numIons && placed < o->max_atoms; i++ )
    {
-      // Ensure that we always have a checkered pattern of ions.
-      int totalColumns = o->x - ( o->x / 2 ) - 2;
-      int filledColumns = 1 + ( ( totalColumns - 1 ) / o->rspacing );
-      if( filledColumns % 2 == 0  )
-      {
-         atomBit = !atomBit;
-      }
+      placed++;
 
-      for( x = o->x / 2 + 1; ( x < o->x - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
-      {
-         current_idx = idx( x, y );
-         world[ current_idx ].delta_x = 0;
-         world[ current_idx ].delta_y = 0;
+      x = ( positionsRHS[ i ] % ( o->x / 2 - 2 ) ) + ( o->x / 2 + 1 );
+      y = positionsRHS[ i ] / ( o->x / 2 - 2 );
+      current_idx = idx( x, y );
 
-         if( atomBit )
-         {
-            world[ current_idx ].color = ATOM_K;
-            LRcharge--;
-            initRHS_K++;
-         } else {
-            world[ current_idx ].color = ATOM_Cl;
-            LRcharge++;
-            initRHS_Cl++;
-         }
-         atomBit = !atomBit;
-         nAtoms++;
+      world[ current_idx ].delta_x = 0;
+      world[ current_idx ].delta_y = 0;
+
+      if( atomBit )
+      {
+         // ATOM_K
+         world[ current_idx ].color = ATOM_K;
+         LRcharge--;
+         initRHS_K++;
+      } else {
+         // ATOM_Cl
+         world[ current_idx ].color = ATOM_Cl;
+         LRcharge++;
+         initRHS_Cl++;
       }
+      atomBit = !atomBit;
    }
 
    // Set up the membrane.
@@ -369,7 +419,7 @@ initAtoms( struct options *options )
       world[ idx( x, y ) ].color = SOLVENT;
    }
 
-   o->max_atoms = nAtoms;  // Record this to print out later.
+   o->max_atoms = placed;  // Record this to print out later.
 }
 
 

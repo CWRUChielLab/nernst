@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "xsim.h"
+#include "atom.h"
 #include "options.h"
 #include "util.h"
 
@@ -104,11 +105,6 @@ XNernstSim::runSim()
 
    if( currentIter > o->iters )
    {
-      currentIter = o->iters;
-   }
-
-   if( currentIter == o->iters )
-   {
       emit finished();
    }
 }
@@ -140,6 +136,7 @@ XNernstSim::resetSim()
       initialized = 0;
    }
    o->max_atoms = maxatomsDefault;
+   randomizePositions( o );
    emit updateVoltsStatus( 0, 0 );
 }
 

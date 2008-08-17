@@ -31,6 +31,10 @@
 #ifndef SFMT_H
 #define SFMT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
@@ -155,3 +159,8 @@ inline static double genrand_res53_mix(void)
     return to_res53_mix(x, y);
 } 
 #endif
+
+#ifdef __cplusplus
+}
+#endif
+

@@ -25,8 +25,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    xDefault = o->x;
    yDefault = o->y;
    poresDefault = o->pores;
-   lspacingDefault = o->lspacing;
-   rspacingDefault = o->rspacing;
+   lconcDefault = o->lconc;
+   rconcDefault = o->rconc;
    selectivityDefault = o->selectivity;
    electrostaticsDefault = o->electrostatics;
 
@@ -56,7 +56,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    xSld = new QSlider( Qt::Horizontal );
    xSld->setMinimumWidth( 100 );
-   xSld->setRange( 4, 11 );
+   xSld->setRange( (int)( log( MIN_X ) / log( 2 ) + 0.5 ), (int)( log( MAX_X ) / log( 2 ) + 0.5 ) );
    xSld->setValue( (int)( log( xDefault ) / log( 2 ) + 0.5 ) );
    xSld->setToolTip( "Set the width of the world." );
 
@@ -71,7 +71,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    ySld = new QSlider( Qt::Horizontal );
    ySld->setMinimumWidth( 100 );
-   ySld->setRange( 4, 11 );
+   ySld->setRange( (int)( log( MIN_Y ) / log( 2 ) + 0.5 ), (int)( log( MAX_Y ) / log( 2 ) + 0.5 ) );
    ySld->setValue( (int)( log( yDefault ) / log( 2 ) + 0.5 ) );
    ySld->setToolTip( "Set the height of the world." );
 
@@ -105,31 +105,31 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    seedLbl->setBuddy( seedVal );
 
-   // Intracellular (left) ion spacing control
-   lspacingLbl = new QLabel( "I&ntracellular" );
+   // Intracellular (left) ion concentration control
+   lconcLbl = new QLabel( "I&ntracellular" );
 
-   lspacingSld = new QSlider( Qt::Horizontal );
-   lspacingSld->setMinimumWidth( 100 );
-   lspacingSld->setRange( 1, 24 );
-   lspacingSld->setValue( lspacingDefault );
+   lconcSld = new QSlider( Qt::Horizontal );
+   lconcSld->setMinimumWidth( 100 );
+   lconcSld->setRange( MIN_CONC, MAX_CONC );
+   lconcSld->setValue( lconcDefault );
 
-   lspacingLbl->setBuddy( lspacingSld );
+   lconcLbl->setBuddy( lconcSld );
    
-   lspacingVal = new QLabel( QString::number( lspacingDefault ) );
-   lspacingVal->setAlignment( Qt::AlignRight );
+   lconcVal = new QLabel( QString::number( lconcDefault ) + " mM" );
+   lconcVal->setAlignment( Qt::AlignRight );
 
-   // Extracellular (right) ion spacing control
-   rspacingLbl = new QLabel( "E&xtracellular" );
+   // Extracellular (right) ion concentration control
+   rconcLbl = new QLabel( "E&xtracellular" );
 
-   rspacingSld = new QSlider( Qt::Horizontal );
-   rspacingSld->setMinimumWidth( 100 );
-   rspacingSld->setRange( 1, 24 );
-   rspacingSld->setValue( rspacingDefault );
+   rconcSld = new QSlider( Qt::Horizontal );
+   rconcSld->setMinimumWidth( 100 );
+   rconcSld->setRange( MIN_CONC, MAX_CONC );
+   rconcSld->setValue( rconcDefault );
 
-   rspacingLbl->setBuddy( rspacingSld );
+   rconcLbl->setBuddy( rconcSld );
    
-   rspacingVal = new QLabel( QString::number( rspacingDefault ) );
-   rspacingVal->setAlignment( Qt::AlignRight );
+   rconcVal = new QLabel( QString::number( rconcDefault ) + " mM" );
+   rconcVal->setAlignment( Qt::AlignRight );
 
    // Selectivity control
    selectivity = new QCheckBox( "Se&lective Permeability" );
@@ -175,19 +175,19 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    ctrlLayout->addWidget( seedLbl, 5, 0 );
    ctrlLayout->addWidget( seedVal, 5, 1, 1, 2 );
 
-   spacingBox = new QGroupBox( "Initial Ionic Spacing" );
-   spacingLayout = new QGridLayout( spacingBox );
+   concBox = new QGroupBox( "Initial KCl Concentration" );
+   concLayout = new QGridLayout( concBox );
 
-   spacingLayout->addWidget( lspacingLbl, 0, 0 );
-   spacingLayout->addWidget( lspacingSld, 0, 1 );
-   spacingLayout->addWidget( lspacingVal, 0, 2 );
+   concLayout->addWidget( lconcLbl, 0, 0 );
+   concLayout->addWidget( lconcSld, 0, 1 );
+   concLayout->addWidget( lconcVal, 0, 2 );
 
-   spacingLayout->addWidget( rspacingLbl, 1, 0 );
-   spacingLayout->addWidget( rspacingSld, 1, 1 );
-   spacingLayout->addWidget( rspacingVal, 1, 2 );
+   concLayout->addWidget( rconcLbl, 1, 0 );
+   concLayout->addWidget( rconcSld, 1, 1 );
+   concLayout->addWidget( rconcVal, 1, 2 );
 
-   spacingLayout->setColumnMinimumWidth( 2, 16 );
-   ctrlLayout->addWidget( spacingBox, 6, 0, 1, 3 );
+   concLayout->setColumnMinimumWidth( 2, 60 );
+   ctrlLayout->addWidget( concBox, 6, 0, 1, 3 );
 
    ctrlLayout->addWidget( selectivity, 7, 0, 1, 3 );
    ctrlLayout->addWidget( electrostatics, 8, 0, 1, 3 );
@@ -213,8 +213,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( ySld, SIGNAL( valueChanged( int ) ), this, SLOT( changeY( int ) ) );
    connect( poresSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePores( int ) ) );
    connect( seedVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
-   connect( lspacingSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLspacing( int ) ) );
-   connect( rspacingSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRspacing( int ) ) );
+   connect( lconcSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLconc( int ) ) );
+   connect( rconcSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRconc( int ) ) );
    connect( selectivity, SIGNAL( toggled( bool ) ), this, SLOT( changeSelectivity( bool ) ) );
    connect( electrostatics, SIGNAL( toggled ( bool ) ), this, SLOT( changeElectrostatics( bool ) ) );
 
@@ -265,6 +265,8 @@ NernstCtrl::changeX( int xpow )
 
    o->x = (int)pow( 2, xpow );
    xVal->setNum( o->x );
+
+   randomizePositions( o );
    emit updatePreview();
 
    if( o->x < oldx )
@@ -281,6 +283,8 @@ NernstCtrl::changeY( int ypow )
 
    o->y = (int)pow( 2, ypow );
    yVal->setNum( o->y );
+
+   randomizePositions( o );
    emit updatePreview();
 
    poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
@@ -312,19 +316,19 @@ NernstCtrl::changeSeed( QString seed )
 
 
 void
-NernstCtrl::changeLspacing( int lspacing )
+NernstCtrl::changeLconc( int lconc )
 {
-   o->lspacing = lspacing;
-   lspacingVal->setNum( o->lspacing );
+   o->lconc = lconc;
+   lconcVal->setText( QString::number( o->lconc ) + " mM" );
    emit updatePreview();
 }
 
 
 void
-NernstCtrl::changeRspacing( int rspacing )
+NernstCtrl::changeRconc( int rconc )
 {
-   o->rspacing = rspacing;
-   rspacingVal->setNum( o->rspacing );
+   o->rconc = rconc;
+   rconcVal->setText( QString::number( o->rconc ) + " mM" );
    emit updatePreview();
 }
 
@@ -361,8 +365,8 @@ NernstCtrl::reloadSettings()
    ySld->setValue( (int)( log( o->y ) / log( 2 ) + 0.5 ) );
    poresSld->setValue( o->pores );
    seedVal->setText( QString::number( o->randseed ) );
-   lspacingSld->setValue( o->lspacing );
-   rspacingSld->setValue( o->rspacing );
+   lconcSld->setValue( o->lconc );
+   rconcSld->setValue( o->rconc );
    selectivity->setChecked( o->selectivity );
    electrostatics->setChecked( o->electrostatics );
 }
@@ -393,7 +397,7 @@ NernstCtrl::disableCtrl()
    seedLbl->setEnabled( 0 );
    seedVal->setEnabled( 0 );
 
-   spacingBox->setEnabled( 0 );
+   concBox->setEnabled( 0 );
 
    selectivity->setEnabled( 0 );
    electrostatics->setEnabled( 0 );
@@ -452,9 +456,9 @@ NernstCtrl::resetCtrl()
    seedVal->setEnabled( 1 );
    seedVal->setText( QString::number( time( NULL ) ) );
 
-   spacingBox->setEnabled( 1 );
-   lspacingSld->setValue( lspacingDefault );
-   rspacingSld->setValue( rspacingDefault );
+   concBox->setEnabled( 1 );
+   lconcSld->setValue( lconcDefault );
+   rconcSld->setValue( rconcDefault );
 
    selectivity->setEnabled( 1 );
    selectivity->setChecked( selectivityDefault );

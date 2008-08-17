@@ -39,7 +39,7 @@ char
    "(C) 2008  Jeff Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Dr. Hillel J. Chiel",
    "",
-   "Version 0.8.0",
+   "Version 0.8.1",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
@@ -62,16 +62,14 @@ char
    "-i, --iters               Number of iterations. Default=50000.",
    "-l, --sleep               Seconds between each iteration (for debugging).",
    "                             Default=0.",
-   "-L, --lspacing            Horizontal and vertical gap between atoms in the",
-   "                             left partition. Default=4.",
+   "-L, --lconc               Concentration of KCl in LHS in mM. Default=400.",
    "-o, --pores               Number of pores in the membrane. Default=12.",
    "-p, --profiling           Output performance information and some",
    "                             settings.",
    "-P, --progress            Print the percentage complete periodically.",
    "-r, --randseed            Random number seed (integer). Default is set by",
    "                             system time.",
-   "-R, --rspacing            Horizontal and vertical gap between atoms in the",
-   "                             right partition. Default=12.",
+   "-R, --rconc               Concentration of KCl in RHS in mM. Default=20.",
    "-s, --selectivity         Turn on semipermeability of the central",
    "                             membrane. This is the default.",
    "-S, --no-selectivity      Turn off semipermeability of the central",
@@ -158,8 +156,8 @@ set_defaults( struct options *o )
    o->version        = 0;
    o->randseed       = time( NULL );
    o->sleep          = 0;
-   o->lspacing       = 4;
-   o->rspacing       = 12;
+   o->lconc          = 400;
+   o->rconc          = 20;
    o->threads        = 1;
    o->profiling      = 0;
    o->progress       = 0;
@@ -187,8 +185,8 @@ dump_options( struct options *o )
    fprintf( stderr, "version =        %d\n", o->version );
    fprintf( stderr, "randseed =       %d\n", o->randseed );
    fprintf( stderr, "sleep =          %d\n", o->sleep );
-   fprintf( stderr, "lspacing =       %d\n", o->lspacing );
-   fprintf( stderr, "rspacing =       %d\n", o->rspacing );
+   fprintf( stderr, "lconc =          %d\n", o->lconc );
+   fprintf( stderr, "rconc =          %d\n", o->rconc );
    fprintf( stderr, "pores =          %d\n", o->pores );
    fprintf( stderr, "threads =        %d\n", o->threads );
    fprintf( stderr, "progress =       %d\n", o->progress );
@@ -232,12 +230,12 @@ parseOptions(int argc, char **argv)
       { "help",              0, 0, 'h' },
       { "iters",             1, 0, 'i' },
       { "sleep",             1, 0, 'l' },
-      { "lspacing",          1, 0, 'L' },
+      { "lconc",             1, 0, 'L' },
       { "pores",             1, 0, 'o' },
       { "profiling",         0, 0, 'p' },
       { "progress",          0, 0, 'P' },
       { "randseed",          1, 0, 'r' },
-      { "rspacing",          1, 0, 'R' },
+      { "rconc",             1, 0, 'R' },
       { "selectivity",       0, 0, 's' },
       { "no-selectivity",    0, 0, 'S' },
       { "threads",           1, 0, 't' },
@@ -287,7 +285,7 @@ parseOptions(int argc, char **argv)
             options->sleep = safe_strtol( optarg );
             break;
          case 'L':
-            options->lspacing = safe_strtol( optarg );
+            options->lconc = safe_strtol( optarg );
             break;
          case 'o':
             options->pores = safe_strtol( optarg );
@@ -302,7 +300,7 @@ parseOptions(int argc, char **argv)
             options->randseed = safe_strtol( optarg );
             break;
          case 'R':
-            options->rspacing = safe_strtol( optarg );
+            options->rconc = safe_strtol( optarg );
             break;
          case 's':
             options->selectivity = 1;

@@ -17,6 +17,20 @@ extern unsigned char *claimed;
 extern unsigned char *direction;
 void initWorld( struct options *o );
 
+enum
+{
+   MIN_X = 16,
+   MIN_Y = 16,
+   MAX_X = 1024,
+   MAX_Y = 1024
+};
+
+enum
+{
+   MIN_CONC = 0,     // Minimum ion concentration (mM)
+   MAX_CONC = 2000   // Maximum ion concentration (mM)
+};
+
 extern double e;     // Elementary charge (C)
 extern double k;     // Boltzmann's constant (J K^-1)
 extern double R;     // Molar gas constant (J K^-1 mol^-1)

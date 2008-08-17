@@ -28,6 +28,7 @@ NernstSim::initNernstSim()
 {
    currentIter = 1;
    elapsed = 0;
+   randomizePositions( o );
    initWorld( o );
    initAtoms( o );
    takeCensus( 0 );
@@ -84,9 +85,9 @@ NernstSim::completeNernstSim()
 
    if( o->profiling )
    {
-      std::cout << "iters = "            << o->iters
+      std::cout << "iters = "            << currentIter - 1
                 << "  seconds = "        << elapsed
-                << "  iters/sec = "      << o->iters / elapsed
+                << "  iters/sec = "      << ( currentIter - 1 ) / elapsed
                 << "  pores = "          << o->pores
                 << "  ions = "           << o->max_atoms
                 << "  area = "           << (long)(o->x) * (long)(o->y)
@@ -111,7 +112,7 @@ NernstSim::runSim()
       postIter();
    }
 
-   elapsed += qtime->elapsed()/ 1000.0;
+   elapsed += qtime->elapsed() / 1000.0;
 
    completeNernstSim();
 }

@@ -5,6 +5,8 @@
 
 
 #include <QApplication>
+#include <assert.h>
+#include <SFMT.h>
 
 #include "paint.h"
 #include "options.h"
@@ -19,7 +21,8 @@ NernstPainter::NernstPainter( struct options *options, QWidget *parent )
    o = options;
    running = 0;
    cleanRedraw = 0;
-
+   randomizePositions( o );
+ 
    setFormat( QGLFormat( QGL::DoubleBuffer | QGL::DepthBuffer ) );
    rotationX = 0.0;
    rotationY = 0.0;
@@ -154,10 +157,9 @@ NernstPainter::draw()
    } else {
       // World preview visualization
       glBegin( GL_POINTS );
+      int numIons, placed = 0, x, y, i = 1, atomBit;
 
-      int i = 1;
-
-      for( int y = 0; y < o->y; y++ )
+      for( y = 0; y < o->y; y++ )
       {
          glColor3f( 0.f, 0.f, 0.f );
 
@@ -176,60 +178,48 @@ NernstPainter::draw()
          glVertex3f( (GLfloat)( o->x - 1 ) / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
       }
 
-      int atomBit = 0, nAtoms = 0;
-
       // LHS
-      for( int y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->lspacing )
+      atomBit = 1;
+      numIons = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) * (double)( o->lconc ) / (double)MAX_CONC + 0.5 );
+      for( int i = 0; i < numIons && placed < o->max_atoms; i++ )
       {
-         // Ensure that we always have a checkered pattern of ions.
-         int totalColumns = ( o->x / 2 ) - 1;
-         int filledColumns = 1 + ( ( totalColumns - 1 ) / o->lspacing );
-         if( filledColumns % 2 == 0  )
-         {
-            atomBit = !atomBit;
-         }
+         placed++;
 
-         for( int x = 1; ( x < o->x / 2 ) && ( nAtoms < o->max_atoms ); x += o->lspacing )
+         x = ( positionsLHS[ i ] % ( o->x / 2 - 1 ) ) + 1;
+         y = positionsLHS[ i ] / ( o->x / 2 - 1 );
+ 
+         if( atomBit )
          {
-            if( atomBit )
-            {
-               // ATOM_K
-               glColor3f( 1.f, 0.f, 0.f );
-            } else {
-               // ATOM_Cl
-               glColor3f( 0.f, 0.f, 1.f );
-            }
-            glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
-            atomBit = !atomBit;
-            nAtoms++;
+            // ATOM_K
+            glColor3f( 1.f, 0.f, 0.f );
+         } else {
+            // ATOM_Cl
+            glColor3f( 0.f, 0.f, 1.f );
          }
+         atomBit = !atomBit;
+
+         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
       }
 
       // RHS
-      for( int y = 0; ( y < o->y ) && ( nAtoms < o->max_atoms ); y += o->rspacing )
+      atomBit = 1;
+      numIons = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) * (double)( o->rconc ) / (double)MAX_CONC + 0.5 );
+      for( int i = 0; i < numIons && placed < o->max_atoms; i++ )
       {
-         // Ensure that we always have a checkered pattern of ions.
-         int totalColumns = o->x - ( o->x / 2 ) - 2;
-         int filledColumns = 1 + ( ( totalColumns - 1 ) / o->rspacing );
-         if( filledColumns % 2 == 0  )
-         {
-            atomBit = !atomBit;
-         }
+         placed++;
 
-         for( int x = o->x / 2 + 1; ( x < o->x - 1 ) && ( nAtoms < o->max_atoms ); x += o->rspacing )
+         x = ( positionsRHS[ i ] % ( o->x / 2 - 2 ) ) + ( o->x / 2 + 1 );
+         y = positionsRHS[ i ] / ( o->x / 2 - 2 );
+
+         if( atomBit )
          {
-            if( atomBit )
-            {
-               // ATOM_K
-               glColor3f( 1.f, 0.f, 0.f );
-            } else {
-               // ATOM_Cl
-               glColor3f( 0.f, 0.f, 1.f );
-            }
-            glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
-            atomBit = !atomBit;
-            nAtoms++;
+            glColor3f( 0.f, 0.f, 1.f );
+         } else {
+            glColor3f( 1.f, 0.f, 0.f );
          }
+         atomBit = !atomBit;
+
+         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
       }
 
       glEnd();

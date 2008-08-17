@@ -21,8 +21,8 @@ struct options
 
    // atom options
    long max_atoms;      // --max-atoms[=LONG_MAX]
-   int lspacing;        // --lspacing[=4]
-   int rspacing;        // --rspacing[=12]
+   int lconc;           // --lconc[=400]
+   int rconc;           // --rconc[=20]
    int pores;           // --pores[=12]
    int selectivity;     // --selectivity[=1]
    int electrostatics;  // -- electrostatics[=1]
