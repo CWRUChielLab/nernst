@@ -11,6 +11,7 @@
 #include <fstream>
 
 #include "gui.h"
+#include "status.h"
 #include "xsim.h"
 #include "ctrl.h"
 #include "paint.h"
@@ -19,7 +20,7 @@
 #include "world.h"
 
 
-double x_iters[ 100000 ], y_volts[ 100000 ], y_nernst[ 100000 ];
+double x_iters[ MAX_ITERS ], y_volts[ MAX_ITERS ], y_nernst[ MAX_ITERS ];
 
 
 NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags flags )
@@ -76,18 +77,10 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.8.1" );
+   setWindowTitle( "Nernst Potential Simulator | v0.8.2" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
-
-   // Status bar
-   progressBar = new QProgressBar( this );
-   progressBar->setRange( 1, o->iters );
-   progressBar->setValue( 1 );
-   progressBar->setMinimumWidth( 300 );
-   voltsLbl = new QLabel( "0 mV" );
-   statusBar()->addWidget( progressBar);
-   statusBar()->addWidget( new QWidget(), 1 );
-   statusBar()->addWidget( voltsLbl );
+   statusBar = new NernstStatusBar( o, this );
+   setStatusBar( statusBar );
 
    // Actions
    saveInitAct = new QAction( "&Save Initial Conditions", this );
@@ -106,10 +99,6 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    aboutAct->setStatusTip( "" );
    connect( aboutAct, SIGNAL( triggered() ), this, SLOT( about() ) );
 
-   aboutSFMTAct = new QAction( "About &SFMT", this );
-   aboutSFMTAct->setStatusTip( "" );
-   connect( aboutSFMTAct, SIGNAL( triggered() ), this, SLOT( aboutSFMT() ) );
-
    aboutQtAct = new QAction( "About &Qt", this );
    aboutQtAct->setStatusTip( "" );
    connect( aboutQtAct, SIGNAL( triggered() ), qApp, SLOT( aboutQt() ) );
@@ -123,7 +112,6 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
 
    helpMenu = menuBar()->addMenu( "&Help" );
    helpMenu->addAction( aboutAct );
-   // helpMenu->addAction( aboutSFMTAct );
    helpMenu->addAction( aboutQtAct );
 
    // Signals
@@ -132,22 +120,25 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( sim, SIGNAL( moveCompleted( int ) ), ctrl, SLOT( updateIter( int ) ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), canvas, SLOT( update() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updatePlots( int ) ) );
-   connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updateProgress( int ) ) );
-   connect( sim, SIGNAL( updateVoltsStatus( int, int ) ), this, SLOT( updateVoltsStatus( int, int ) ) );
+   connect( sim, SIGNAL( moveCompleted( int ) ), statusBar, SLOT( updateProgressBar( int ) ) );
+   connect( sim, SIGNAL( updateStatus( QString ) ), statusBar, SLOT( setStatusLbl( QString ) ) ); 
+   connect( sim, SIGNAL( updateVoltsStatus( int, int ) ), statusBar, SLOT( setVoltsLbl( int, int ) ) );
    connect( sim, SIGNAL( finished() ), ctrl, SLOT( reenableCtrl() ) );
 
    connect( ctrl, SIGNAL( startBtnClicked() ), canvas, SLOT( startPaint() ) );
-   connect( ctrl, SIGNAL( startBtnClicked() ), this, SLOT( recalcProgress() ) );
+   connect( ctrl, SIGNAL( startBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
+   connect( ctrl, SIGNAL( startBtnClicked() ), this, SLOT( disableSaveLoad() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), sim, SLOT( runSim() ) );
    connect( ctrl, SIGNAL( pauseBtnClicked() ), sim, SLOT( pauseSim() ) );
-   connect( ctrl, SIGNAL( continueBtnClicked() ), this, SLOT( recalcProgress() ) );
+   connect( ctrl, SIGNAL( continueBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), this, SLOT( recalcNernst() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), sim, SLOT( unpauseSim() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), sim, SLOT( resetSim() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), canvas, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( enableSaveLoad() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( resetPlots() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( resetProgress() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( recalcProgress() ) );
+   connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( resetProgress() ) );
+   connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
    connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
    connect( ctrl, SIGNAL( worldShrunk() ), this, SLOT( shrinkWindow() ) );
 #ifdef BLR_USELINUX
@@ -161,33 +152,12 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
 
 
 void
-NernstGUI::updateProgress( int currentIter )
-{
-   progressBar->setValue( currentIter );
-}
-
-
-void
-NernstGUI::recalcProgress()
-{
-   progressBar->setMaximum( o->iters );
-}
-
-
-void
-NernstGUI::resetProgress()
-{
-   progressBar->reset();
-}
-
-
-void
 NernstGUI::about()
 {
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.8.1<br>"
+      "Version 0.8.2<br>"
       "Copyright " + QString( 0x00A9 ) + " 2008  "
       "Jeff Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -198,48 +168,9 @@ NernstGUI::about()
       "conditions. There is NO warranty; not even for "
       "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>"
       "<br>"
-      "Have a suggestion? Found a bug? Send us your comments "
+      "Have a suggestion? Find a bug? Send us your comments "
       "at <a href='mailto:autopoiesis@case.edu'>"
       "autopoiesis@case.edu</a>." );
-}
-
-
-void
-NernstGUI::aboutSFMT()
-{
-   QMessageBox::about( this, "About SFMT",
-      "<h3>About SFMT</h3><br>"
-      "<br>"
-      "Copyright " + QString( 0x00A9 ) + " 2006, 2007  "
-      "Mutsuo Saito, Makoto Matsumoto and Hiroshima "
-      "University. All rights reserved.<br>"
-      "<br>"
-      "Redistribution and use in source and binary forms, with or without "
-      "modification, are permitted provided that the following conditions are "
-      "met:"
-      "<ul>"
-      "<li>Redistributions of source code must retain the above copyright "
-      "notice, this list of conditions and the following disclaimer.</li>"
-      "<li>Redistributions in binary form must reproduce the above "
-      "copyright notice, this list of conditions and the following "
-      "disclaimer in the documentation and/or other materials provided "
-      "with the distribution.</li>"
-      "<li>Neither the name of the Hiroshima University nor the names of "
-      "its contributors may be used to endorse or promote products "
-      "derived from this software without specific prior written "
-      "permission.</li>"
-      "</ul>"
-      "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "
-      "\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT "
-      "LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR "
-      "A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT "
-      "OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, "
-      "SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT "
-      "LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, "
-      "DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY "
-      "THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT "
-      "(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
-      "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE." );
 }
 
 
@@ -331,6 +262,22 @@ NernstGUI::loadInit()
 
 
 void
+NernstGUI::disableSaveLoad()
+{
+   saveInitAct->setEnabled( 0 );
+   loadInitAct->setEnabled( 0 );
+}
+
+
+void
+NernstGUI::enableSaveLoad()
+{
+   saveInitAct->setEnabled( 1 );
+   loadInitAct->setEnabled( 1 );
+}
+
+
+void
 NernstGUI::recalcNernst()
 {
    int x, y;
@@ -349,7 +296,13 @@ NernstGUI::recalcNernst()
             case ATOM_K:
                initLHS_K++;
                break;
+            case ATOM_K_TRACK:
+               initLHS_K++;
+               break;
             case ATOM_Cl:
+               initLHS_Cl++;
+               break;
+            case ATOM_Cl_TRACK:
                initLHS_Cl++;
                break;
             default:
@@ -368,7 +321,13 @@ NernstGUI::recalcNernst()
             case ATOM_K:
                initRHS_K++;
                break;
+            case ATOM_K_TRACK:
+               initRHS_K++;
+               break;
             case ATOM_Cl:
+               initRHS_Cl++;
+               break;
+            case ATOM_Cl_TRACK:
                initRHS_Cl++;
                break;
             default:
@@ -384,8 +343,8 @@ NernstGUI::updatePlots( int currentIter )
 {
    // Potential plot
    x_iters[ currentIter ] = currentIter;
-
    y_volts[ currentIter ] = LRcharge * e / ( c * a * o->y ) * 1000;                                      // Membrane potential (mV)
+
    voltsCurve->setData( x_iters, y_volts, currentIter );
 
    if( o->pores == 0 )
@@ -407,7 +366,10 @@ NernstGUI::updatePlots( int currentIter )
       }
    }
 
-   nernstCurve->setData( x_iters, y_nernst, currentIter );
+   //if( o->electrostatics == 1 )
+   //{
+   //   nernstCurve->setData( x_iters, y_nernst, currentIter );
+   //}
 
    voltsPlot->replot();
 }
@@ -420,25 +382,6 @@ NernstGUI::resetPlots()
    nernstCurve->setData( x_iters, y_nernst, 0 );
 
    voltsPlot->replot();
-}
-
-
-void
-NernstGUI::updateVoltsStatus( int currentIter, int avg )
-{
-   if( avg )
-   {
-      int i;
-      double avgVolt = 0;
-      for( i = currentIter - 128; i < currentIter; i++ )
-      {
-         avgVolt += y_volts[ i ];
-      }
-      avgVolt /= 128.0;
-      voltsLbl->setText( QString::number( avgVolt, 'g', 4 ) + " mV" );
-   } else {
-      voltsLbl->setText( QString::number( y_volts[ currentIter ], 'g', 4 ) + " mV" );
-   }
 }
 
 

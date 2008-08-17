@@ -41,11 +41,18 @@ XNernstSim::preIter()
    NernstSim::preIter();
    QCoreApplication::processEvents();
 
-   if( paused || resetting || quitting )
+   if( paused )
    {
+      emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters )
+            + " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
       return 1;
    } else {
-      return 0;
+      if( resetting || quitting )
+      {
+         return 1;
+      } else {
+         return 0;
+      }
    }
 }
 
@@ -62,6 +69,12 @@ XNernstSim::postIter()
 {
    NernstSim::postIter();
    emit moveCompleted( currentIter );
+
+   if( currentIter % 8 == 0 )
+   {
+      emit updateStatus( "Iteration: " + QString::number( currentIter ) + " of " + QString::number( o->iters )
+            + " | " + QString::number( (int)( 100 * (double)currentIter / (double)o->iters ) ) + "\% complete" );
+   }
 
    if( currentIter % 128 == 0 )
    {
@@ -105,6 +118,8 @@ XNernstSim::runSim()
 
    if( currentIter > o->iters )
    {
+      emit updateStatus( "Iteration: " + QString::number( currentIter - 1 ) + " of " + QString::number( o->iters )
+            + " | " + QString::number( (int)( 100 * (double)( currentIter - 1 ) / (double)o->iters ) ) + "\% complete" );
       emit finished();
    }
 }
@@ -136,8 +151,9 @@ XNernstSim::resetSim()
       initialized = 0;
    }
    o->max_atoms = maxatomsDefault;
-   randomizePositions( o );
+   shufflePositions( o );
    emit updateVoltsStatus( 0, 0 );
+   emit updateStatus( "Ready" );
 }
 
 

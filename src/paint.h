@@ -26,6 +26,7 @@ class NernstPainter : public QGLWidget
       void previewRedrawn();
 
    protected:
+      void mousePressEvent( QMouseEvent *event );
       void initializeGL();
       void resizeGL( int width, int height );
       void paintGL();

@@ -5,6 +5,7 @@
 
 
 #include <QApplication>
+#include <QMouseEvent>
 #include <assert.h>
 #include <SFMT.h>
 
@@ -21,7 +22,7 @@ NernstPainter::NernstPainter( struct options *options, QWidget *parent )
    o = options;
    running = 0;
    cleanRedraw = 0;
-   randomizePositions( o );
+   shufflePositions( o );
  
    setFormat( QGLFormat( QGL::DoubleBuffer | QGL::DepthBuffer ) );
    rotationX = 0.0;
@@ -29,6 +30,44 @@ NernstPainter::NernstPainter( struct options *options, QWidget *parent )
    rotationZ = 0.0;
 
    setFixedSize( o->x, o->y );
+}
+
+
+void
+NernstPainter::mousePressEvent( QMouseEvent *event )
+{
+   int x, y;
+   x = event->x();
+   y = o->y - 1 - event->y();
+
+   if( !running )
+   {
+      event->ignore();
+      return;
+   } else {
+      event->accept();
+   }
+
+   switch( world[ idx( x, y ) ].color )
+   {
+      case ATOM_K:
+         world[ idx( x, y ) ].color = ATOM_K_TRACK;
+         break;
+      case ATOM_Cl:
+         world[ idx( x, y ) ].color = ATOM_Cl_TRACK;
+         break;
+      case ATOM_K_TRACK:
+         //world[ idx( x, y ) ].color = ATOM_K;
+         break;
+      case ATOM_Cl_TRACK:
+         //world[ idx( x, y ) ].color = ATOM_Cl;
+         break;
+      default:
+         event->ignore();
+         break;
+   }
+
+   update();
 }
 
 
@@ -132,6 +171,7 @@ NernstPainter::draw()
       {
          for( int x = 0; x < o->x; x++ )
          {
+            // Nontracked atoms
             switch( world[ idx( x, y ) ].color )
             {
                case SOLVENT:
@@ -149,7 +189,64 @@ NernstPainter::draw()
                   glColor3f( 0.f, 1.f, 0.f );
                   break;
             }
-            glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+            glVertex3f( (GLfloat)( x ) / (GLfloat)o->x, (GLfloat)( y ) / (GLfloat)o->y, (GLfloat)0.0 );
+         }
+      }
+
+      for( int y = 0; y < o->y; y++ )
+      {
+         for( int x = 0; x < o->x; x++ )
+         {
+            int tracked = 0;
+
+            // Tracked atoms
+            switch( world[ idx( x, y ) ].color )
+            {
+                case ATOM_K_TRACK:
+                  glColor3f( 1.f, 0.3f, 0.3f );
+                  tracked = 1;
+                  break;
+               case ATOM_Cl_TRACK:
+                  glColor3f( 0.3f, 0.3f, 1.f );
+                  tracked = 1;
+                  break;
+               default:
+                  tracked = 0;
+                  break;
+            }
+
+            if( tracked )
+            {
+               //glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               //glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+
+               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+
+               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+
+               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+                  
+               //glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
+               glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
+               //glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+            }
          }
       }
       glEnd();
@@ -157,7 +254,7 @@ NernstPainter::draw()
    } else {
       // World preview visualization
       glBegin( GL_POINTS );
-      int numIons, placed = 0, x, y, i = 1, atomBit;
+      int numIons, placed = 0, x, y, i = 1;
 
       for( y = 0; y < o->y; y++ )
       {
@@ -179,7 +276,6 @@ NernstPainter::draw()
       }
 
       // LHS
-      atomBit = 1;
       numIons = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) * (double)( o->lconc ) / (double)MAX_CONC + 0.5 );
       for( int i = 0; i < numIons && placed < o->max_atoms; i++ )
       {
@@ -188,7 +284,7 @@ NernstPainter::draw()
          x = ( positionsLHS[ i ] % ( o->x / 2 - 1 ) ) + 1;
          y = positionsLHS[ i ] / ( o->x / 2 - 1 );
  
-         if( atomBit )
+         if( i % 2 == 0 )
          {
             // ATOM_K
             glColor3f( 1.f, 0.f, 0.f );
@@ -196,13 +292,11 @@ NernstPainter::draw()
             // ATOM_Cl
             glColor3f( 0.f, 0.f, 1.f );
          }
-         atomBit = !atomBit;
 
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
       }
 
       // RHS
-      atomBit = 1;
       numIons = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) * (double)( o->rconc ) / (double)MAX_CONC + 0.5 );
       for( int i = 0; i < numIons && placed < o->max_atoms; i++ )
       {
@@ -211,13 +305,14 @@ NernstPainter::draw()
          x = ( positionsRHS[ i ] % ( o->x / 2 - 2 ) ) + ( o->x / 2 + 1 );
          y = positionsRHS[ i ] / ( o->x / 2 - 2 );
 
-         if( atomBit )
+         if( i % 2 == 0 )
          {
+            // ATOM_Cl
             glColor3f( 0.f, 0.f, 1.f );
          } else {
+            // ATOM_K
             glColor3f( 1.f, 0.f, 0.f );
          }
-         atomBit = !atomBit;
 
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
       }

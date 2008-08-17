@@ -33,7 +33,7 @@ int ionCharge( uint8_t type );
 int isMembrane( unsigned int position );
 int isPore( unsigned int position );
 int isPermeable( uint8_t type );
-void randomizePositions( struct options *options );
+void shufflePositions( struct options *options );
 void initAtoms( struct options *options );
 void moveAtoms( void );
 void redistributePores( void );
@@ -46,7 +46,9 @@ enum
 {
    SOLVENT,
    ATOM_K,
+   ATOM_K_TRACK,
    ATOM_Cl,
+   ATOM_Cl_TRACK,
    MEMBRANE
 };
 

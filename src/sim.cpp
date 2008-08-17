@@ -28,7 +28,7 @@ NernstSim::initNernstSim()
 {
    currentIter = 1;
    elapsed = 0;
-   randomizePositions( o );
+   shufflePositions( o );
    initWorld( o );
    initAtoms( o );
    takeCensus( 0 );

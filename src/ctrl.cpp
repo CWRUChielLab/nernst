@@ -36,14 +36,16 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    // Iterations control
    itersLbl = new QLabel( "&Iterations" );
-   itersLbl->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 100,000." );
+   itersLbl->setToolTip( "Set the number of iterations of the simulation\nbetween " + QString::number( MIN_ITERS )
+         + " and " + QString::number( MAX_ITERS ) + "." );
 
    itersSld = new QSlider( Qt::Horizontal );
    itersSld->setMinimumWidth( 100 );
-   itersSld->setRange( 1, 100000 );
+   itersSld->setRange( MIN_ITERS, MAX_ITERS );
    itersSld->setPageStep( 1000 );
    itersSld->setValue( itersDefault );
-   itersSld->setToolTip( "Set the number of iterations of the simulation\nbetween 1 and 100,000." );
+   itersSld->setToolTip( "Set the number of iterations of the simulation\nbetween " + QString::number( MIN_ITERS )
+         + " and " + QString::number( MAX_ITERS ) + "." );
 
    itersLbl->setBuddy( itersSld );
 
@@ -145,6 +147,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    startBtn = new QPushButton( "&Start" );
    pauseBtn = new QPushButton( "&Pause" );
    continueBtn = new QPushButton( "&Continue" );
+   clearTrackingBtn = new QPushButton( "Clear &Tracked Ions" );
+   clearTrackingBtn->setEnabled( 0 );
    resetBtn = new QPushButton( "&Reset" );
    quitBtn = new QPushButton( "&Quit" );
 
@@ -202,6 +206,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    stackedBtnLayout->setCurrentWidget( startBtn );
 
    mainLayout->addLayout( stackedBtnLayout );
+   mainLayout->addWidget( clearTrackingBtn );
    mainLayout->addWidget( resetBtn );
    mainLayout->addWidget( quitBtn );
 
@@ -221,12 +226,14 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( startBtn, SIGNAL( clicked() ), this, SIGNAL( startBtnClicked() ) );
    connect( pauseBtn, SIGNAL( clicked() ), this, SIGNAL( pauseBtnClicked() ) );
    connect( continueBtn, SIGNAL( clicked() ), this, SIGNAL( continueBtnClicked() ) );
+   connect( clearTrackingBtn, SIGNAL( clicked() ), this, SIGNAL( clearTrackingBtnClicked() ) );
    connect( resetBtn, SIGNAL( clicked() ), this, SIGNAL( resetBtnClicked() ) );
    connect( quitBtn, SIGNAL( clicked() ), this, SIGNAL( quitBtnClicked() ) );
 
    connect( this, SIGNAL( startBtnClicked() ), this, SLOT( disableCtrl() ) );
    connect( this, SIGNAL( pauseBtnClicked() ), this, SLOT( reenableCtrl() ) );
    connect( this, SIGNAL( continueBtnClicked() ), this, SLOT( disableCtrl() ) );
+   connect( this, SIGNAL( clearTrackingBtnClicked() ), this, SLOT( clearTrackedIons() ) );
    connect( this, SIGNAL( resetBtnClicked() ), this, SLOT( resetCtrl() ) );
 }
 
@@ -266,7 +273,7 @@ NernstCtrl::changeX( int xpow )
    o->x = (int)pow( 2, xpow );
    xVal->setNum( o->x );
 
-   randomizePositions( o );
+   shufflePositions( o );
    emit updatePreview();
 
    if( o->x < oldx )
@@ -284,7 +291,7 @@ NernstCtrl::changeY( int ypow )
    o->y = (int)pow( 2, ypow );
    yVal->setNum( o->y );
 
-   randomizePositions( o );
+   shufflePositions( o );
    emit updatePreview();
 
    poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
@@ -312,6 +319,8 @@ void
 NernstCtrl::changeSeed( QString seed )
 {
    o->randseed = seed.toInt();
+   shufflePositions( o );
+   emit updatePreview();
 }
 
 
@@ -373,10 +382,38 @@ NernstCtrl::reloadSettings()
 
 
 void
+NernstCtrl::clearTrackedIons()
+{
+   if( world != NULL )
+   {
+      for( int x = 0; x < o->x; x++ )
+      {
+         for( int y = 0; y < o->y; y++ )
+         {
+            switch( world[ idx( x, y ) ].color )
+            {
+               case ATOM_K_TRACK:
+                  world[ idx( x, y ) ].color = ATOM_K;
+                  break;
+               case ATOM_Cl_TRACK:
+                  world[ idx( x, y ) ].color = ATOM_Cl;
+                  break;
+               default:
+                  break;
+            }
+         }
+      }
+      emit updatePreview();
+   }
+}
+
+
+void
 NernstCtrl::disableCtrl()
 {
    // Set the first push button to "Pause" and disable all controls.
    stackedBtnLayout->setCurrentWidget( pauseBtn );
+   clearTrackingBtn->setEnabled( 1 );
 
    xLbl->setEnabled( 0 );
    xSld->setEnabled( 0 );
@@ -430,6 +467,7 @@ NernstCtrl::resetCtrl()
    // Set the first push button to "Start", reenable all controls, and reset all control values to defaults.
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
+   clearTrackingBtn->setEnabled( 0 );
 
    xLbl->setEnabled( 1 );
    xSld->setEnabled( 1 );

@@ -68,7 +68,13 @@ ionCharge( uint8_t type )
       case ATOM_K:
          q = 1;
          break;
+      case ATOM_K_TRACK:
+         q = 1;
+         break;
       case ATOM_Cl:
+         q = -1;
+         break;
+      case ATOM_Cl_TRACK:
          q = -1;
          break;
       default:
@@ -131,7 +137,18 @@ isPermeable( uint8_t type )
       case ATOM_K:
          p = 1;
          break;
+      case ATOM_K_TRACK:
+         p = 1;
+         break;
       case ATOM_Cl:
+         if( o->selectivity )
+         {
+            p = 0;
+         } else {
+            p = 1;
+         }
+         break;
+      case ATOM_Cl_TRACK:
          if( o->selectivity )
          {
             p = 0;
@@ -247,7 +264,7 @@ dirPore( unsigned int from )
 
 
 void
-randomizePositions( struct options *o )
+shufflePositions( struct options *o )
 {
    static int initialized = 0;
    unsigned int i, highest, lowest, range, rand, temp;
@@ -325,7 +342,7 @@ initAtoms( struct options *options )
    dir2offset[ 6 ] = off_se;
    dir2offset[ 7 ] = off_sw;
 
-   int x, y, i, numIons, atomBit, current_idx = 0, placed = 0;
+   int x, y, i, numIons, current_idx = 0, placed = 0;
 
    // Initialize the Mersenne twister random number generator.
    init_gen_rand( (uint32_t)(o->randseed) );
@@ -344,7 +361,6 @@ initAtoms( struct options *options )
    }
 
    // Initialize LHS atoms.
-   atomBit = 1;
    numIons = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) * (double)( o->lconc ) / (double)MAX_CONC + 0.5 );
    for( i = 0; i < numIons && placed < o->max_atoms; i++ )
    {
@@ -357,7 +373,7 @@ initAtoms( struct options *options )
       world[ current_idx ].delta_x = 0;
       world[ current_idx ].delta_y = 0;
 
-      if( atomBit )
+      if( i % 2 == 0 )
       {
          // ATOM_K
          world[ current_idx ].color = ATOM_K;
@@ -369,11 +385,9 @@ initAtoms( struct options *options )
          LRcharge--;
          initLHS_Cl++;
       }
-      atomBit = !atomBit;
    }
 
    // Initialize RHS atoms.
-   atomBit = 1;
    numIons = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) * (double)( o->rconc ) / (double)MAX_CONC + 0.5 );
    for( i = 0; i < numIons && placed < o->max_atoms; i++ )
    {
@@ -386,7 +400,7 @@ initAtoms( struct options *options )
       world[ current_idx ].delta_x = 0;
       world[ current_idx ].delta_y = 0;
 
-      if( atomBit )
+      if( i % 2 == 0 )
       {
          // ATOM_K
          world[ current_idx ].color = ATOM_K;
@@ -398,7 +412,6 @@ initAtoms( struct options *options )
          LRcharge++;
          initRHS_Cl++;
       }
-      atomBit = !atomBit;
    }
 
    // Set up the membrane.
@@ -537,9 +550,14 @@ takeCensus( int iter )
                case ATOM_K:
                   K++;
                   break;
+               case ATOM_K_TRACK:
+                  K++;
+                  break;
                case ATOM_Cl:
                   Cl++;
                   break;
+               case ATOM_Cl_TRACK:
+                  Cl++;
                default:
                   break;
             }
@@ -557,7 +575,13 @@ takeCensus( int iter )
                case ATOM_K:
                   K++;
                   break;
+               case ATOM_K_TRACK:
+                  K++;
+                  break;
                case ATOM_Cl:
+                  Cl++;
+                  break;
+               case ATOM_Cl_TRACK:
                   Cl++;
                   break;
                default:
@@ -575,7 +599,13 @@ takeCensus( int iter )
             case ATOM_K:
                K++;
                break;
+            case ATOM_K_TRACK:
+               K++;
+               break;
             case ATOM_Cl:
+               Cl++;
+               break;
+            case ATOM_Cl_TRACK:
                Cl++;
                break;
             default:
@@ -632,7 +662,7 @@ finalizeAtoms()
             if( world[ idx( x, y ) ].color != SOLVENT && world[ idx( x, y ) ].color != MEMBRANE )
             {
                fprintf( fp, "%d %d %d\n",
-                  world[ idx( x, y ) ].color == ATOM_K,
+                  world[ idx( x, y ) ].color == ATOM_K || world[ idx( x, y ) ].color == ATOM_K_TRACK,
                   world[ idx( x, y ) ].delta_x,
                   world[ idx( x, y ) ].delta_y );
             }

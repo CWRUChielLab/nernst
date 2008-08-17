@@ -27,6 +27,12 @@ enum
 
 enum
 {
+   MIN_ITERS = 1,
+   MAX_ITERS = 100000
+};
+
+enum
+{
    MIN_CONC = 0,     // Minimum ion concentration (mM)
    MAX_CONC = 2000   // Maximum ion concentration (mM)
 };

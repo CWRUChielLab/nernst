@@ -39,6 +39,7 @@ class NernstCtrl : public QWidget
       void changeElectrostatics( bool electrostatics );
       void reloadSettings();
 
+      void clearTrackedIons();
       void disableCtrl();
       void reenableCtrl();
       void resetCtrl();
@@ -47,6 +48,7 @@ class NernstCtrl : public QWidget
       void startBtnClicked();
       void pauseBtnClicked();
       void continueBtnClicked();
+      void clearTrackingBtnClicked();
       void resetBtnClicked();
       void quitBtnClicked();
 
@@ -101,6 +103,7 @@ class NernstCtrl : public QWidget
       QPushButton *startBtn;
       QPushButton *pauseBtn;
       QPushButton *continueBtn;
+      QPushButton *clearTrackingBtn;
       QPushButton *resetBtn;
       QPushButton *quitBtn;
 

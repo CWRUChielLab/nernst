@@ -70,7 +70,7 @@ initWorld( struct options *o )
    k = 1.38056e-23;     // Boltzmann's constant (J K^-1)
    R = 8.31447;         // Molar gas constant (J K^-1 mol^-1)
    F = 96485.3;         // Faraday's constant (C mol^-1)
-   t = 373.15 * 0.8;    // Temperature (K)
+   t = 298;             // Temperature (K)
 
    d = 3.5e-10;         // Length of a lattice square (m)
    a = d * d;           // Membrane area per lattice quare (m^2)
