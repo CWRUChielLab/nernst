@@ -77,8 +77,9 @@ class NernstGUI : public QMainWindow
       QAction *aboutQtAct;
 
       QwtPlot *voltsPlot;
-      QwtPlotCurve *voltsCurve;
-      QwtPlotCurve *nernstCurve;
+      QwtPlotCurve **curves;
+      int numCurves;
+      int currentNernstCurve;
 };
 
 #endif /* GUI_H */

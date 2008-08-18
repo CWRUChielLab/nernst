@@ -51,20 +51,24 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    canvasLayout->addWidget( canvas );
    canvasFrame->setLayout( canvasLayout );
 
-   // Potential plot
+   // Potential plot   
    voltsPlot = new QwtPlot();
    voltsPlot->setTitle( "Membrane Potential" );
    voltsPlot->setAxisTitle( 0, "Potential (mV)" );
    voltsPlot->setAxisTitle( 2, "Time (iters)" );
 
-   voltsCurve = new QwtPlotCurve( "Membrane Potential" );
-   voltsCurve->setData( x_iters, y_volts, 0 );
-   voltsCurve->attach( voltsPlot );
+   numCurves = 4;
+   curves = new QwtPlotCurve *[ numCurves ];
+   currentNernstCurve = 1;
 
-   nernstCurve = new QwtPlotCurve( "Nernst Potential" );
-   nernstCurve->setPen( QColor( Qt::red ) );
-   nernstCurve->setData( x_iters, y_nernst, 0 );
-   nernstCurve->attach( voltsPlot );
+   curves[ 0 ] = new QwtPlotCurve( "Membrane Potential" );
+   curves[ 0 ]->setData( x_iters, y_volts, 0 );
+   curves[ 0 ]->attach( voltsPlot );
+
+   curves[ currentNernstCurve ] = new QwtPlotCurve( "Nernst Potential" );
+   curves[ currentNernstCurve ]->setPen( QColor( Qt::red ) );
+   curves[ currentNernstCurve ]->setData( x_iters, y_nernst, 0 );
+   curves[ currentNernstCurve ]->attach( voltsPlot );
 
    // Main window
    mainLayout = new QGridLayout();
@@ -77,7 +81,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.8.2" );
+   setWindowTitle( "Nernst Potential Simulator | v0.8.3" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -157,7 +161,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.8.2<br>"
+      "Version 0.8.3<br>"
       "Copyright " + QString( 0x00A9 ) + " 2008  "
       "Jeff Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -341,35 +345,63 @@ NernstGUI::recalcNernst()
 void
 NernstGUI::updatePlots( int currentIter )
 {
-   // Potential plot
+   static int nernstHasSomeData = 0;
+   static int beginThisNernstCurve = 0;
+
    x_iters[ currentIter ] = currentIter;
    y_volts[ currentIter ] = LRcharge * e / ( c * a * o->y ) * 1000;                                      // Membrane potential (mV)
 
-   voltsCurve->setData( x_iters, y_volts, currentIter );
+   curves[ 0 ]->setData( x_iters, y_volts, currentIter );
 
-   if( o->pores == 0 )
+   if( o->electrostatics == 1 )
    {
-      y_nernst[ currentIter ] = y_volts[ currentIter ];
-   } else {
-      if( o->selectivity == 0 )
+      if( !nernstHasSomeData )
       {
-         y_nernst[ currentIter ] = 0;
+         beginThisNernstCurve = currentIter;
+         nernstHasSomeData = 1;
+      }
+      if( o->pores == 0 )
+      {
+         y_nernst[ currentIter ] = y_volts[ currentIter ];
       } else {
-         if( o->electrostatics == 0 )
+         if( o->selectivity == 0 )
          {
-            int equilibriumCharge_LHS = ( ( initLHS_K + initRHS_K ) / 2 ) - initLHS_Cl;
-            int equilibriumCharge_RHS = ( ( initLHS_K + initRHS_K ) / 2 ) - initRHS_Cl;
-            y_nernst[ currentIter ] = ( equilibriumCharge_LHS - equilibriumCharge_RHS ) * e / ( c * a * o->y ) * 1000;
+            y_nernst[ currentIter ] = 0;
          } else {
             y_nernst[ currentIter ] = R * t / F * log( (double)initRHS_K / (double)initLHS_K ) * 1000;   // Equilibrium potential (mV)
          }
       }
-   }
+      curves[ currentNernstCurve ]->setData( x_iters + beginThisNernstCurve,
+                                             y_nernst + beginThisNernstCurve,
+                                             currentIter - beginThisNernstCurve + 1 );
 
-   //if( o->electrostatics == 1 )
-   //{
-   //   nernstCurve->setData( x_iters, y_nernst, currentIter );
-   //}
+   } else {
+
+      if( nernstHasSomeData )
+      {
+         currentNernstCurve++;
+         if( currentNernstCurve >= numCurves )
+         {
+            // Grow the curves array.
+            QwtPlotCurve *temp[ numCurves ];
+            for( int i = 0; i < numCurves; i++ )
+            {
+               temp[ i ] = curves[ i ];
+            }
+            numCurves *= 2;
+            curves = new QwtPlotCurve *[ numCurves ];
+            for( int i = 0; i < numCurves / 2; i++ )
+            {
+               curves[ i ] = temp[ i ];
+            }
+         }
+         curves[ currentNernstCurve ] = new QwtPlotCurve( "Nernst Potential" );
+         curves[ currentNernstCurve ]->setPen( QColor( Qt::red ) );
+         curves[ currentNernstCurve ]->attach( voltsPlot );
+         nernstHasSomeData = 0;
+      }
+
+   }
 
    voltsPlot->replot();
 }
@@ -378,8 +410,10 @@ NernstGUI::updatePlots( int currentIter )
 void
 NernstGUI::resetPlots()
 {
-   voltsCurve->setData( x_iters, y_volts, 0 );
-   nernstCurve->setData( x_iters, y_nernst, 0 );
+   curves[ 0 ]->setData( x_iters, y_volts, 0 );
+
+   currentNernstCurve = 1;
+   curves[ currentNernstCurve ]->setData( x_iters, y_nernst, 0 );
 
    voltsPlot->replot();
 }
