@@ -75,8 +75,9 @@ initWorld( struct options *o )
    d = 3.5e-10;         // Length of a lattice square (m)
    a = d * d;           // Membrane area per lattice quare (m^2)
    eps0 = 8.85419e-12;  // Vacuum permittivity (F m^-1)
-   // eps = 2.59764;       // Membrane dielectric constant
-   eps = 50;            // Membrane dielectric constant
+   //eps = 2.59764;       // Membrane dielectric constant
+   //eps = 50;            // Membrane dielectric constant
+   eps = 250;            // Membrane dielectric constant
    c = eps * eps0 / d;  // Membrane capacitance (F m^-2)
 }
 

@@ -16,3 +16,4 @@ object_script*
 # ignore any data files we've created
 *.out
 *.init
+*.world

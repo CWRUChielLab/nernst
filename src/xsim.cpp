@@ -24,12 +24,28 @@ XNernstSim::XNernstSim( struct options *options, QWidget *parent )
 }
 
 
+int
+XNernstSim::getCurrentIter()
+{
+   return currentIter;
+}
+
+
+void
+XNernstSim::loadWorld( int iter )
+{
+   initialized = 1;
+   currentIter = iter;
+}
+
+
 void
 XNernstSim::initNernstSim()
 {
    paused = 0;
    resetting = 0;
    NernstSim::initNernstSim();
+   emit calcEquilibrium();
    emit moveCompleted( 0 );
    initialized = 1;
 }

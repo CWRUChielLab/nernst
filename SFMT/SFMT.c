@@ -621,3 +621,45 @@ void init_by_array(uint32_t *init_key, int key_length) {
     period_certification();
     initialized = 1;
 }
+
+
+/**
+ * These functions returns pointers to the internal state.
+ * Author: JPG
+ */
+uint32_t *get_sfmt_state32(void)
+{
+   return psfmt32;
+}
+
+uint64_t *get_sfmt_state64(void)
+{
+   return psfmt64;
+}
+
+/**
+ * Returns idx.
+ * Author: JPG
+ */
+int get_sfmt_idx(void)
+{
+   return idx;
+}
+
+/**
+ * Sets idx.
+ * Author: JPG
+ */
+void set_sfmt_idx(int my_idx)
+{
+   idx = my_idx;
+}
+
+/**
+ * Returns the size of the internal state variable sfmt.
+ * Author: JPG
+ */
+int sizeofSFMT(void)
+{
+   return N32;
+}

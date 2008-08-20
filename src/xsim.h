@@ -20,8 +20,10 @@ class XNernstSim : public QWidget, public NernstSim
 
    public:
       XNernstSim( struct options *options, QWidget *parent = 0 );
+      int getCurrentIter();
  
    public slots:
+      void loadWorld( int iter );
       void runSim();
       void pauseSim();
       void unpauseSim();
@@ -29,6 +31,7 @@ class XNernstSim : public QWidget, public NernstSim
       void quitSim();
 
    signals:
+      void calcEquilibrium();
       void moveCompleted( int currentIter );
       void updateStatus( QString msg );
       void updateVoltsStatus( int currentIter, int avg );

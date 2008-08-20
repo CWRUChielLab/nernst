@@ -21,7 +21,7 @@ class QwtPlot;
 class QwtPlotCurve;
 
 
-extern double x_iters[], y_volts[], y_nernst[];
+extern double x_iters[], y_volts[], y_nernst[], y_gibbs[], y_boltzmann[];
 
 
 class NernstGUI : public QMainWindow
@@ -38,9 +38,20 @@ class NernstGUI : public QMainWindow
       void about();
       void saveInit();
       void loadInit();
-      void disableSaveLoad();
-      void enableSaveLoad();
-      void recalcNernst();
+      void saveWorld();
+      void loadWorld();
+
+      void enableSaveInit();
+      void disableSaveInit();
+      void enableLoadInit();
+      void disableLoadInit();
+      void enableSaveWorld();
+      void disableSaveWorld();
+      void enableLoadWorld();
+      void disableLoadWorld();
+
+      void recountIons();
+      void calcEquilibrium();
       void updatePlots( int currentIter );
       void resetPlots();
       void fixRedraw();
@@ -48,6 +59,7 @@ class NernstGUI : public QMainWindow
 
    signals:
       void settingsLoaded();
+      void worldLoaded( int iter );
       void repaintWorld();
       void finished();
  
@@ -72,6 +84,8 @@ class NernstGUI : public QMainWindow
       QMenu *helpMenu;
       QAction *saveInitAct;
       QAction *loadInitAct;
+      QAction *saveWorldAct;
+      QAction *loadWorldAct;
       QAction *quitAct;
       QAction *aboutAct;
       QAction *aboutQtAct;
@@ -80,6 +94,12 @@ class NernstGUI : public QMainWindow
       QwtPlotCurve **curves;
       int numCurves;
       int currentNernstCurve;
+      double voltsNernst;
+      double voltsGibbs;
+      double voltsBoltzmann;
+
+      double gibbsEnergy( int q );
+      double boltzmannProbDiff( int q );
 };
 
 #endif /* GUI_H */
