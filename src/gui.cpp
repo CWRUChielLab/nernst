@@ -104,7 +104,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.0" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.1" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -208,7 +208,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.0<br>"
+      "Version 0.9.1<br>"
       "Copyright " + QString( 0x00A9 ) + " 2008  "
       "Jeff Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -228,8 +228,6 @@ NernstGUI::about()
 void
 NernstGUI::saveInit()
 {
-   // Needs fixed with new options.
-   /*
    QString fileName;
    fileName = QFileDialog::getSaveFileName( this, "Save Initial Conditions", "settings.init", "Initial Conditions (*.init)" );
 
@@ -254,24 +252,27 @@ NernstGUI::saveInit()
    out << o->iters;           endl( out );
    out << o->x;               endl( out );
    out << o->y;               endl( out );
-   out << o->pores;           endl( out );
    out << o->randseed;        endl( out );
-   out << o->lconc;           endl( out );
-   out << o->rconc;           endl( out );
+   out << o->lK;              endl( out );
+   out << o->lNa;             endl( out );
+   out << o->lCl;             endl( out );
+   out << o->rK;              endl( out );
+   out << o->rNa;             endl( out );
+   out << o->rCl;             endl( out );
+   out << o->pK;              endl( out );
+   out << o->pNa;             endl( out );
+   out << o->pCl;             endl( out );
    out << o->selectivity;     endl( out );
    out << o->electrostatics;  endl( out );
 
    QApplication::restoreOverrideCursor();
    return;
-   */
 }
 
 
 void
 NernstGUI::loadInit()
 {
-   // Needs fixed with new options.
-   /*
    QString fileName;
    fileName = QFileDialog::getOpenFileName( this, "Load Initial Conditions", "", "Initial Conditions (*.init)" );
 
@@ -296,17 +297,22 @@ NernstGUI::loadInit()
    in >> o->iters;
    in >> o->x;
    in >> o->y;
-   in >> o->pores;
    in >> o->randseed;
-   in >> o->lconc;
-   in >> o->rconc;
+   in >> o->lK;
+   in >> o->lNa;
+   in >> o->lCl;
+   in >> o->rK;
+   in >> o->rNa;
+   in >> o->rCl;
+   in >> o->pK;
+   in >> o->pNa;
+   in >> o->pCl;
    in >> o->selectivity;
    in >> o->electrostatics;
 
    QApplication::restoreOverrideCursor();
    emit settingsLoaded();
    return;
-   */
 }
 
 
