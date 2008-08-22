@@ -14,9 +14,14 @@ extern int nAtoms;
 extern int WORLD_T;
 extern unsigned int WORLD_COUNTER;
 extern int LRcharge;
-extern int initLHS_K, initRHS_K, initLHS_Cl, initRHS_Cl;
+
+extern int initLHS_K,  initRHS_K;
+extern int initLHS_Na, initRHS_Na;
+extern int initLHS_Cl, initRHS_Cl;
+
 extern unsigned int *positionsLHS;
 extern unsigned int *positionsRHS;
+extern unsigned int *positionsPORES;
 
 struct atom
 {
@@ -29,14 +34,16 @@ struct atom
 unsigned long int  idx( int x, int y );
 int getX( unsigned int position );
 int getY( unsigned int position );
-int ionCharge( uint8_t type );
+int ionCharge( unsigned int position );
 int isMembrane( unsigned int position );
+int isSolvent( unsigned int position );
 int isPore( unsigned int position );
-int isPermeable( uint8_t type );
+int isAtom( unsigned int position );
+int isPermeable( unsigned int porePos, unsigned int ionPos );
 void shufflePositions( struct options *options );
 void initAtoms( struct options *options );
 void moveAtoms( void );
-void redistributePores( void );
+void distributePores( struct options *options );
 void finalizeAtoms( void );
 void takeCensus( int iter );
 
@@ -47,9 +54,14 @@ enum
    SOLVENT,
    ATOM_K,
    ATOM_K_TRACK,
+   ATOM_Na,
+   ATOM_Na_TRACK,
    ATOM_Cl,
    ATOM_Cl_TRACK,
-   MEMBRANE
+   MEMBRANE,
+   PORE_K,
+   PORE_Na,
+   PORE_Cl
 };
 
 enum

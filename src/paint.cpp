@@ -53,15 +53,21 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
       case ATOM_K:
          world[ idx( x, y ) ].color = ATOM_K_TRACK;
          break;
+      case ATOM_Na:
+         world[ idx( x, y ) ].color = ATOM_Na_TRACK;
+         break;
       case ATOM_Cl:
          world[ idx( x, y ) ].color = ATOM_Cl_TRACK;
          break;
       case ATOM_K_TRACK:
          //world[ idx( x, y ) ].color = ATOM_K;
-         break;
+         //break;
+      case ATOM_Na_TRACK:
+         //world[ idx( x, y ) ].color = ATOM_Na;
+         //break;
       case ATOM_Cl_TRACK:
          //world[ idx( x, y ) ].color = ATOM_Cl;
-         break;
+         //break;
       default:
          event->ignore();
          break;
@@ -171,57 +177,56 @@ NernstPainter::draw()
       {
          for( int x = 0; x < o->x; x++ )
          {
+            int tracked = 0;
+
             // Nontracked atoms
             switch( world[ idx( x, y ) ].color )
             {
                case SOLVENT:
                   continue;
                case ATOM_K:
-                  glColor3f( 1.f, 0.f, 0.f );
+                  glColor3f( 1.f, 0.15f, 0.f );    // Red
+                  break;
+               case ATOM_Na:
+                  glColor3f( 0.f, 0.f, 1.f );      // Blue
                   break;
                case ATOM_Cl:
-                  glColor3f( 0.f, 0.f, 1.f );
+                  glColor3f( 0.f, 0.70f, 0.35f );  // Green
                   break;
-               case MEMBRANE:
-                  glColor3f( 0.f, 0.f, 0.f );
+               case ATOM_K_TRACK:
+                  glColor3f( 1.f, 0.15f, 0.f );    // Red
+                  tracked = 1;
                   break;
-               default:
-                  glColor3f( 0.f, 1.f, 0.f );
-                  break;
-            }
-            glVertex3f( (GLfloat)( x ) / (GLfloat)o->x, (GLfloat)( y ) / (GLfloat)o->y, (GLfloat)0.0 );
-         }
-      }
-
-      for( int y = 0; y < o->y; y++ )
-      {
-         for( int x = 0; x < o->x; x++ )
-         {
-            int tracked = 0;
-
-            // Tracked atoms
-            switch( world[ idx( x, y ) ].color )
-            {
-                case ATOM_K_TRACK:
-                  glColor3f( 1.f, 0.3f, 0.3f );
+               case ATOM_Na_TRACK:
+                  glColor3f( 0.f, 0.f, 1.f );      // Blue
                   tracked = 1;
                   break;
                case ATOM_Cl_TRACK:
-                  glColor3f( 0.3f, 0.3f, 1.f );
+                  glColor3f( 0.f, 0.70f, 0.35f );  // Green
                   tracked = 1;
                   break;
+               case PORE_K:
+                  glColor3f( 1.f, 0.15f, 0.f );    // Red
+                  break;
+               case PORE_Na:
+                  glColor3f( 0.f, 0.f, 1.f );      // Blue
+                  break;
+               case PORE_Cl:
+                  glColor3f( 0.f, 0.70f, 0.35f );  // Green
+                  break;
+               case MEMBRANE:
+                  glColor3f( 0.f, 0.f, 0.f );      // Black
+                  break;
                default:
-                  tracked = 0;
+                  glColor3f( 1.f, 1.f, 1.f );      // White
                   break;
             }
 
             if( tracked )
             {
-               //glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
                glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
                glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
                glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               //glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
 
                glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
                glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
@@ -241,11 +246,11 @@ NernstPainter::draw()
                glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
                glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
                   
-               //glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
                glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
                glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
                glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               //glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
+            } else {
+               glVertex3f( (GLfloat)( x ) / (GLfloat)o->x, (GLfloat)( y ) / (GLfloat)o->y, (GLfloat)0.0 );
             }
          }
       }
@@ -254,67 +259,130 @@ NernstPainter::draw()
    } else {
       // World preview visualization
       glBegin( GL_POINTS );
-      int numIons, placed = 0, x, y, i = 1;
+      int numK, numNa, numCl;
+      unsigned int *posK, *posNa, *posCl;
+      int placed = 0, x, y, i;
+
+      numK  = (int)( (double)( 1.0 ) * (double)( o->y / 2 ) / 3.0 * (double)( o->pK  ) + 0.5 );
+      numNa = (int)( (double)( 1.0 ) * (double)( o->y / 2 ) / 3.0 * (double)( o->pNa ) + 0.5 );
+      numCl = (int)( (double)( 1.0 ) * (double)( o->y / 2 ) / 3.0 * (double)( o->pCl ) + 0.5 );
+
+      posK  = positionsPORES;
+      posNa = positionsPORES + (int)( (double)( ( 1 ) * ( o->y / 2 ) ) * 1.0 / 3.0 );
+      posCl = positionsPORES + (int)( (double)( ( 1 ) * ( o->y / 2 ) ) * 2.0 / 3.0 );
 
       for( y = 0; y < o->y; y++ )
       {
-         glColor3f( 0.f, 0.f, 0.f );
-
          // Left membrane
+         glColor3f( 0.f, 0.f, 0.f );   // Black
          glVertex3f( (GLfloat)0.0, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
 
          // Central membrane with pores
-         if( y != (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)i ) )
+         glColor3f( 0.f, 0.f, 0.f );   // Black
+         for( i = 0; i < numK; i++ )
          {
-            glVertex3f( (GLfloat)0.5, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
-         } else {
-            i++;
+            if( y == (int)posK[ i ] )
+            {
+               glColor3f( 1.f, 0.15f, 0.f );    // Red
+            }
          }
+         for( i = 0; i < numNa; i++ )
+         {
+            if( y == (int)posNa[ i ] )
+            {
+               glColor3f( 0.f, 0.f, 1.f );      // Blue
+            }
+         }
+         for( i = 0; i < numCl; i++ )
+         {
+            if( y == (int)posCl[ i ] )
+            {
+               glColor3f( 0.f, 0.70f, 0.35f );  // Green
+            }
+         }
+         glVertex3f( (GLfloat)0.5, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
 
          // Right membrane
+         glColor3f( 0.f, 0.f, 0.f );   // Black
          glVertex3f( (GLfloat)( o->x - 1 ) / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
       }
 
-      // LHS
-      numIons = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) * (double)( o->lconc ) / (double)MAX_CONC + 0.5 );
-      for( int i = 0; i < numIons && placed < o->max_atoms; i++ )
+      // Draw LHS atoms.
+      numK  = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lK  ) / (double)MAX_CONC + 0.5 );
+      numNa = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lNa ) / (double)MAX_CONC + 0.5 );
+      numCl = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lCl ) / (double)MAX_CONC + 0.5 );
+
+      posK  = positionsLHS;
+      posNa = positionsLHS + (int)( (double)( ( o->x / 2 - 1 ) * ( o->y ) ) * 1.0 / 3.0 );
+      posCl = positionsLHS + (int)( (double)( ( o->x / 2 - 1 ) * ( o->y ) ) * 2.0 / 3.0 );
+
+      for( i = 0; i < numK && placed < o->max_atoms; i++ )
       {
-         placed++;
+         x = ( posK[ i ] % ( o->x / 2 - 1 ) ) + 1;
+         y =   posK[ i ] / ( o->x / 2 - 1 );
 
-         x = ( positionsLHS[ i ] % ( o->x / 2 - 1 ) ) + 1;
-         y = positionsLHS[ i ] / ( o->x / 2 - 1 );
- 
-         if( i % 2 == 0 )
-         {
-            // ATOM_K
-            glColor3f( 1.f, 0.f, 0.f );
-         } else {
-            // ATOM_Cl
-            glColor3f( 0.f, 0.f, 1.f );
-         }
-
+         glColor3f( 1.f, 0.15f, 0.f );    // Red
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+         placed++;
       }
 
-      // RHS
-      numIons = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) * (double)( o->rconc ) / (double)MAX_CONC + 0.5 );
-      for( int i = 0; i < numIons && placed < o->max_atoms; i++ )
+      for( i = 0; i < numNa && placed < o->max_atoms; i++ )
       {
-         placed++;
+         x = ( posNa[ i ] % ( o->x / 2 - 1 ) ) + 1;
+         y =   posNa[ i ] / ( o->x / 2 - 1 );
 
-         x = ( positionsRHS[ i ] % ( o->x / 2 - 2 ) ) + ( o->x / 2 + 1 );
-         y = positionsRHS[ i ] / ( o->x / 2 - 2 );
-
-         if( i % 2 == 0 )
-         {
-            // ATOM_Cl
-            glColor3f( 0.f, 0.f, 1.f );
-         } else {
-            // ATOM_K
-            glColor3f( 1.f, 0.f, 0.f );
-         }
-
+         glColor3f( 0.f, 0.f, 1.f );      // Blue
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+         placed++;
+      }
+
+      for( i = 0; i < numCl && placed < o->max_atoms; i++ )
+      {
+         x = ( posCl[ i ] % ( o->x / 2 - 1 ) ) + 1;
+         y =   posCl[ i ] / ( o->x / 2 - 1 );
+
+         glColor3f( 0.f, 0.70f, 0.35f );  // Green
+         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+         placed++;
+      }
+
+      // Draw RHS atoms.
+      numK  = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 * (double)( o->rK  ) / (double)MAX_CONC + 0.5 );
+      numNa = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 * (double)( o->rNa ) / (double)MAX_CONC + 0.5 );
+      numCl = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 * (double)( o->rCl ) / (double)MAX_CONC + 0.5 );
+
+      posK  = positionsRHS;
+      posNa = positionsRHS + (int)( (double)( ( o->x / 2 - 2 ) * ( o->y ) ) * 1.0 / 3.0 );
+      posCl = positionsRHS + (int)( (double)( ( o->x / 2 - 2 ) * ( o->y ) ) * 2.0 / 3.0 );
+
+      for( i = 0; i < numK && placed < o->max_atoms; i++ )
+      {
+         x = ( posK[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
+         y =   posK[ i ] / ( o->x / 2 - 2 );
+
+         glColor3f( 1.f, 0.15f, 0.f );    // Red
+         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+         placed++;
+      }
+
+      for( i = 0; i < numNa && placed < o->max_atoms; i++ )
+      {
+         x = ( posNa[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
+         y =   posNa[ i ] / ( o->x / 2 - 2 );
+
+         glColor3f( 0.f, 0.f, 1.f );      // Blue
+         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+         placed++;
+      }
+
+      for( i = 0; i < numCl && placed < o->max_atoms; i++ )
+      {
+         x = ( posCl[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
+         y =   posCl[ i ] / ( o->x / 2 - 2 );
+
+         glColor3f( 0.f, 0.70f, 0.35f );  // Green
+         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+         placed++;
       }
 
       glEnd();

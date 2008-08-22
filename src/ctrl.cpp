@@ -24,9 +24,15 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    itersDefault = o->iters;
    xDefault = o->x;
    yDefault = o->y;
-   poresDefault = o->pores;
-   lconcDefault = o->lconc;
-   rconcDefault = o->rconc;
+   lKDefault = o->lK;
+   lNaDefault = o->lNa;
+   lClDefault = o->lCl;
+   rKDefault = o->rK;
+   rNaDefault = o->rNa;
+   rClDefault = o->rCl;
+   pKDefault = o->pK;
+   pNaDefault = o->pNa;
+   pClDefault = o->pCl;
    selectivityDefault = o->selectivity;
    electrostaticsDefault = o->electrostatics;
 
@@ -82,56 +88,69 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    yVal = new QLabel( QString::number( yDefault ) );
    yVal->setAlignment( Qt::AlignRight );
 
-   // Pores control
-   poresLbl = new QLabel( "P&ores" );
-   poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
-
-   poresSld = new QSlider( Qt::Horizontal );
-   poresSld->setMinimumWidth( 100 );
-   poresSld->setRange( 0, o->y );
-   poresSld->setValue( poresDefault );
-   poresSld->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
-
-   poresLbl->setBuddy( poresSld );
-
-   poresVal = new QLabel( QString::number( poresDefault ) );
-   poresVal->setAlignment( Qt::AlignRight );
-
    // Seed control
    seedLbl = new QLabel( "See&d" );
-   seedLbl->setToolTip( "Set the seed for the random number generator.\nExperiments with matching seeds and world settings\nare identical." );
+   seedLbl->setToolTip( "Set the seed for the random number generator.\nSimulations with matching seeds and world settings\nare identical." );
 
    seedVal = new QLineEdit( QString::number( o->randseed ) );
    seedVal->setValidator( new QIntValidator( this ) );
-   seedVal->setToolTip( "Set the seed for the random number generator.\nExperiments with matching seeds and world settings\nare identical." );
+   seedVal->setToolTip( "Set the seed for the random number generator.\nSimulations with matching seeds and world settings\nare identical." );
 
    seedLbl->setBuddy( seedVal );
 
-   // Intracellular (left) ion concentration control
-   lconcLbl = new QLabel( "I&ntracellular" );
+   // Ion controls
+   inLbl = new QLabel( "Intracellular" );
+   outLbl = new QLabel( "Extracellular" );
+   permLbl = new QLabel( "Permeability" );
 
-   lconcSld = new QSlider( Qt::Horizontal );
-   lconcSld->setMinimumWidth( 100 );
-   lconcSld->setRange( MIN_CONC, MAX_CONC );
-   lconcSld->setValue( lconcDefault );
+   KLbl = new QLabel( "K+" );
+   NaLbl = new QLabel( "Na+" );
+   ClLbl = new QLabel( "Cl-" );
 
-   lconcLbl->setBuddy( lconcSld );
-   
-   lconcVal = new QLabel( QString::number( lconcDefault ) + " mM" );
-   lconcVal->setAlignment( Qt::AlignRight );
+   lKSld = new QSlider( Qt::Horizontal );
+   lKSld->setRange( MIN_CONC, MAX_CONC );
+   lKSld->setValue( lKDefault );
+   lKLbl = new QLabel( QString::number( lKDefault ) + " mM" );
 
-   // Extracellular (right) ion concentration control
-   rconcLbl = new QLabel( "E&xtracellular" );
+   lNaSld = new QSlider( Qt::Horizontal );
+   lNaSld->setRange( MIN_CONC, MAX_CONC );
+   lNaSld->setValue( lNaDefault );
+   lNaLbl = new QLabel( QString::number( lNaDefault ) + " mM" );
 
-   rconcSld = new QSlider( Qt::Horizontal );
-   rconcSld->setMinimumWidth( 100 );
-   rconcSld->setRange( MIN_CONC, MAX_CONC );
-   rconcSld->setValue( rconcDefault );
+   lClSld = new QSlider( Qt::Horizontal );
+   lClSld->setRange( MIN_CONC, MAX_CONC );
+   lClSld->setValue( lClDefault );
+   lClLbl = new QLabel( QString::number( lClDefault ) + " mM" );
 
-   rconcLbl->setBuddy( rconcSld );
-   
-   rconcVal = new QLabel( QString::number( rconcDefault ) + " mM" );
-   rconcVal->setAlignment( Qt::AlignRight );
+   rKSld = new QSlider( Qt::Horizontal );
+   rKSld->setRange( MIN_CONC, MAX_CONC );
+   rKSld->setValue( rKDefault );
+   rKLbl = new QLabel( QString::number( rKDefault ) + " mM" );
+
+   rNaSld = new QSlider( Qt::Horizontal );
+   rNaSld->setRange( MIN_CONC, MAX_CONC );
+   rNaSld->setValue( rNaDefault );
+   rNaLbl = new QLabel( QString::number( rNaDefault ) + " mM" );
+
+   rClSld = new QSlider( Qt::Horizontal );
+   rClSld->setRange( MIN_CONC, MAX_CONC );
+   rClSld->setValue( rClDefault );
+   rClLbl = new QLabel( QString::number( rClDefault ) + " mM" );
+
+   pKSld = new QSlider( Qt::Horizontal );
+   pKSld->setRange( 0, 100 );
+   pKSld->setValue( (int)( (double)pKDefault * 100.0 ) );
+   pKLbl = new QLabel( QString::number( pKDefault ) );
+
+   pNaSld = new QSlider( Qt::Horizontal );
+   pNaSld->setRange( 0, 100 );
+   pNaSld->setValue( (int)( (double)pNaDefault * 100.0 ) );
+   pNaLbl = new QLabel( QString::number( pNaDefault ) );
+
+   pClSld = new QSlider( Qt::Horizontal );
+   pClSld->setRange( 0, 100 );
+   pClSld->setValue( (int)( (double)pClDefault * 100.0 ) );
+   pClLbl = new QLabel( QString::number( pClDefault ) );
 
    // Selectivity control
    selectivity = new QCheckBox( "Se&lective Permeability" );
@@ -170,31 +189,46 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    ctrlLayout->addWidget( ySld, 3, 1 );
    ctrlLayout->addWidget( yVal, 3, 2 );
   
-   ctrlLayout->addWidget( poresLbl, 4, 0 );
-   ctrlLayout->addWidget( poresSld, 4, 1 );
-   ctrlLayout->addWidget( poresVal, 4, 2 );
-
    ctrlLayout->setColumnMinimumWidth( 2, 50 );
 
-   ctrlLayout->addWidget( seedLbl, 5, 0 );
-   ctrlLayout->addWidget( seedVal, 5, 1, 1, 2 );
+   ctrlLayout->addWidget( seedLbl, 4, 0 );
+   ctrlLayout->addWidget( seedVal, 4, 1, 1, 2 );
 
-   concBox = new QGroupBox( "Initial KCl Concentration" );
-   concLayout = new QGridLayout( concBox );
+   sldBox = new QGroupBox( "Initial Conditions" );
+   sldLayout = new QGridLayout( sldBox );
 
-   concLayout->addWidget( lconcLbl, 0, 0 );
-   concLayout->addWidget( lconcSld, 0, 1 );
-   concLayout->addWidget( lconcVal, 0, 2 );
+   sldLayout->addWidget( inLbl, 0, 1 );
+   sldLayout->addWidget( outLbl, 0, 2 );
+   sldLayout->addWidget( permLbl, 0, 3 );
 
-   concLayout->addWidget( rconcLbl, 1, 0 );
-   concLayout->addWidget( rconcSld, 1, 1 );
-   concLayout->addWidget( rconcVal, 1, 2 );
+   sldLayout->addWidget( KLbl, 1, 0 );
+   sldLayout->addWidget( lKSld, 1, 1 );
+   sldLayout->addWidget( lKLbl, 2, 1 );
+   sldLayout->addWidget( rKSld, 1, 2 );
+   sldLayout->addWidget( rKLbl, 2, 2 );
+   sldLayout->addWidget( pKSld, 1, 3 );
+   sldLayout->addWidget( pKLbl, 2, 3 );
 
-   concLayout->setColumnMinimumWidth( 2, 60 );
-   ctrlLayout->addWidget( concBox, 6, 0, 1, 3 );
+   sldLayout->addWidget( NaLbl, 3, 0 );
+   sldLayout->addWidget( lNaSld, 3, 1 );
+   sldLayout->addWidget( lNaLbl, 4, 1 );
+   sldLayout->addWidget( rNaSld, 3, 2 );
+   sldLayout->addWidget( rNaLbl, 4, 2 );
+   sldLayout->addWidget( pNaSld, 3, 3 );
+   sldLayout->addWidget( pNaLbl, 4, 3 );
 
-   ctrlLayout->addWidget( selectivity, 7, 0, 1, 3 );
-   ctrlLayout->addWidget( electrostatics, 8, 0, 1, 3 );
+   sldLayout->addWidget( ClLbl, 5, 0 );
+   sldLayout->addWidget( lClSld, 5, 1 );
+   sldLayout->addWidget( lClLbl, 6, 1 );
+   sldLayout->addWidget( rClSld, 5, 2 );
+   sldLayout->addWidget( rClLbl, 6, 2 );
+   sldLayout->addWidget( pClSld, 5, 3 );
+   sldLayout->addWidget( pClLbl, 6, 3 );
+
+   ctrlLayout->addWidget( sldBox, 5, 0, 1, 3 );
+
+   ctrlLayout->addWidget( selectivity, 6, 0, 1, 3 );
+   ctrlLayout->addWidget( electrostatics, 7, 0, 1, 3 );
 
    mainLayout->addLayout( ctrlLayout );
    mainLayout->addStretch( 1 );
@@ -216,10 +250,16 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( itersSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeIters( int ) ) );
    connect( xSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeX( int ) ) );
    connect( ySld, SIGNAL( valueChanged( int ) ), this, SLOT( changeY( int ) ) );
-   connect( poresSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePores( int ) ) );
    connect( seedVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
-   connect( lconcSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLconc( int ) ) );
-   connect( rconcSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRconc( int ) ) );
+   connect( lKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLeftK( int ) ) );
+   connect( rKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRightK( int ) ) );
+   connect( pKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePermK( int ) ) );
+   connect( lNaSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLeftNa( int ) ) );
+   connect( rNaSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRightNa( int ) ) );
+   connect( pNaSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePermNa( int ) ) );
+   connect( lClSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLeftCl( int ) ) );
+   connect( rClSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRightCl( int ) ) );
+   connect( pClSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePermCl( int ) ) );
    connect( selectivity, SIGNAL( toggled( bool ) ), this, SLOT( changeSelectivity( bool ) ) );
    connect( electrostatics, SIGNAL( toggled ( bool ) ), this, SLOT( changeElectrostatics( bool ) ) );
 
@@ -294,24 +334,10 @@ NernstCtrl::changeY( int ypow )
    shufflePositions( o );
    emit updatePreview();
 
-   poresLbl->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
-   poresSld->setRange( 0, o->y );
-   poresSld->setToolTip( "Set the number of ion channels contained in the\ncentral membrane between 0 and " + QString::number( o->y ) + "." );
-
    if( o->y < oldy )
    {
       emit worldShrunk();
    }
-}
-
-
-void
-NernstCtrl::changePores( int pores )
-{
-   o->pores = pores;
-   poresVal->setNum( o->pores );
-   redistributePores();
-   emit updatePreview();
 }
 
 
@@ -325,19 +351,85 @@ NernstCtrl::changeSeed( QString seed )
 
 
 void
-NernstCtrl::changeLconc( int lconc )
+NernstCtrl::changeLeftK( int lK )
 {
-   o->lconc = lconc;
-   lconcVal->setText( QString::number( o->lconc ) + " mM" );
+   o->lK = lK;
+   lKLbl->setText( QString::number( o->lK ) + " mM" );
    emit updatePreview();
 }
 
 
 void
-NernstCtrl::changeRconc( int rconc )
+NernstCtrl::changeLeftNa( int lNa )
 {
-   o->rconc = rconc;
-   rconcVal->setText( QString::number( o->rconc ) + " mM" );
+   o->lNa = lNa;
+   lNaLbl->setText( QString::number( o->lNa ) + " mM" );
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changeLeftCl( int lCl )
+{
+   o->lCl = lCl;
+   lClLbl->setText( QString::number( o->lCl ) + " mM" );
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changeRightK( int rK )
+{
+   o->rK = rK;
+   rKLbl->setText( QString::number( o->rK ) + " mM" );
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changeRightNa( int rNa )
+{
+   o->rNa = rNa;
+   rNaLbl->setText( QString::number( o->rNa ) + " mM" );
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changeRightCl( int rCl )
+{
+   o->rCl = rCl;
+   rClLbl->setText( QString::number( o->rCl ) + " mM" );
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changePermK( int pK )
+{
+   o->pK = (double)pK / 100.0;
+   pKLbl->setNum( o->pK );
+   distributePores( o );
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changePermNa( int pNa )
+{
+   o->pNa = (double)pNa / 100.0;
+   pNaLbl->setNum( o->pNa );
+   distributePores( o );
+   emit updatePreview();
+}
+
+
+void
+NernstCtrl::changePermCl( int pCl )
+{
+   o->pCl = (double)pCl / 100.0;
+   pClLbl->setNum( o->pCl );
+   distributePores( o );
    emit updatePreview();
 }
 
@@ -372,10 +464,16 @@ NernstCtrl::reloadSettings()
    itersSld->setValue( o->iters );
    xSld->setValue( (int)( log( o->x ) / log( 2 ) + 0.5 ) );
    ySld->setValue( (int)( log( o->y ) / log( 2 ) + 0.5 ) );
-   poresSld->setValue( o->pores );
    seedVal->setText( QString::number( o->randseed ) );
-   lconcSld->setValue( o->lconc );
-   rconcSld->setValue( o->rconc );
+   lKSld->setValue( o->lK );
+   lNaSld->setValue( o->lNa );
+   lClSld->setValue( o->lCl );
+   rKSld->setValue( o->rK );
+   rNaSld->setValue( o->rNa );
+   rClSld->setValue( o->rCl );
+   pKSld->setValue( (int)( o->pK * 100.0 ) );
+   pNaSld->setValue( (int)( o->pNa * 100.0 ) );
+   pClSld->setValue( (int)( o->pCl * 100.0 ) );
    selectivity->setChecked( o->selectivity );
    electrostatics->setChecked( o->electrostatics );
 }
@@ -395,6 +493,9 @@ NernstCtrl::clearTrackedIons()
                case ATOM_K_TRACK:
                   world[ idx( x, y ) ].color = ATOM_K;
                   break;
+               case ATOM_Na_TRACK:
+                  world[ idx( x, y ) ].color = ATOM_Na;
+                  break;
                case ATOM_Cl_TRACK:
                   world[ idx( x, y ) ].color = ATOM_Cl;
                   break;
@@ -411,7 +512,7 @@ NernstCtrl::clearTrackedIons()
 void
 NernstCtrl::disableCtrl()
 {
-   // Set the first push button to "Pause" and disable all controls.
+   // Set the first push button to "Pause" and disable (most) controls.
    stackedBtnLayout->setCurrentWidget( pauseBtn );
    clearTrackingBtn->setEnabled( 1 );
 
@@ -427,14 +528,24 @@ NernstCtrl::disableCtrl()
    itersSld->setEnabled( 0 );
    itersVal->setEnabled( 0 );
 
-   poresLbl->setEnabled( 0 );
-   poresSld->setEnabled( 0 );
-   poresVal->setEnabled( 0 );
-
    seedLbl->setEnabled( 0 );
    seedVal->setEnabled( 0 );
 
-   concBox->setEnabled( 0 );
+   inLbl->setEnabled( 0 );
+   outLbl->setEnabled( 0 );
+   lKSld->setEnabled( 0 );
+   lKLbl->setEnabled( 0 );
+   lNaSld->setEnabled( 0 );
+   lNaLbl->setEnabled( 0 );
+   lClSld->setEnabled( 0 );
+   lClLbl->setEnabled( 0 );
+   rKSld->setEnabled( 0 );
+   rKLbl->setEnabled( 0 );
+   rNaSld->setEnabled( 0 );
+   rNaLbl->setEnabled( 0 );
+   rClSld->setEnabled( 0 );
+   rClLbl->setEnabled( 0 );
+   sldBox->setEnabled( 0 );
 
    selectivity->setEnabled( 0 );
    electrostatics->setEnabled( 0 );
@@ -452,9 +563,7 @@ NernstCtrl::reenableCtrl()
    itersSld->setMinimum( currentIter );
    itersVal->setEnabled( 1 );
 
-   poresLbl->setEnabled( 1 );
-   poresSld->setEnabled( 1 );
-   poresVal->setEnabled( 1 );
+   sldBox->setEnabled( 1 );
 
    selectivity->setEnabled( 1 );
    electrostatics->setEnabled( 1 );
@@ -485,18 +594,34 @@ NernstCtrl::resetCtrl()
    itersSld->setValue( itersDefault );
    itersVal->setEnabled( 1 );
 
-   poresLbl->setEnabled( 1 );
-   poresSld->setEnabled( 1 );
-   poresSld->setValue( poresDefault );
-   poresVal->setEnabled( 1 );
-
    seedLbl->setEnabled( 1 );
    seedVal->setEnabled( 1 );
    seedVal->setText( QString::number( time( NULL ) ) );
 
-   concBox->setEnabled( 1 );
-   lconcSld->setValue( lconcDefault );
-   rconcSld->setValue( rconcDefault );
+   inLbl->setEnabled( 1 );
+   outLbl->setEnabled( 1 );
+   lKSld->setEnabled( 1 );
+   lKSld->setValue( lKDefault );
+   lKLbl->setEnabled( 1 );
+   lNaSld->setEnabled( 1 );
+   lNaSld->setValue( lNaDefault );
+   lNaLbl->setEnabled( 1 );
+   lClSld->setEnabled( 1 );
+   lClSld->setValue( lClDefault );
+   lClLbl->setEnabled( 1 );
+   rKSld->setEnabled( 1 );
+   rKSld->setValue( rKDefault );
+   rKLbl->setEnabled( 1 );
+   rNaSld->setEnabled( 1 );
+   rNaSld->setValue( rNaDefault );
+   rNaLbl->setEnabled( 1 );
+   rClSld->setEnabled( 1 );
+   rClSld->setValue( rClDefault );
+   rClLbl->setEnabled( 1 );
+   pKSld->setValue( (int)( pKDefault * 100.0 ) );
+   pNaSld->setValue( (int)( pNaDefault * 100.0 ) );
+   pClSld->setValue( (int)( pClDefault * 100.0 ) );
+   sldBox->setEnabled( 1 );
 
    selectivity->setEnabled( 1 );
    selectivity->setChecked( selectivityDefault );

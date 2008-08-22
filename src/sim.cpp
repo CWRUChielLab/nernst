@@ -88,7 +88,6 @@ NernstSim::completeNernstSim()
       std::cout << "iters = "            << currentIter - 1
                 << "  seconds = "        << elapsed
                 << "  iters/sec = "      << ( currentIter - 1 ) / elapsed
-                << "  pores = "          << o->pores
                 << "  ions = "           << o->max_atoms
                 << "  area = "           << (long)(o->x) * (long)(o->y)
                 << "  density = "        << (double)o->max_atoms / ( (long)(o->x) * (long)(o->y) )

@@ -21,7 +21,7 @@ class QwtPlot;
 class QwtPlotCurve;
 
 
-extern double x_iters[], y_volts[], y_nernst[], y_gibbs[], y_boltzmann[];
+extern double x_iters[], y_volts[], y_ghk[]; // y_gibbs[], y_boltzmann[];
 
 
 class NernstGUI : public QMainWindow
@@ -94,9 +94,10 @@ class NernstGUI : public QMainWindow
       QwtPlotCurve **curves;
       int numCurves;
       int currentNernstCurve;
-      double voltsNernst;
-      double voltsGibbs;
-      double voltsBoltzmann;
+      // double voltsNernst;
+      double voltsGHK;
+      // double voltsGibbs;
+      // double voltsBoltzmann;
 
       double gibbsEnergy( int q );
       double boltzmannProbDiff( int q );

@@ -31,10 +31,16 @@ class NernstCtrl : public QWidget
       void changeIters( int iters );
       void changeX( int xpow );
       void changeY( int ypow );
-      void changePores( int pores );
       void changeSeed( QString seed );
-      void changeLconc( int lconc );
-      void changeRconc( int rconc );
+      void changeLeftK( int lK );
+      void changeLeftNa( int lNa );
+      void changeLeftCl( int lCl );
+      void changeRightK( int rK );
+      void changeRightNa( int rNa );
+      void changeRightCl( int rCl );
+      void changePermK( int pK );
+      void changePermNa( int pNa );
+      void changePermCl( int pCl );
       void changeSelectivity( bool selectivity );
       void changeElectrostatics( bool electrostatics );
       void reloadSettings();
@@ -62,9 +68,15 @@ class NernstCtrl : public QWidget
       int itersDefault;
       int xDefault;
       int yDefault;
-      int poresDefault;
-      int lconcDefault;
-      int rconcDefault;
+      int lKDefault;
+      int lNaDefault;
+      int lClDefault;
+      int rKDefault;
+      int rNaDefault;
+      int rClDefault;
+      double pKDefault;
+      double pNaDefault;
+      double pClDefault;
       int selectivityDefault;
       int electrostaticsDefault;
 
@@ -82,20 +94,33 @@ class NernstCtrl : public QWidget
       QSlider *ySld;
       QLabel *yVal;
 
-      QLabel *poresLbl;
-      QSlider *poresSld;
-      QLabel *poresVal;
-
       QLabel *seedLbl;
       QLineEdit *seedVal;
 
-      QLabel *lconcLbl;
-      QSlider *lconcSld;
-      QLabel *lconcVal;
-
-      QLabel *rconcLbl;
-      QSlider *rconcSld;
-      QLabel *rconcVal;
+      QLabel *inLbl;
+      QLabel *outLbl;
+      QLabel *permLbl;
+      QLabel *KLbl;
+      QLabel *NaLbl;
+      QLabel *ClLbl;
+      QSlider *lKSld;
+      QLabel *lKLbl;
+      QSlider *lNaSld;
+      QLabel *lNaLbl;
+      QSlider *lClSld;
+      QLabel *lClLbl;
+      QSlider *rKSld;
+      QLabel *rKLbl;
+      QSlider *rNaSld;
+      QLabel *rNaLbl;
+      QSlider *rClSld;
+      QLabel *rClLbl;
+      QSlider *pKSld;
+      QLabel *pKLbl;
+      QSlider *pNaSld;
+      QLabel *pNaLbl;
+      QSlider *pClSld;
+      QLabel *pClLbl;
 
       QCheckBox *selectivity;
       QCheckBox *electrostatics;
@@ -109,8 +134,8 @@ class NernstCtrl : public QWidget
 
       QVBoxLayout *mainLayout;
       QGridLayout *ctrlLayout;
-      QGroupBox *concBox;
-      QGridLayout *concLayout;
+      QGroupBox *sldBox;
+      QGridLayout *sldLayout;
       QStackedLayout *stackedBtnLayout;
 };
 

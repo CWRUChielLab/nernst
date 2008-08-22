@@ -39,7 +39,7 @@ char
    "(C) 2008  Jeff Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Dr. Hillel J. Chiel",
    "",
-   "Version 0.8.4",
+   "Version 0.9.0",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
@@ -52,35 +52,37 @@ char
 {
    "-a, --max-atoms           Use no more than this number of atoms, even if",
    "                             the spacing scheme will accomodate more.",
-   "-e, --electrostatics      Turn on the \"Maxwell's demon\" method for",
-   "                             electrostatics. This is the default.",
-   "-E, --no-electrostatics   Turn off electrostatics.",
-   "-g, --gui                 Use the GUI.  Set x and y according to your",
-   "                             monitor resolution.  This is the default.",
-   "-G, --no-gui              Don't use the GUI.",
+   "-A, --pK                  Permeability of K. Default=1.0.",
+   "-B, --pNa                 Permeability of Na. Default=0.04.",
+   "-C, --pCl                 Permeability of Cl. Default=0.45.",
+   "-e, --no-electrostatics   Turn off electrostatics.",
+   "-g, --no-gui              Don't use the GUI.",
    "-h, --help                Display this information.",
    "-i, --iters               Number of iterations. Default=50000.",
    "-l, --sleep               Seconds between each iteration (for debugging).",
    "                             Default=0.",
-   "-L, --lconc               Concentration of KCl in LHS in mM. Default=400.",
+   "-L, --lK                  Concentration of K in LHS in mM. Default=400.",
+   "-M, --lNa                 Concentration of Na in LHS in mM. Default=50.",
+   "-N, --lCl                 Concentration of Cl in LHS in mM. Default=52.",
    "-o, --pores               Number of pores in the membrane. Default=12.",
    "-p, --profiling           Output performance information and some",
    "                             settings.",
    "-P, --progress            Print the percentage complete periodically.",
    "-r, --randseed            Random number seed (integer). Default is set by",
    "                             system time.",
-   "-R, --rconc               Concentration of KCl in RHS in mM. Default=20.",
-   "-s, --selectivity         Turn on semipermeability of the central",
-   "                             membrane. This is the default.",
-   "-S, --no-selectivity      Turn off semipermeability of the central",
-   "                             membrane.",
+   "-R, --rK                  Concentration of K in RHS in mM. Default=20.",
+   "-s, --no-selectivity      Turn off pore selectivity.",
+   "-S, --rNa                 Concentration of Na in RHS in mM. Default=440.",
    "-t, --threads             Number of threads per machine.  Not yet",
    "                             implemented.",
+   "-T, --rCl                 Concentration of Cl in RHS in mM. Default=560.",
    "-v, --verbose             Print debugging information (occasionally",
    "                             implemented).",
    "-V, --version             Print version information.",
-   "-x, --x                   Horizontal size.  Default=512.",
-   "-y, --y                   Vertical size.  Default=512.",
+   "-x, --x                   Horizontal world size.  Must be a power of 2.",
+   "                             Default=256.",
+   "-y, --y                   Vertical world size.  Must be a power of 2.",
+   "                             Default=256.",
    NULL
 };
 
@@ -143,22 +145,32 @@ print_version()
 void
 set_defaults( struct options *o )
 {
-   o->x              = 512;
-   o->y              = 512;
+   o->x              = 256;
+   o->y              = 256;
    o->iters          = 50000;
+
    o->max_atoms      = LONG_MAX;
-   o->pores          = 12;
+   o->lK             = 400;
+   o->lNa            = 50;
+   o->lCl            = 52;
+   o->rK             = 20;
+   o->rNa            = 440;
+   o->rCl            = 560;
+   o->pK             = 1.0;
+   o->pNa            = 0.04;
+   o->pCl            = 0.45;
    o->selectivity    = 1;
    o->electrostatics = 1;
+
    o->use_gui        = 1;
+   o->sleep          = 0;
+
+   o->randseed       = time( NULL );
    o->verbose        = 0;
    o->help           = 0;
    o->version        = 0;
-   o->randseed       = time( NULL );
-   o->sleep          = 0;
-   o->lconc          = 400;
-   o->rconc          = 20;
    o->threads        = 1;
+
    o->profiling      = 0;
    o->progress       = 0;
 }
@@ -168,29 +180,36 @@ void
 dump_options( struct options *o )
 {
    print_version();
+
    fprintf( stderr, "x =              %d\n", o->x );
    fprintf( stderr, "y =              %d\n", o->y );
    fprintf( stderr, "iters =          %d\n", o->iters );
-   if( o->max_atoms == LONG_MAX )
-   {
-      fprintf( stderr, "max_atoms =      LONG_MAX\n" );
-   } else {
-      fprintf( stderr, "max_atoms =      %ld\n", o->max_atoms );
-   }
+
+   fprintf( stderr, "max_atoms =      %ld\n", o->max_atoms );
+   fprintf( stderr, "lK =             %d\n", o->lK );
+   fprintf( stderr, "lNa =            %d\n", o->lNa );
+   fprintf( stderr, "lCl =            %d\n", o->lCl );
+   fprintf( stderr, "rK =             %d\n", o->rK );
+   fprintf( stderr, "rNa =            %d\n", o->rNa );
+   fprintf( stderr, "rCl =            %d\n", o->rCl );
+   fprintf( stderr, "pK =             %f\n", o->pK );
+   fprintf( stderr, "pNa =            %f\n", o->pNa );
+   fprintf( stderr, "pCl =            %f\n", o->pCl );
    fprintf( stderr, "selectivity =    %d\n", o->selectivity );
    fprintf( stderr, "electrostatics = %d\n", o->electrostatics );
+
    fprintf( stderr, "use_gui =        %d\n", o->use_gui );
+   fprintf( stderr, "sleep =          %d\n", o->sleep );
+
+   fprintf( stderr, "randseed =       %d\n", o->randseed );
    fprintf( stderr, "verbose =        %d\n", o->verbose );
    fprintf( stderr, "help =           %d\n", o->help );
    fprintf( stderr, "version =        %d\n", o->version );
-   fprintf( stderr, "randseed =       %d\n", o->randseed );
-   fprintf( stderr, "sleep =          %d\n", o->sleep );
-   fprintf( stderr, "lconc =          %d\n", o->lconc );
-   fprintf( stderr, "rconc =          %d\n", o->rconc );
-   fprintf( stderr, "pores =          %d\n", o->pores );
    fprintf( stderr, "threads =        %d\n", o->threads );
+
    fprintf( stderr, "progress =       %d\n", o->progress );
    fprintf( stderr, "profiling =      %d\n", o->profiling );
+
    fprintf( stderr, "---------------------------------------------------------------------------\n" );
 }
 
@@ -223,22 +242,25 @@ parseOptions(int argc, char **argv)
 
    // Keep this ordered by short opt name.
       { "max-atoms",         1, 0, 'a' },
-      { "electrostatics",    0, 0, 'e' },
-      { "no-electrostatics", 0, 0, 'E' },
-      { "gui",               0, 0, 'g' },
-      { "no-gui",            0, 0, 'G' },
+      { "pK",                1, 0, 'A' },
+      { "pNa",               1, 0, 'B' },
+      { "pCl",               1, 0, 'C' },
+      { "no-electrostatics", 0, 0, 'e' },
+      { "no-gui",            0, 0, 'g' },
       { "help",              0, 0, 'h' },
       { "iters",             1, 0, 'i' },
       { "sleep",             1, 0, 'l' },
-      { "lconc",             1, 0, 'L' },
-      { "pores",             1, 0, 'o' },
+      { "lK",                1, 0, 'L' },
+      { "lNa",               1, 0, 'M' },
+      { "lCl",               1, 0, 'N' },
       { "profiling",         0, 0, 'p' },
       { "progress",          0, 0, 'P' },
       { "randseed",          1, 0, 'r' },
-      { "rconc",             1, 0, 'R' },
-      { "selectivity",       0, 0, 's' },
-      { "no-selectivity",    0, 0, 'S' },
+      { "rK",                1, 0, 'R' },
+      { "no-selectivity",    0, 0, 's' },
+      { "rNa",               1, 0, 'S' },
       { "threads",           1, 0, 't' },
+      { "rCl",               1, 0, 'T' },
       { "verbose",           0, 0, 'v' },
       { "version",           0, 0, 'V' },
       { "x",                 1, 0, 'x' },
@@ -252,7 +274,7 @@ parseOptions(int argc, char **argv)
    set_defaults( options );
    while( 1 )
    {
-      c = getopt_long( argc2, argv2, "a:eEgGhi:l:L:o:pPr:R:sSt:vVx:y:", long_options, &option_index );
+      c = getopt_long( argc2, argv2, "a:A:B:C:eghi:l:L:M:N:pPr:R:sS:t:T:vVx:y:", long_options, &option_index );
       if( c == -1 )
       {
          break;
@@ -263,15 +285,19 @@ parseOptions(int argc, char **argv)
          case 'a':
             options->max_atoms = safe_strtol( optarg );
             break;
+         case 'A':
+            options->pK = safe_strtol( optarg );
+            break;
+         case 'B':
+            options->pNa = safe_strtol( optarg );
+            break;
+         case 'C':
+            options->pCl = safe_strtol( optarg );
+            break;
          case 'e':
-            options->electrostatics = 1;
-            break;
-         case 'E':
             options->electrostatics = 0;
-         case 'g':
-            options->use_gui = 1;
             break;
-         case 'G':
+         case 'g':
             options->use_gui = 0;
             break;
          case 'h':
@@ -285,10 +311,13 @@ parseOptions(int argc, char **argv)
             options->sleep = safe_strtol( optarg );
             break;
          case 'L':
-            options->lconc = safe_strtol( optarg );
+            options->lK = safe_strtol( optarg );
             break;
-         case 'o':
-            options->pores = safe_strtol( optarg );
+         case 'M':
+            options->lNa = safe_strtol( optarg );
+            break;
+         case 'N':
+            options->lCl = safe_strtol( optarg );
             break;
          case 'p':
             options->profiling = 1;
@@ -300,16 +329,19 @@ parseOptions(int argc, char **argv)
             options->randseed = safe_strtol( optarg );
             break;
          case 'R':
-            options->rconc = safe_strtol( optarg );
+            options->rK = safe_strtol( optarg );
             break;
          case 's':
-            options->selectivity = 1;
+            options->selectivity = 0;
             break;
          case 'S':
-            options->selectivity = 0;
+            options->rNa = safe_strtol( optarg );
             break;
          case 't':
             options->threads = safe_strtol( optarg );
+            break;
+         case 'T':
+            options->rCl = safe_strtol( optarg );
             break;
          case 'v':
             options->verbose = 1;

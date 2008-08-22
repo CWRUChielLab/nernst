@@ -15,17 +15,23 @@ struct options
 {
    // world options
                         // x & y dimensions of the world
-   int x;               // -x[=512]
-   int y;               // -y[=512]
+   int x;               // -x[=256]
+   int y;               // -y[=256]
    int iters;           // --iters[=50000]
 
    // atom options
    long max_atoms;      // --max-atoms[=LONG_MAX]
-   int lconc;           // --lconc[=400]
-   int rconc;           // --rconc[=20]
-   int pores;           // --pores[=12]
+   int lK;              // --lK[=400]
+   int lNa;             // --lNa[=50]
+   int lCl;             // --lCl[=52]
+   int rK;              // --rK[=20]
+   int rNa;             // --rNa[=440]
+   int rCl;             // --rCl[=560]
+   double pK;           // --pK[=1.0]
+   double pNa;          // --pNa[=0.04]
+   double pCl;          // --pCl[=0.45]
    int selectivity;     // --selectivity[=1]
-   int electrostatics;  // -- electrostatics[=1]
+   int electrostatics;  // --electrostatics[=1]
 
    // gui options
    int use_gui;         // --[no-]gui

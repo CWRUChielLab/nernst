@@ -22,6 +22,7 @@
 #include "options.h"
 #include "atom.h"
 #include "world.h"
+#include "util.h"
 
 
 struct atom *world;
@@ -39,8 +40,7 @@ initWorld( struct options *o )
    // Test that the size of the world is a power of 2.
    if( ( o->x * o->y )  &  ( ( o->x * o->y ) - 1 ) )
    {
-      fprintf( stderr, "ERROR: World size must be a power of 2.\n" );
-      assert( !( ( o->x * o->y )  &  ( ( o->x * o->y ) - 1 ) ) );
+      ASSERT( !( ( o->x * o->y )  &  ( ( o->x * o->y ) - 1 ) ) );
    }
 
    world   = calloc( sizeof( struct atom   ) * o->x * o->y, 1 );
@@ -75,9 +75,9 @@ initWorld( struct options *o )
    d = 3.5e-10;         // Length of a lattice square (m)
    a = d * d;           // Membrane area per lattice quare (m^2)
    eps0 = 8.85419e-12;  // Vacuum permittivity (F m^-1)
-   //eps = 2.59764;       // Membrane dielectric constant
-   //eps = 50;            // Membrane dielectric constant
-   eps = 250;            // Membrane dielectric constant
+   // eps = 2.59764;       // Membrane dielectric constant
+   // eps = 50;            // Membrane dielectric constant
+   eps = 250;           // Membrane dielectric constant
    c = eps * eps0 / d;  // Membrane capacitance (F m^-2)
 }
 

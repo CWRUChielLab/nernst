@@ -28,13 +28,17 @@ struct options *o;
 static int WORLD_SZ_MASK;
 unsigned int WORLD_COUNTER;
 int LRcharge;           // Net charge on left minus net charge on right
-int initLHS_K, initRHS_K, initLHS_Cl, initRHS_Cl;  // Initial ion counts
+
+int initLHS_K,  initRHS_K;
+int initLHS_Na, initRHS_Na;
+int initLHS_Cl, initRHS_Cl;
 
 signed int off_n, off_s, off_e, off_w, off_ne, off_nw, off_se, off_sw;
 signed int *dir2offset;
 
 unsigned int *positionsLHS;
 unsigned int *positionsRHS;
+unsigned int *positionsPORES;
 
 
 unsigned long int
@@ -60,25 +64,28 @@ getY( unsigned int position )
 
 
 int
-ionCharge( uint8_t type )
+ionCharge( unsigned int position )
 {
    int q;
-   switch( type )
+   switch( world[ position ].color )
    {
       case ATOM_K:
-         q = 1;
-         break;
       case ATOM_K_TRACK:
          q = 1;
          break;
-      case ATOM_Cl:
-         q = -1;
+      case ATOM_Na:
+      case ATOM_Na_TRACK:
+         q = 1;
          break;
+      case ATOM_Cl:
       case ATOM_Cl_TRACK:
          q = -1;
          break;
       default:
          q = 0;
+#ifndef QT_NO_DEBUG
+         ASSERT( q != 0 );
+#endif /* QT_NO_DEBUG */
          break;
    }
    return q;
@@ -88,79 +95,75 @@ ionCharge( uint8_t type )
 int
 isMembrane( unsigned int position )
 {
-   if( getX( position ) == 0 || getX( position ) == o->x - 1 )
-   {
-      return 1;
-   }
-   if( getX( position ) == o->x / 2 )
-   {
-      int i, y;
-      for( i = 1; i <= o->pores; i++ )
-      {
-         y = (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)i );
-         if( getY( position ) == y )
-         {
-            return 0;
-         }
-      }
-      return 1;
-   }
-   return 0;
+   return ( world[ position ].color == MEMBRANE ); 
+}
+
+
+int
+isSolvent( unsigned int position )
+{
+   return ( world[ position ].color == SOLVENT );
 }
 
 
 int
 isPore( unsigned int position )
 {
-   if( getX( position ) == o->x / 2 )
-   {
-      int i, y;
-      for( i = 1; i <= o->pores; i++ )
-      {
-         y = (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)i );
-         if( getY( position ) == y )
-         {
-            return 1;
-         }
-      }
-   }
-   return 0;
+   return ( world[ position ].color == PORE_K  ||
+            world[ position ].color == PORE_Na ||
+            world[ position ].color == PORE_Cl );
 }
 
 
 int
-isPermeable( uint8_t type )
+isAtom( unsigned int position )
 {
-   int p;
-   switch( type )
+   return ( world[ position ].color == ATOM_K        ||
+            world[ position ].color == ATOM_K_TRACK  ||
+            world[ position ].color == ATOM_Na       ||
+            world[ position ].color == ATOM_Na_TRACK ||
+            world[ position ].color == ATOM_Cl       ||
+            world[ position ].color == ATOM_Cl_TRACK );
+}
+
+
+int
+isPermeable( unsigned int porePos, unsigned int ionPos )
+{
+
+   if( isPore( porePos ) && isAtom( ionPos ) )
    {
-      case ATOM_K:
-         p = 1;
-         break;
-      case ATOM_K_TRACK:
-         p = 1;
-         break;
-      case ATOM_Cl:
-         if( o->selectivity )
-         {
-            p = 0;
-         } else {
-            p = 1;
-         }
-         break;
-      case ATOM_Cl_TRACK:
-         if( o->selectivity )
-         {
-            p = 0;
-         } else {
-            p = 1;
-         }
-         break;
-      default:
-         p = 0;
-         break;
+      if( !o->selectivity )
+      {
+         return 1;
+      }
+
+      uint8_t poreType = world[ porePos ].color;
+      uint8_t ionType = world[ ionPos ].color;
+
+      switch( poreType )
+      {
+         case PORE_K:
+            return ( ionType == ATOM_K || ionType == ATOM_K_TRACK );
+            break;
+         case PORE_Na:
+            return ( ionType == ATOM_Na || ionType == ATOM_Na_TRACK );
+            break;
+         case PORE_Cl:
+            return ( ionType == ATOM_Cl || ionType == ATOM_Cl_TRACK );
+            break;
+         default:
+#ifndef QT_NO_DEBUG
+            ASSERT( poreType == PORE_K || poreType == PORE_Na || poreType == PORE_Cl );
+#endif /* QT_NO_DEBUG */
+            return 0;
+      }
+   } else {
+#ifndef QT_NO_DEBUG
+      ASSERT( isPore( porePos ) && isAtom( ionPos ) );
+#endif /* QT_NO_DEBUG */
+      return 0;
    }
-   return p;
 }
 
 
@@ -198,68 +201,55 @@ copyAtom( unsigned int from, unsigned int to, int dx, int dy )
    world[ to ].delta_x = world[ from ].delta_x + dx;
    world[ to ].delta_y = world[ from ].delta_y + dy;
    world[ to ].color   = world[ from ].color;
-   if( isMembrane( from ) )
-   {
-      world[ from ].delta_x = MEMBRANE;
-      world[ from ].delta_y = MEMBRANE;
-      world[ from ].color   = MEMBRANE;
-   } else {
-      world[ from ].delta_x = SOLVENT;
-      world[ from ].delta_y = SOLVENT;
-      world[ from ].color   = SOLVENT;
-   }
+
+   world[ from ].delta_x = SOLVENT;
+   world[ from ].delta_y = SOLVENT;
+   world[ from ].color   = SOLVENT;
 }
 
 
 static int
-chargeFlux( unsigned int from, unsigned int to )
+shouldTransport( unsigned int from, unsigned int to )
 {
-   int q = ionCharge( world[ from ].color );
+   // Returns a 1 if the ion can move through the pore, else 0.
+   // Assumes we have already checked that ion and pore types
+   // match. Here we use direction[ to ] as a random number, not
+   // a direction.
 
-   // If the moving atom is entering a pore from the left or exiting a pore to the right
-   if( ( getX( to ) == o->x / 2 && getX( from ) < o->x / 2 ) ||
-       ( getX( from ) == o->x / 2 && getX( to ) > o->x / 2 ) )
+   if( !isSolvent( to ) )
    {
-      return( -q );
-   } else {
-      // If the moving atom is entering a pore from the right or exiting a pore to the left
-      if( ( getX( to ) == o->x / 2 && getX( from ) > o->x / 2 ) ||
-          ( getX( from ) == o->x / 2 && getX( to ) < o->x / 2 ) )
-      {
-         return( q );
-      } else {
-         return( 0 );
-      }
+#ifndef QT_NO_DEBUG
+      ASSERT( isSolvent( to ) );
+#endif /* QT_NO_DEBUG */
+      return 0;
    }
-}
 
-
-static int
-dirPore( unsigned int from )
-{
-   // Return a -1 for move left, a 1 for move right, or 0 for don't move.
+   if( !o->electrostatics )
+   {
+      return ( direction[ to ] % 256 <= 127 );
+   }
 
    const double constant = e * e / ( 2 * k * t * c * a );
 
-   int q, dir;
+   int q;
+   q = ionCharge( from );
 
-   q = ionCharge( world[ from ].color );
-
-   // Using direction[ from ] as a random number, not a random direction.
-   if( direction[ from ] % 256 <= 16 * exp( constant * LRcharge * -q / o->y ) )
+   // Moving left to right across membrane.
+   if( getX( from ) == o->x / 2 - 1 && getX( to ) == o->x / 2 + 1 )
    {
-      dir = -1;
+      return ( direction[ to ] % 256 <= 16 * exp( constant * LRcharge * q / o->y ) );
    } else {
-      if ( direction[ from ] % 256 <=
-               16 * exp( constant * LRcharge * -q / o->y )
-             + 16 * exp( constant * LRcharge *  q / o->y ) )
+      // Moving right to left across membrane.
+      if( getX( from ) == o->x / 2 + 1 && getX( to ) == o->x / 2 - 1 )
       {
-         dir = 1;
+         return ( direction[ to ] % 256 <= 16 * exp( constant * LRcharge * -q / o->y ) );
       } else {
-         dir = 0;
+#ifndef QT_NO_DEBUG
+         ASSERT( ( getX( from ) == o->x / 2 - 1 && getX( to ) == o->x / 2 + 1 ) || ( getX( from ) == o->x / 2 + 1 && getX( from ) == o->x / 2 - 1 ) );
+#endif /* QT_NO_DEBUG */
+         return 0;
       }
    }
-   return( dir );
 }
 
 
@@ -271,10 +261,11 @@ shufflePositions( struct options *o )
 
    if( !initialized )
    {
-      positionsLHS = malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 1 ) * ( MAX_Y ) );
-      positionsRHS = malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 2 ) * ( MAX_Y ) );
+      positionsLHS   = malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 1 ) * ( MAX_Y ) );
+      positionsRHS   = malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 2 ) * ( MAX_Y ) );
+      positionsPORES = malloc( sizeof( unsigned int ) * ( 1 )             * ( MAX_Y / 2 ) );
 
-      assert( positionsLHS && positionsRHS );
+      assert( positionsLHS && positionsRHS && positionsPORES );
       initialized = 1;
    }
 
@@ -287,6 +278,11 @@ shufflePositions( struct options *o )
    for( i = 0; i < (unsigned int)( ( o->x / 2 - 2 ) * ( o->y ) ); i++ )
    {
       positionsRHS[ i ] = i;
+   }
+
+   for( i = 0; i < (unsigned int)( ( 1 ) * ( o->y / 2 ) ); i++ )
+   {
+      positionsPORES[ i ] = 2 * i;
    }
 
    // Shuffle the position arrays
@@ -313,6 +309,66 @@ shufflePositions( struct options *o )
       positionsRHS[ i ] = positionsRHS[ rand ];
       positionsRHS[ rand ] = temp;
    }
+
+   highest = ( 1 ) * ( o->y / 2 ) - 1;
+   for( i = 0; i < highest; i++ )
+   {
+      lowest = i + 1;
+      range = highest - lowest + 1;
+      rand = ( gen_rand32() % range ) + lowest;
+      temp = positionsPORES[ i ];
+      positionsPORES[ i ] = positionsPORES[ rand ];
+      positionsPORES[ rand ] = temp;
+   }
+}
+
+
+void
+distributePores( struct options *o )
+{
+   if( world == NULL )
+   {
+      return;
+   }
+
+   int i, y;
+   int current_idx, numK, numNa, numCl;
+   unsigned int *posK, *posNa, *posCl;
+
+   for( y = 0; y < o->y; y++ )
+   {
+      current_idx = idx( o->x / 2, y );
+      world[ current_idx ].color = MEMBRANE;
+   }
+
+   numK  = (int)( (double)( 1.0 ) * (double)( o->y / 2 ) / 3.0 * o->pK  + 0.5 );
+   numNa = (int)( (double)( 1.0 ) * (double)( o->y / 2 ) / 3.0 * o->pNa + 0.5 );
+   numCl = (int)( (double)( 1.0 ) * (double)( o->y / 2 ) / 3.0 * o->pCl + 0.5 );
+
+   posK  = positionsPORES;
+   posNa = positionsPORES + (int)( (double)( ( 1 ) * ( o->y / 2 ) ) * 1.0 / 3.0 );
+   posCl = positionsPORES + (int)( (double)( ( 1 ) * ( o->y / 2 ) ) * 2.0 / 3.0 );
+
+   for( i = 0; i < numK; i++ )
+   {
+      y = posK[ i ];
+      current_idx = idx( o->x / 2, y );
+      world[ current_idx ].color = PORE_K;
+   }
+ 
+   for( i = 0; i < numNa; i++ )
+   {
+      y = posNa[ i ];
+      current_idx = idx( o->x / 2, y );
+      world[ current_idx ].color = PORE_Na;
+   }
+
+   for( i = 0; i < numCl; i++ )
+   {
+      y = posCl[ i ];
+      current_idx = idx( o->x / 2, y );
+      world[ current_idx ].color = PORE_Cl;
+   }
 }
 
 
@@ -333,6 +389,7 @@ initAtoms( struct options *options )
    off_sw = (  o->x - 1 );
 
    dir2offset = malloc( sizeof( unsigned int ) * 8 );
+   assert( dir2offset );
    dir2offset[ 0 ] = off_n;
    dir2offset[ 1 ] = off_s;
    dir2offset[ 2 ] = off_e;
@@ -342,15 +399,19 @@ initAtoms( struct options *options )
    dir2offset[ 6 ] = off_se;
    dir2offset[ 7 ] = off_sw;
 
-   int x, y, i, numIons, current_idx = 0, placed = 0;
+   int x, y, i, current_idx = 0, placed = 0;
+   int numK, numNa, numCl;
+   unsigned int *posK, *posNa, *posCl;
 
    // Initialize the Mersenne twister random number generator.
    init_gen_rand( (uint32_t)(o->randseed) );
 
    WORLD_SZ_MASK = o->x * o->y - 1;
-   LRcharge = 0;
-   initLHS_K = 0;
-   initRHS_K = 0;
+   LRcharge   = 0;
+   initLHS_K  = 0;
+   initRHS_K  = 0;
+   initLHS_Na = 0;
+   initRHS_Na = 0;
    initLHS_Cl = 0;
    initRHS_Cl = 0;
 
@@ -361,78 +422,130 @@ initAtoms( struct options *options )
    }
 
    // Initialize LHS atoms.
-   numIons = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) * (double)( o->lconc ) / (double)MAX_CONC + 0.5 );
-   for( i = 0; i < numIons && placed < o->max_atoms; i++ )
-   {
-      placed++;
+   numK  = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lK  ) / (double)MAX_CONC + 0.5 );
+   numNa = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lNa ) / (double)MAX_CONC + 0.5 );
+   numCl = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lCl ) / (double)MAX_CONC + 0.5 );
 
-      x = ( positionsLHS[ i ] % ( o->x / 2 - 1 ) ) + 1;
-      y = positionsLHS[ i ] / ( o->x / 2 - 1 );
+   posK  = positionsLHS;
+   posNa = positionsLHS + (int)( (double)( ( o->x / 2 - 1 ) * ( o->y ) ) * 1.0 / 3.0 );
+   posCl = positionsLHS + (int)( (double)( ( o->x / 2 - 1 ) * ( o->y ) ) * 2.0 / 3.0 );
+
+   for( i = 0; i < numK && placed < o->max_atoms; i++ )
+   {
+      x = ( posK[ i ] % ( o->x / 2 - 1 ) ) + 1;
+      y =   posK[ i ] / ( o->x / 2 - 1 );
       current_idx = idx( x, y );
 
       world[ current_idx ].delta_x = 0;
       world[ current_idx ].delta_y = 0;
+      world[ current_idx ].color   = ATOM_K;
+      LRcharge++;
+      initLHS_K++;
 
-      if( i % 2 == 0 )
-      {
-         // ATOM_K
-         world[ current_idx ].color = ATOM_K;
-         LRcharge++;
-         initLHS_K++;
-      } else {
-         // ATOM_Cl
-         world[ current_idx ].color = ATOM_Cl;
-         LRcharge--;
-         initLHS_Cl++;
-      }
+      placed++;
+   }
+
+   for( i = 0; i < numNa && placed < o->max_atoms; i++ )
+   {
+      x = ( posNa[ i ] % ( o->x / 2 - 1 ) ) + 1;
+      y =   posNa[ i ] / ( o->x / 2 - 1 );
+      current_idx = idx( x, y );
+
+      world[ current_idx ].delta_x = 0;
+      world[ current_idx ].delta_y = 0;
+      world[ current_idx ].color   = ATOM_Na;
+      LRcharge++;
+      initLHS_Na++;
+
+      placed++;
+   }
+
+   for( i = 0; i < numCl && placed < o->max_atoms; i++ )
+   {
+      x = ( posCl[ i ] % ( o->x / 2 - 1 ) ) + 1;
+      y =   posCl[ i ] / ( o->x / 2 - 1 );
+      current_idx = idx( x, y );
+
+      world[ current_idx ].delta_x = 0;
+      world[ current_idx ].delta_y = 0;
+      world[ current_idx ].color   = ATOM_Cl;
+      LRcharge--;
+      initLHS_Cl++;
+
+      placed++;
    }
 
    // Initialize RHS atoms.
-   numIons = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) * (double)( o->rconc ) / (double)MAX_CONC + 0.5 );
-   for( i = 0; i < numIons && placed < o->max_atoms; i++ )
-   {
-      placed++;
+   numK  = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 * (double)( o->rK  ) / (double)MAX_CONC + 0.5 );
+   numNa = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 * (double)( o->rNa ) / (double)MAX_CONC + 0.5 );
+   numCl = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 * (double)( o->rCl ) / (double)MAX_CONC + 0.5 );
 
-      x = ( positionsRHS[ i ] % ( o->x / 2 - 2 ) ) + ( o->x / 2 + 1 );
-      y = positionsRHS[ i ] / ( o->x / 2 - 2 );
+   posK  = positionsRHS;
+   posNa = positionsRHS + (int)( (double)( ( o->x / 2 - 2 ) * ( o->y ) ) * 1.0 / 3.0 );
+   posCl = positionsRHS + (int)( (double)( ( o->x / 2 - 2 ) * ( o->y ) ) * 2.0 / 3.0 );
+
+   for( i = 0; i < numK && placed < o->max_atoms; i++ )
+   {
+      x = ( posK[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
+      y =   posK[ i ] / ( o->x / 2 - 2 );
       current_idx = idx( x, y );
 
       world[ current_idx ].delta_x = 0;
       world[ current_idx ].delta_y = 0;
+      world[ current_idx ].color   = ATOM_K;
+      LRcharge--;
+      initRHS_K++;
 
-      if( i % 2 == 0 )
-      {
-         // ATOM_K
-         world[ current_idx ].color = ATOM_K;
-         LRcharge--;
-         initRHS_K++;
-      } else {
-         // ATOM_Cl
-         world[ current_idx ].color = ATOM_Cl;
-         LRcharge++;
-         initRHS_Cl++;
-      }
+      placed++;
    }
 
-   // Set up the membrane.
+   for( i = 0; i < numNa && placed < o->max_atoms; i++ )
+   {
+      x = ( posNa[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
+      y =   posNa[ i ] / ( o->x / 2 - 2 );
+      current_idx = idx( x, y );
+
+      world[ current_idx ].delta_x = 0;
+      world[ current_idx ].delta_y = 0;
+      world[ current_idx ].color   = ATOM_Na;
+      LRcharge--;
+      initRHS_Na++;
+
+      placed++;
+   }
+
+   for( i = 0; i < numCl && placed < o->max_atoms; i++ )
+   {
+      x = ( posCl[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
+      y =   posCl[ i ] / ( o->x / 2 - 2 );
+      current_idx = idx( x, y );
+
+      world[ current_idx ].delta_x = 0;
+      world[ current_idx ].delta_y = 0;
+      world[ current_idx ].color   = ATOM_Cl;
+      LRcharge++;
+      initRHS_Cl++;
+
+      placed++;
+   }
+
+   LRcharge = 0;
+
+   // Set up the membranes.
    for( y = 0; y < o->y; y++ )
    {
-      current_idx = idx( o->x / 2, y );
-      world[ current_idx ].color = MEMBRANE;
       current_idx = idx( 0, y );
+      world[ current_idx ].color = MEMBRANE;
+      current_idx = idx( o->x / 2, y );
       world[ current_idx ].color = MEMBRANE;
       current_idx = idx( o->x - 1, y );
       world[ current_idx ].color = MEMBRANE;
    }
 
-   // Punch holes in the membrane for pores.
-   for( i = 1, x = o->x / 2, y = 0; i <= o->pores; i++ )
-   {
-      y = (int)( ( (double)o->y / (double)( o->pores + 1 ) ) * (double)i );
-      world[ idx( x, y ) ].color = SOLVENT;
-   }
+   distributePores( o );
 
-   o->max_atoms = placed;  // Record this to print out later.
+   // Record number of atoms placed to print out later.
+   o->max_atoms = placed;
 }
 
 
@@ -440,7 +553,6 @@ void
 moveAtoms()
 {
    unsigned int dir = 0, off = 0, from = 0, to = 0;
-   int atomCount = 0, chargeTemp = LRcharge;
    unsigned int WORLD_SZ = o->x * o->y;
 
    // Only need to clear out claimed.
@@ -452,26 +564,17 @@ moveAtoms()
    // Stake our claims for next turn.
    for( from = 0; from < WORLD_SZ; from++ )
    {
-      if( world[ from ].color != SOLVENT && world[ from ].color != MEMBRANE )
+      if( isAtom( from ) )
       {                                            // If there's an atom present,
-         claimed[ from ] ++;                       // block anyone from moving here,
+         claimed[ from ]++;                        // block anyone from moving here,
          dir = direction[ from ] & DIR_MASK;       // get my direction,
          off = dir2offset[ dir ];                  // get my offset,
-         if( o->electrostatics && getX( from ) == o->x / 2 )
-         {
-            to = idx(
-                  getX( from ) + dirPore( from ),
-                  getY( ( from + off ) & WORLD_SZ_MASK )
-                  );
-         } else {
-            to = ( from + off ) & WORLD_SZ_MASK;   // add offset and normalize,
-         }
+         to = ( from + off ) & WORLD_SZ_MASK;      // add offset and normalize,
          claimed[ to ]++;                          // and stake my claim.
-         atomCount++;
       }
 
       // Don't run through the membrane
-      if( world[ from ].color == MEMBRANE )
+      if( isMembrane( from ) || isPore( from ) )
       {
          claimed[ from ]++;
       }
@@ -480,30 +583,53 @@ moveAtoms()
    // Move those that are eligible.
    for( from = 0; from < WORLD_SZ; from++ )
    {
-      if( claimed[ from ] == 1 && world[ from ].color != SOLVENT && world[ from ].color != MEMBRANE )
+      if( claimed[ from ] == 1 && isAtom( from ) )
       {                                            // If there's an atom present,
          dir = direction[ from ] & DIR_MASK;       // get my direction,
          off = dir2offset[ dir ];                  // get my offset,
-         if( o->electrostatics && getX( from ) == o->x / 2 )
-         {
-            to = idx(
-                  getX( from ) + dirPore( from ),
-                  getY( ( from + off ) & WORLD_SZ_MASK )
-                  );
-         } else {
-            to = ( from + off ) & WORLD_SZ_MASK;   // and add offset and normalize.
-         }
+         to = ( from + off ) & WORLD_SZ_MASK;      // and add offset and normalize.
 
-         if( claimed[ to ] == 1 && ( isPermeable( world[ from ].color ) || !isPore( to ) ) )
+         if( claimed[ to ] == 1 )
          {                                         // If it's safe to move,
-            chargeTemp += chargeFlux( from, to );  // take care of any charges moving across the membrane,
             copyAtom( from, to, dir2dx[ dir ], dir2dy[ dir ] );   // copy the atom,
             claimed[ to ] = 0;                     // and make sure no other atoms move here.
          }
-         atomCount++;
       }
    }
-   LRcharge = chargeTemp;
+
+   // Transport atoms through pores.
+   int y;
+   unsigned int current_idx;
+   for( y = 0; y < o->y; y++ )
+   {
+      current_idx = idx( o->x / 2, y );
+      if( isPore( current_idx ) )
+      {
+         from = idx( o->x / 2 - 1, y );
+         to   = idx( o->x / 2 + 1, y );
+         if( isAtom( from ) &&
+             isSolvent( to ) &&
+             isPermeable( current_idx, from ) &&
+             shouldTransport( from, to ) )
+         {
+            int q = ionCharge( from );
+            copyAtom( from, to, 2, 0 );
+            LRcharge += -2 * q;
+         } else {
+            from = idx( o->x / 2 + 1, y );
+            to   = idx( o->x / 2 - 1, y );
+            if( isAtom( from ) &&
+                isSolvent( to ) &&
+                isPermeable( current_idx, from ) &&
+                shouldTransport( from, to ) )
+            {
+               int q = ionCharge( from );
+               copyAtom( from, to, -2, 0 );
+               LRcharge += 2 * q;
+            }
+         }
+      }
+   }
 }
 
 
@@ -512,7 +638,7 @@ void
 takeCensus( int iter )
 {
    int x, y;
-   int K, Cl;
+   int K, Na, Cl;
    static int initialized = 0;
    static FILE *fp;
 
@@ -532,7 +658,7 @@ takeCensus( int iter )
       fp = fopen( "static.out", "w" );
       if( fp )
       {
-         fprintf( fp, "T LK LCl RK RCl PK PCl q\n" );
+         fprintf( fp, "T LK LNa LCl RK RNa RCl q\n" );
       }
    }
 
@@ -541,21 +667,21 @@ takeCensus( int iter )
       fprintf( fp, "%d ", iter );
 
       // Count atoms on LHS
-      for( x = 0, K = 0, Cl = 0; x < o->x / 2; x++ )
+      for( x = 0, K = 0, Na = 0, Cl = 0; x < o->x / 2; x++ )
       {
          for( y = 0; y < o->y; y++ )
          {
             switch( world[ idx( x, y ) ].color )
             {
                case ATOM_K:
-                  K++;
-                  break;
                case ATOM_K_TRACK:
                   K++;
                   break;
-               case ATOM_Cl:
-                  Cl++;
+               case ATOM_Na:
+               case ATOM_Na_TRACK:
+                  Na++;
                   break;
+               case ATOM_Cl:
                case ATOM_Cl_TRACK:
                   Cl++;
                default:
@@ -563,24 +689,24 @@ takeCensus( int iter )
             }
          }
       }
-      fprintf( fp, "%d %d ", K, Cl );
+      fprintf( fp, "%d %d %d ", K, Na, Cl );
 
       // Count atoms on RHS
-      for( x = o->x / 2 + 1, K = 0, Cl = 0; x < o->x; x++ )
+      for( x = o->x / 2 + 1, K = 0, Na = 0, Cl = 0; x < o->x; x++ )
       {
          for( y = 0; y < o->y; y++ )
          {
             switch( world[ idx( x, y ) ].color )
             {
                case ATOM_K:
-                  K++;
-                  break;
                case ATOM_K_TRACK:
                   K++;
                   break;
-               case ATOM_Cl:
-                  Cl++;
+               case ATOM_Na:
+               case ATOM_Na_TRACK:
+                  Na++;
                   break;
+               case ATOM_Cl:
                case ATOM_Cl_TRACK:
                   Cl++;
                   break;
@@ -589,58 +715,10 @@ takeCensus( int iter )
             }
          }
       }
-      fprintf( fp, "%d %d ", K, Cl );
-
-      // Count atoms in pores
-      for( K = 0, Cl = 0, x = o->x / 2, y = 0; y < o->y; y++ )
-      {
-         switch( world[ idx( x, y ) ].color )
-         {
-            case ATOM_K:
-               K++;
-               break;
-            case ATOM_K_TRACK:
-               K++;
-               break;
-            case ATOM_Cl:
-               Cl++;
-               break;
-            case ATOM_Cl_TRACK:
-               Cl++;
-               break;
-            default:
-               break;
-         }
-      }
-      fprintf( fp, "%d %d ", K, Cl );
+      fprintf( fp, "%d %d %d ", K, Na, Cl );
 
       // Output net charge across membrane
       fprintf( fp, "%d\n", LRcharge );
-   }
-}
-
-
-void
-redistributePores()
-{
-   if( world == NULL )
-   {
-      return;
-   }
-   int x, y;
-   for( x = o->x / 2, y = 0; y < o->y; y++ )
-   {
-      if( world[ idx( x, y ) ].color == MEMBRANE || world[ idx( x, y ) ].color == SOLVENT )
-      {
-         if( isMembrane( idx( x, y ) ) )
-         {
-            world[ idx( x, y ) ].color = MEMBRANE;
-         }
-         if( isPore( idx( x, y ) ) )
-         {
-            world[ idx( x, y ) ].color = SOLVENT;
-         }
-      }
    }
 }
 
@@ -654,15 +732,33 @@ finalizeAtoms()
    fp = fopen( "world.out", "w" );
    if( fp )
    {
-      fprintf( fp, "ATOM_K? dx dy\n" );
+      fprintf( fp, "type dx dy\n" );
       for( x = 0; x < o->x; x++ )
       {
          for( y = 0; y < o->y; y++ )
          {
-            if( world[ idx( x, y ) ].color != SOLVENT && world[ idx( x, y ) ].color != MEMBRANE )
+            if( isAtom( idx( x, y ) ) )
             {
+               int type = 0;
+               switch( world[ idx( x, y ) ].color )
+               {
+                  case ATOM_K:
+                  case ATOM_K_TRACK:
+                     type = 1;
+                     break;
+                  case ATOM_Na:
+                  case ATOM_Na_TRACK:
+                     type = 2;
+                     break;
+                  case ATOM_Cl:
+                  case ATOM_Cl_TRACK:
+                     type = 3;
+                     break;
+                  default:
+                     break;
+               }
                fprintf( fp, "%d %d %d\n",
-                  world[ idx( x, y ) ].color == ATOM_K || world[ idx( x, y ) ].color == ATOM_K_TRACK,
+                  type,
                   world[ idx( x, y ) ].delta_x,
                   world[ idx( x, y ) ].delta_y );
             }
