@@ -128,6 +128,24 @@ isAtom( unsigned int position )
 
 
 int
+isUntrackedAtom( unsigned int position )
+{
+   return ( world[ position ].color == ATOM_K        ||
+            world[ position ].color == ATOM_Na       ||
+            world[ position ].color == ATOM_Cl       );
+}
+
+
+int
+isTrackedAtom( unsigned int position )
+{
+   return ( world[ position ].color == ATOM_K_TRACK  ||
+            world[ position ].color == ATOM_Na_TRACK ||
+            world[ position ].color == ATOM_Cl_TRACK );
+}
+
+
+int
 isPermeable( unsigned int porePos, unsigned int ionPos )
 {
 

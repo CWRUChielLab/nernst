@@ -155,7 +155,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    // Selectivity control
    selectivity = new QCheckBox( "Se&lective Permeability" );
    selectivity->setChecked( selectivityDefault );
-   selectivity->setToolTip( "Toggle selectivity of the membrane's pores so that\nonly potassium ions are permeable to the membrane." );
+   selectivity->setToolTip( "Toggle selectivity of the membrane's pores so that\nonly ions of the right type can pass through any\ngiven pore." );
 
    // Electrostatics control
    electrostatics = new QCheckBox( "&Electrostatics" );

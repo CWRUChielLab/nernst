@@ -36,9 +36,9 @@ NernstPainter::NernstPainter( struct options *options, QWidget *parent )
 void
 NernstPainter::mousePressEvent( QMouseEvent *event )
 {
-   int x, y;
-   x = event->x();
-   y = o->y - 1 - event->y();
+   int mouseX, mouseY, x, y;
+   mouseX = event->x();
+   mouseY = o->y - 1 - event->y();
 
    if( !running )
    {
@@ -47,6 +47,31 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
    } else {
       event->accept();
    }
+
+   x = mouseX;
+   y = mouseY;
+
+   if( !isUntrackedAtom( idx( x, y ) ) )
+   {
+      int offset = 1, done = 0;
+      while( !done && offset < 5 )
+      {
+         for( x = mouseX - offset; x <= mouseX + offset && !done; x++ )
+         {
+            for( y = mouseY - offset; y <= mouseY + offset && !done; y++ )
+            {
+               if( isUntrackedAtom( idx( x, y ) ) )
+               {
+                  done = 1;
+               }
+            }
+         }
+         offset++;
+      }
+   }
+
+   x--;
+   y--;
 
    switch( world[ idx( x, y ) ].color )
    {
@@ -59,15 +84,6 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
       case ATOM_Cl:
          world[ idx( x, y ) ].color = ATOM_Cl_TRACK;
          break;
-      case ATOM_K_TRACK:
-         //world[ idx( x, y ) ].color = ATOM_K;
-         //break;
-      case ATOM_Na_TRACK:
-         //world[ idx( x, y ) ].color = ATOM_Na;
-         //break;
-      case ATOM_Cl_TRACK:
-         //world[ idx( x, y ) ].color = ATOM_Cl;
-         //break;
       default:
          event->ignore();
          break;

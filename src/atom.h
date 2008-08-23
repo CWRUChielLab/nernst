@@ -39,6 +39,8 @@ int isMembrane( unsigned int position );
 int isSolvent( unsigned int position );
 int isPore( unsigned int position );
 int isAtom( unsigned int position );
+int isUntrackedAtom( unsigned int position );
+int isTrackedAtom( unsigned int position );
 int isPermeable( unsigned int porePos, unsigned int ionPos );
 void shufflePositions( struct options *options );
 void initAtoms( struct options *options );
