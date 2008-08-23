@@ -28,6 +28,7 @@ class NernstCtrl : public QWidget
 
    public slots:
       void updateIter( int iter );
+      void changeCapacitance( double cap );
       void changeIters( int iters );
       void changeX( int xpow );
       void changeY( int ypow );
@@ -93,6 +94,10 @@ class NernstCtrl : public QWidget
       QLabel *yLbl;
       QSlider *ySld;
       QLabel *yVal;
+
+      QLabel *capLbl;
+      QSlider *capSld;
+      QLabel *capVal;
 
       QLabel *seedLbl;
       QLineEdit *seedVal;

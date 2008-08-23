@@ -103,9 +103,9 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    outLbl = new QLabel( "Extracellular" );
    permLbl = new QLabel( "Permeability" );
 
-   KLbl = new QLabel( "K+" );
-   NaLbl = new QLabel( "Na+" );
-   ClLbl = new QLabel( "Cl-" );
+   KLbl = new QLabel( "<font color=#ff2600>K<sup>+</sup></font>" );
+   NaLbl = new QLabel( "<font color=#0000ff>Na<sup>+</sup></font>" );
+   ClLbl = new QLabel( "<font color=#00b259>Cl<sup>-</sup></font>" );
 
    lKSld = new QSlider( Qt::Horizontal );
    lKSld->setRange( MIN_CONC, MAX_CONC );
@@ -194,7 +194,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    ctrlLayout->addWidget( seedLbl, 4, 0 );
    ctrlLayout->addWidget( seedVal, 4, 1, 1, 2 );
 
-   sldBox = new QGroupBox( "Initial Conditions" );
+   sldBox = new QGroupBox();
    sldLayout = new QGridLayout( sldBox );
 
    sldLayout->addWidget( inLbl, 0, 1 );
@@ -282,6 +282,13 @@ void
 NernstCtrl::updateIter( int iter )
 {
    currentIter = iter + 1;
+}
+
+
+void
+NernstCtrl::changeCapacitance( double cap )
+{
+   eps = cap;
 }
 
 
@@ -443,6 +450,7 @@ NernstCtrl::changeSelectivity( bool selectivity )
    } else {
       o->selectivity = 0;
    }
+   emit updatePreview();
 }
 
 
@@ -455,6 +463,7 @@ NernstCtrl::changeElectrostatics( bool electrostatics )
    } else {
       o->electrostatics = 0;
    }
+   emit updatePreview();
 }
 
 

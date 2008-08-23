@@ -9,6 +9,7 @@
 #include <qwt_plot_curve.h>
 #include <SFMT.h>
 #include <math.h>
+#include <limits>
 #include <fstream>
 
 #include "gui.h"
@@ -19,9 +20,6 @@
 #include "options.h"
 #include "atom.h"
 #include "world.h"
-
-
-#include <iostream>
 
 
 double x_iters[ MAX_ITERS ];
@@ -104,13 +102,13 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.1" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.2" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
 
    // Actions
-   saveInitAct = new QAction( "&Save Initial Conditions", this );
+   saveInitAct = new QAction( "&Save Current Conditions", this );
    saveInitAct->setStatusTip( "Save the control panel settings for later use" );
    connect( saveInitAct, SIGNAL( triggered() ), this, SLOT( saveInit() ) );
 
@@ -208,7 +206,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.1<br>"
+      "Version 0.9.2<br>"
       "Copyright " + QString( 0x00A9 ) + " 2008  "
       "Jeff Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -229,7 +227,7 @@ void
 NernstGUI::saveInit()
 {
    QString fileName;
-   fileName = QFileDialog::getSaveFileName( this, "Save Initial Conditions", "settings.init", "Initial Conditions (*.init)" );
+   fileName = QFileDialog::getSaveFileName( this, "Save Current Conditions", "settings.init", "Initial Conditions (*.init)" );
 
    if( fileName == "" )
    {
@@ -239,7 +237,7 @@ NernstGUI::saveInit()
    QFile file( fileName );
    if( !file.open( QIODevice::WriteOnly ) )
    {
-      QMessageBox::warning( this, "Initial Conditions", QString("Cannot write file %1:\n%2.")
+      QMessageBox::warning( this, "Current Conditions", QString("Cannot write file %1:\n%2.")
             .arg( file.fileName() )
             .arg( file.errorString() ) );
       return;
@@ -716,6 +714,13 @@ NernstGUI::updatePlots( int currentIter )
    static int nernstHasSomeData = 0;
    static int beganThisNernstCurve = 0;
 
+   if( currentIter < 0 )
+   {
+      nernstHasSomeData = 0;
+      beganThisNernstCurve = 0;
+      return;
+   }
+
    x_iters[ currentIter ] = currentIter;
    y_volts[ currentIter ] = LRcharge * e / ( c * a * o->y ) * 1000;  // Current membrane potential (mV)
    // y_gibbs[ currentIter ] = voltsGibbs;
@@ -725,30 +730,29 @@ NernstGUI::updatePlots( int currentIter )
    // curves[ 1 ]->setData( x_iters, y_gibbs, currentIter );
    // curves[ 2 ]->setData( x_iters, y_boltzmann, currentIter );
 
-   if( o->electrostatics == 1 )
+   int drawThisTime = 1;
+   if( o->electrostatics != 1                               ||
+       o->selectivity != 1                                  ||
+       voltsGHK == std::numeric_limits<double>::infinity()  || // inf
+       voltsGHK == -std::numeric_limits<double>::infinity() || // -inf
+       voltsGHK != voltsGHK                                 )  // NaN
+   {
+      drawThisTime = 0;
+   }
+
+   if( drawThisTime )
    {
       if( !nernstHasSomeData )
       {
          beganThisNernstCurve = currentIter;
          nernstHasSomeData = 1;
       }
-      if( o->pK == 0.0 && o->pNa == 0.0 && o->pCl == 0.0 )
-      {
-         y_ghk[ currentIter ] = y_volts[ currentIter ];
-      } else {
-         if( o->selectivity == 0 )
-         {
-            y_ghk[ currentIter ] = 0;
-         } else {
-            y_ghk[ currentIter ] = voltsGHK;
-         }
-      }
+
+      y_ghk[ currentIter ] = voltsGHK;
       curves[ currentNernstCurve ]->setData( x_iters + beganThisNernstCurve,
                                              y_ghk + beganThisNernstCurve,
                                              currentIter - beganThisNernstCurve + 1 );
-
    } else {
-
       if( nernstHasSomeData )
       {
          currentNernstCurve++;
@@ -772,9 +776,7 @@ NernstGUI::updatePlots( int currentIter )
          curves[ currentNernstCurve ]->attach( voltsPlot );
          nernstHasSomeData = 0;
       }
-
    }
-
    voltsPlot->replot();
 }
 
@@ -786,9 +788,13 @@ NernstGUI::resetPlots()
    // curves[ 1 ]->setData( x_iters, y_gibbs, 0 );
    // curves[ 2 ]->setData( x_iters, y_boltzmann, 0 );
 
-   currentNernstCurve = 3;
-   curves[ currentNernstCurve ]->setData( x_iters, y_ghk, 0 );
+   for( int i = 3; i <= currentNernstCurve; i++ )
+   {
+      curves[ i ]->setData( x_iters, y_ghk, 0 );
+   }
 
+   currentNernstCurve = 3;
+   updatePlots( -1 );
    voltsPlot->replot();
 }
 
@@ -799,6 +805,8 @@ NernstGUI::fixRedraw()
    // Fixes a redraw issue whenever the world size is changed in Windows.
    canvasFrame->hide();
    canvasFrame->show();
+   voltsPlot->hide();
+   voltsPlot->show();
 }
 
 

@@ -185,13 +185,28 @@ NernstPainter::draw()
                case SOLVENT:
                   continue;
                case ATOM_K:
-                  glColor3f( 1.f, 0.15f, 0.f );    // Red
+                  if( o->electrostatics )
+                  {
+                     glColor3f( 1.f, 0.15f, 0.f );    // Red
+                  } else {
+                     glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
+                  }
                   break;
                case ATOM_Na:
-                  glColor3f( 0.f, 0.f, 1.f );      // Blue
+                  if( o->electrostatics )
+                  {
+                     glColor3f( 0.f, 0.f, 1.f );      // Blue
+                  } else {
+                     glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
+                  }
                   break;
                case ATOM_Cl:
-                  glColor3f( 0.f, 0.70f, 0.35f );  // Green
+                  if( o->electrostatics )
+                  {
+                     glColor3f( 0.f, 0.70f, 0.35f );  // Green
+                  } else {
+                     glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
+                  }
                   break;
                case ATOM_K_TRACK:
                   glColor3f( 1.f, 0.15f, 0.f );    // Red
@@ -206,13 +221,28 @@ NernstPainter::draw()
                   tracked = 1;
                   break;
                case PORE_K:
-                  glColor3f( 1.f, 0.15f, 0.f );    // Red
+                  if( o->selectivity )
+                  {
+                     glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
+                  } else {
+                     glColor3f( 1.f, 1.f, 1.f );      // White
+                  }
                   break;
                case PORE_Na:
-                  glColor3f( 0.f, 0.f, 1.f );      // Blue
+                  if( o->selectivity )
+                  {
+                     glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
+                  } else {
+                     glColor3f( 1.f, 1.f, 1.f );      // White
+                  }
                   break;
                case PORE_Cl:
-                  glColor3f( 0.f, 0.70f, 0.35f );  // Green
+                  if( o->selectivity )
+                  {
+                     glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
+                  } else {
+                     glColor3f( 1.f, 1.f, 1.f );      // White
+                  }
                   break;
                case MEMBRANE:
                   glColor3f( 0.f, 0.f, 0.f );      // Black
@@ -283,21 +313,36 @@ NernstPainter::draw()
          {
             if( y == (int)posK[ i ] )
             {
-               glColor3f( 1.f, 0.15f, 0.f );    // Red
+               if( o->selectivity )
+               {
+                  glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
+               } else {
+                  glColor3f( 1.f, 1.f, 1.f );      // White
+               }
             }
          }
          for( i = 0; i < numNa; i++ )
          {
             if( y == (int)posNa[ i ] )
             {
-               glColor3f( 0.f, 0.f, 1.f );      // Blue
+               if( o->selectivity )
+               {
+                  glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
+               } else {
+                  glColor3f( 1.f, 1.f, 1.f );      // White
+               }
             }
          }
          for( i = 0; i < numCl; i++ )
          {
             if( y == (int)posCl[ i ] )
             {
-               glColor3f( 0.f, 0.70f, 0.35f );  // Green
+               if( o->selectivity )
+               {
+                  glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
+               } else {
+                  glColor3f( 1.f, 1.f, 1.f );      // White
+               }
             }
          }
          glVertex3f( (GLfloat)0.5, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
@@ -321,7 +366,12 @@ NernstPainter::draw()
          x = ( posK[ i ] % ( o->x / 2 - 1 ) ) + 1;
          y =   posK[ i ] / ( o->x / 2 - 1 );
 
-         glColor3f( 1.f, 0.15f, 0.f );    // Red
+         if( o->electrostatics )
+         {
+            glColor3f( 1.f, 0.15f, 0.f );    // Red
+         } else {
+            glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
+         }
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          placed++;
       }
@@ -331,7 +381,12 @@ NernstPainter::draw()
          x = ( posNa[ i ] % ( o->x / 2 - 1 ) ) + 1;
          y =   posNa[ i ] / ( o->x / 2 - 1 );
 
-         glColor3f( 0.f, 0.f, 1.f );      // Blue
+         if( o->electrostatics )
+         {
+            glColor3f( 0.f, 0.f, 1.f );      // Blue
+         } else {
+            glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
+         }
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          placed++;
       }
@@ -341,7 +396,12 @@ NernstPainter::draw()
          x = ( posCl[ i ] % ( o->x / 2 - 1 ) ) + 1;
          y =   posCl[ i ] / ( o->x / 2 - 1 );
 
-         glColor3f( 0.f, 0.70f, 0.35f );  // Green
+         if( o->electrostatics )
+         {
+            glColor3f( 0.f, 0.70f, 0.35f );  // Green
+         } else {
+            glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
+         }
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          placed++;
       }
@@ -360,7 +420,12 @@ NernstPainter::draw()
          x = ( posK[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
          y =   posK[ i ] / ( o->x / 2 - 2 );
 
-         glColor3f( 1.f, 0.15f, 0.f );    // Red
+         if( o->electrostatics )
+         {
+            glColor3f( 1.f, 0.15f, 0.f );    // Red
+         } else {
+            glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
+         }
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          placed++;
       }
@@ -370,7 +435,12 @@ NernstPainter::draw()
          x = ( posNa[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
          y =   posNa[ i ] / ( o->x / 2 - 2 );
 
-         glColor3f( 0.f, 0.f, 1.f );      // Blue
+         if( o->electrostatics )
+         {
+            glColor3f( 0.f, 0.f, 1.f );      // Blue
+         } else {
+            glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
+         }
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          placed++;
       }
@@ -380,7 +450,12 @@ NernstPainter::draw()
          x = ( posCl[ i ] % ( o->x / 2 - 2 ) ) + o->x / 2 + 1;
          y =   posCl[ i ] / ( o->x / 2 - 2 );
 
-         glColor3f( 0.f, 0.70f, 0.35f );  // Green
+         if( o->electrostatics )
+         {
+            glColor3f( 0.f, 0.70f, 0.35f );  // Green
+         } else {
+            glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
+         }
          glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
          placed++;
       }
