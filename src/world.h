@@ -15,6 +15,7 @@ extern unsigned long int direction_sz64;
 extern struct atom *world;
 extern unsigned char *claimed;
 extern unsigned char *direction;
+void initConstants( void );
 void initWorld( struct options *o );
 
 enum
@@ -48,6 +49,8 @@ extern double a;     // Membrane area per lattice quare (m^2)
 extern double eps0;  // Vacuum permittivity (C^2 J^-1 m^-1)
 extern double eps;   // Membrane dielectric constant
 extern double c;     // Membrane capacitance (F m^-2)
+
+extern double cBoltz;// Constant used in Boltzmann calculation
 
 
 #ifdef __cplusplus

@@ -28,10 +28,10 @@ class NernstCtrl : public QWidget
 
    public slots:
       void updateIter( int iter );
-      void changeCapacitance( double cap );
       void changeIters( int iters );
       void changeX( int xpow );
       void changeY( int ypow );
+      void changeCapacitance( int cap );
       void changeSeed( QString seed );
       void changeLeftK( int lK );
       void changeLeftNa( int lNa );
@@ -69,6 +69,7 @@ class NernstCtrl : public QWidget
       int itersDefault;
       int xDefault;
       int yDefault;
+      double capDefault;
       int lKDefault;
       int lNaDefault;
       int lClDefault;

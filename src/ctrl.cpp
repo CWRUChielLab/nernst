@@ -24,6 +24,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    itersDefault = o->iters;
    xDefault = o->x;
    yDefault = o->y;
+   capDefault = eps;
    lKDefault = o->lK;
    lNaDefault = o->lNa;
    lClDefault = o->lCl;
@@ -87,6 +88,27 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    yVal = new QLabel( QString::number( yDefault ) );
    yVal->setAlignment( Qt::AlignRight );
+
+   // Capacitance control
+   capLbl = new QLabel( "Epsilon" );
+   capLbl->setToolTip( "Set the dielectric constant for the membrane." );
+
+   capSld = new QSlider( Qt::Horizontal );
+   capSld->setMinimumWidth( 100 );
+   capSld->setRange( 1, 10000 );
+   capSld->setValue( (int)( capDefault * 10.0 ) );
+   capSld->setToolTip( "Set the dielectric constant for the membrane." );
+
+   capLbl->setBuddy( capSld );
+
+   capVal = new QLabel( QString::number( capDefault ) );
+   capVal->setAlignment( Qt::AlignRight );
+
+   /*
+   capLbl->hide();
+   capSld->hide();
+   capVal->hide();
+   */
 
    // Seed control
    seedLbl = new QLabel( "See&d" );
@@ -189,10 +211,14 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    ctrlLayout->addWidget( ySld, 3, 1 );
    ctrlLayout->addWidget( yVal, 3, 2 );
   
+   ctrlLayout->addWidget( capLbl, 4, 0 );
+   ctrlLayout->addWidget( capSld, 4, 1 );
+   ctrlLayout->addWidget( capVal, 4, 2 );
+
    ctrlLayout->setColumnMinimumWidth( 2, 50 );
 
-   ctrlLayout->addWidget( seedLbl, 4, 0 );
-   ctrlLayout->addWidget( seedVal, 4, 1, 1, 2 );
+   ctrlLayout->addWidget( seedLbl, 5, 0 );
+   ctrlLayout->addWidget( seedVal, 5, 1, 1, 2 );
 
    sldBox = new QGroupBox();
    sldLayout = new QGridLayout( sldBox );
@@ -225,10 +251,10 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    sldLayout->addWidget( pClSld, 5, 3 );
    sldLayout->addWidget( pClLbl, 6, 3 );
 
-   ctrlLayout->addWidget( sldBox, 5, 0, 1, 3 );
+   ctrlLayout->addWidget( sldBox, 6, 0, 1, 3 );
 
-   ctrlLayout->addWidget( selectivity, 6, 0, 1, 3 );
-   ctrlLayout->addWidget( electrostatics, 7, 0, 1, 3 );
+   ctrlLayout->addWidget( selectivity, 7, 0, 1, 3 );
+   ctrlLayout->addWidget( electrostatics, 8, 0, 1, 3 );
 
    mainLayout->addLayout( ctrlLayout );
    mainLayout->addStretch( 1 );
@@ -250,6 +276,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( itersSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeIters( int ) ) );
    connect( xSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeX( int ) ) );
    connect( ySld, SIGNAL( valueChanged( int ) ), this, SLOT( changeY( int ) ) );
+   connect( capSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeCapacitance( int ) ) );
    connect( seedVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
    connect( lKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLeftK( int ) ) );
    connect( rKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRightK( int ) ) );
@@ -282,13 +309,6 @@ void
 NernstCtrl::updateIter( int iter )
 {
    currentIter = iter + 1;
-}
-
-
-void
-NernstCtrl::changeCapacitance( double cap )
-{
-   eps = cap;
 }
 
 
@@ -345,6 +365,16 @@ NernstCtrl::changeY( int ypow )
    {
       emit worldShrunk();
    }
+}
+
+
+void
+NernstCtrl::changeCapacitance( int cap )
+{
+   eps = (double)cap / 10.0;
+   capVal->setNum( eps );
+   c = eps * eps0 / d;
+   cBoltz = e * e / ( 2 * k * t * c * a );
 }
 
 
@@ -473,6 +503,7 @@ NernstCtrl::reloadSettings()
    itersSld->setValue( o->iters );
    xSld->setValue( (int)( log( o->x ) / log( 2 ) + 0.5 ) );
    ySld->setValue( (int)( log( o->y ) / log( 2 ) + 0.5 ) );
+   capSld->setValue( (int)( eps * 10.0 ) );
    seedVal->setText( QString::number( o->randseed ) );
    lKSld->setValue( o->lK );
    lNaSld->setValue( o->lNa );
@@ -537,6 +568,10 @@ NernstCtrl::disableCtrl()
    itersSld->setEnabled( 0 );
    itersVal->setEnabled( 0 );
 
+   capLbl->setEnabled( 0 );
+   capSld->setEnabled( 0 );
+   capVal->setEnabled( 0 );
+
    seedLbl->setEnabled( 0 );
    seedVal->setEnabled( 0 );
 
@@ -572,6 +607,10 @@ NernstCtrl::reenableCtrl()
    itersSld->setMinimum( currentIter );
    itersVal->setEnabled( 1 );
 
+   capLbl->setEnabled( 1 );
+   capSld->setEnabled( 1 );
+   capVal->setEnabled( 1 );
+
    sldBox->setEnabled( 1 );
 
    selectivity->setEnabled( 1 );
@@ -602,6 +641,11 @@ NernstCtrl::resetCtrl()
    itersSld->setMinimum( 1 );
    itersSld->setValue( itersDefault );
    itersVal->setEnabled( 1 );
+
+   capLbl->setEnabled( 1 );
+   capSld->setEnabled( 1 );
+   capSld->setValue( (int)( capDefault * 10.0 ) );
+   capVal->setEnabled( 1 );
 
    seedLbl->setEnabled( 1 );
    seedVal->setEnabled( 1 );
