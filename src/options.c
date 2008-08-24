@@ -36,7 +36,7 @@ char
 *version[] =
 {
    "Nernst potential simulator.",
-   "(C) 2008  Jeff Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
+   "(C) 2008  Jeffrey Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Dr. Hillel J. Chiel",
    "",
    "Version 0.9.7",

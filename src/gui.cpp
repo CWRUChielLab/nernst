@@ -291,7 +291,7 @@ NernstGUI::about()
       "<br>"
       "Version 0.9.7<br>"
       "Copyright &copy; 2008  "
-      "Jeff Gill, Barry Rountree, Kendrick Shaw, "
+      "Jeffrey Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
       "and Dr. Hillel J. Chiel.<br>"
       "<br>"
