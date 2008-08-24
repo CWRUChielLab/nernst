@@ -109,7 +109,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    yVal->setAlignment( Qt::AlignRight );
 
    // Capacitance control
-   capLbl = new QLabel( "Epsilon" );
+   capLbl = new QLabel( "&Capacitance" );
    capLbl->setToolTip( "Set the dielectric constant for the membrane." );
 
    capSld = new QSlider( Qt::Horizontal );
@@ -130,7 +130,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    */
 
    // Seed control
-   seedLbl = new QLabel( "See&d" );
+   seedLbl = new QLabel( "R&andom Start" );
    seedLbl->setToolTip( "Set the seed for the random number generator.\nSimulations with matching seeds and world settings\nare identical." );
 
    seedVal = new QLineEdit( QString::number( o->randseed ) );
@@ -743,16 +743,26 @@ NernstCtrl::reloadSettings()
    xSld->setValue( (int)( log( o->x ) / log( 2 ) + 0.5 ) );
    ySld->setValue( (int)( log( o->y ) / log( 2 ) + 0.5 ) );
    capSld->setValue( (int)( eps * 10.0 ) );
+   capVal->setText( QString::number( eps ) );
    seedVal->setText( QString::number( o->randseed ) );
    lKSld->setValue( o->lK );
+   lKVal->setText( QString::number( o->lK ) );
    lNaSld->setValue( o->lNa );
+   lNaVal->setText( QString::number( o->lNa ) );
    lClSld->setValue( o->lCl );
+   lClVal->setText( QString::number( o->lCl ) );
    rKSld->setValue( o->rK );
+   rKVal->setText( QString::number( o->rK ) );
    rNaSld->setValue( o->rNa );
+   rNaVal->setText( QString::number( o->rNa ) );
    rClSld->setValue( o->rCl );
+   rClVal->setText( QString::number( o->rCl ) );
    pKSld->setValue( (int)( o->pK * 100.0 ) );
+   pKVal->setText( QString::number( o->pK ) );
    pNaSld->setValue( (int)( o->pNa * 100.0 ) );
+   pNaVal->setText( QString::number( o->pNa ) );
    pClSld->setValue( (int)( o->pCl * 100.0 ) );
+   pClVal->setText( QString::number( o->pCl ) );
    selectivity->setChecked( o->selectivity );
    electrostatics->setChecked( o->electrostatics );
    adjustTable();

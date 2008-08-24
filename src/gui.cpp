@@ -69,16 +69,26 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    // World visualization
    canvas = new NernstPainter( o, this );
 
-   canvasFrame = new QFrame();
-   canvasFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
+   /*
+   inCanvasLbl = new QLabel( "Intracellular" );
+   inCanvasLbl->setAlignment( Qt::AlignCenter );
+   outCanvasLbl = new QLabel( "Extracellular" );
+   outCanvasLbl->setAlignment( Qt::AlignCenter );
+
+   canvasLayout = new QGridLayout();
+   canvasLayout->addWidget( inCanvasLbl, 0, 0 );
+   canvasLayout->addWidget( outCanvasLbl, 0, 1 );
+   canvasLayout->addWidget( canvas, 1, 0, 1, 2 );
+   canvasLayout->setRowStretch( 1, 1 );
+   canvasLayout->setAlignment( Qt::AlignCenter );
+   */
 
    canvasScroll = new QScrollArea();
+   //canvasScroll->setLayout( canvasLayout );
    canvasScroll->setWidget( canvas );
-   canvasScroll->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+   canvasScroll->setAlignment( Qt::AlignCenter );
    canvasScroll->setMinimumWidth( 300 );
-   canvasLayout = new QVBoxLayout();
-   canvasLayout->addWidget( canvasScroll );
-   canvasFrame->setLayout( canvasLayout );
+   canvasScroll->setFrameStyle( QFrame::Box | QFrame::Sunken );
 
    // Potential plot   
    voltsPlot = new QwtPlot();
@@ -138,7 +148,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    // Main window
    mainLayout = new QGridLayout();
    mainLayout->addWidget( ctrlFrame, 0, 0, 2, 1 );
-   mainLayout->addWidget( canvasFrame, 0, 1, 2, 1 );
+   mainLayout->addWidget( canvasScroll, 0, 1, 2, 1 );
 
    plotFrame = new QFrame();
    plotFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
@@ -184,7 +194,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.7" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.8" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -289,7 +299,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.7<br>"
+      "Version 0.9.8<br>"
       "Copyright &copy; 2008  "
       "Jeffrey Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -345,6 +355,7 @@ NernstGUI::saveInit()
    out << o->pCl;             endl( out );
    out << o->selectivity;     endl( out );
    out << o->electrostatics;  endl( out );
+   out << eps;                endl( out );
 
    QApplication::restoreOverrideCursor();
    return;
@@ -390,6 +401,7 @@ NernstGUI::loadInit()
    in >> o->pCl;
    in >> o->selectivity;
    in >> o->electrostatics;
+   in >> eps;
 
    QApplication::restoreOverrideCursor();
    emit settingsLoaded();
@@ -897,8 +909,8 @@ void
 NernstGUI::fixRedraw()
 {
    // Fixes a redraw issue whenever the world size is changed in Windows.
-   canvasFrame->hide();
-   canvasFrame->show();
+   canvasScroll->hide();
+   canvasScroll->show();
    voltsPlot->hide();
    voltsPlot->show();
 }
