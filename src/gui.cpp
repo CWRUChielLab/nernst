@@ -91,18 +91,67 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    curves[ currentNernstCurve ]->attach( voltsPlot );
    voltsGHK = 0;
 
+   // Concentration table
+   inLbl = new QLabel( "<b>Intracellular</b>" );
+   outLbl = new QLabel( "<b>Extracellular</b>" );
+   KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
+   NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
+   ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>-</sup></b></font>" );
+   ImpChargeLbl = new QLabel( "<b>Impermeable<br>Charge</b>" );
+   ImpPartLbl = new QLabel( "<b>Impermeable<br>Particles</b>" );
+
+   KInLbl = new QLabel();
+   KOutLbl = new QLabel();
+   NaInLbl = new QLabel();
+   NaOutLbl = new QLabel();
+   ClInLbl = new QLabel();
+   ClOutLbl = new QLabel();
+   ImpChargeInLbl = new QLabel();
+   ImpChargeOutLbl = new QLabel();
+   ImpPartInLbl = new QLabel();
+   ImpPartOutLbl = new QLabel();
+   adjustTable();
+
    // Main window
    mainLayout = new QGridLayout();
-   mainLayout->addWidget( ctrlFrame, 0, 0 );
-   mainLayout->addWidget( canvasFrame, 0, 1 );
+   mainLayout->addWidget( ctrlFrame, 0, 0, 2, 1 );
+   mainLayout->addWidget( canvasFrame, 0, 1, 2, 1 );
    mainLayout->addWidget( voltsPlot, 0, 2 );
+
+   concBox = new QGroupBox();
+   concLayout = new QGridLayout( concBox );
+
+   concLayout->addWidget( inLbl, 0, 1 );
+   concLayout->addWidget( outLbl, 0, 2 );
+
+   concLayout->addWidget( KLbl, 1, 0 );
+   concLayout->addWidget( KInLbl, 1, 1 );
+   concLayout->addWidget( KOutLbl, 1, 2 );
+
+   concLayout->addWidget( NaLbl, 2, 0 );
+   concLayout->addWidget( NaInLbl, 2, 1 );
+   concLayout->addWidget( NaOutLbl, 2, 2 );
+
+   concLayout->addWidget( ClLbl, 3, 0 );
+   concLayout->addWidget( ClInLbl, 3, 1 );
+   concLayout->addWidget( ClOutLbl, 3, 2 );
+
+   concLayout->addWidget( ImpChargeLbl, 4, 0 );
+   concLayout->addWidget( ImpChargeInLbl, 4, 1 );
+   concLayout->addWidget( ImpChargeOutLbl, 4, 2 );
+
+   concLayout->addWidget( ImpPartLbl, 5, 0 );
+   concLayout->addWidget( ImpPartInLbl, 5, 1 );
+   concLayout->addWidget( ImpPartOutLbl, 5, 2 );
+
+   mainLayout->addWidget( concBox, 1, 2 );
    mainLayout->setColumnMinimumWidth( 2, 350 );
    mainLayout->setColumnStretch( 2, 1 );
 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.4" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.5" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -164,6 +213,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( sim, SIGNAL( moveCompleted( int ) ), ctrl, SLOT( updateIter( int ) ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), canvas, SLOT( update() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updatePlots( int ) ) );
+   connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updateTable() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), statusBar, SLOT( updateProgressBar( int ) ) );
    connect( sim, SIGNAL( updateStatus( QString ) ), statusBar, SLOT( setStatusLbl( QString ) ) ); 
    connect( sim, SIGNAL( updateVoltsStatus( int, int ) ), statusBar, SLOT( setVoltsLbl( int, int ) ) );
@@ -177,7 +227,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( pauseBtnClicked() ), sim, SLOT( pauseSim() ) );
    connect( ctrl, SIGNAL( pauseBtnClicked() ), this, SLOT( enableSaveWorld() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
-   connect( ctrl, SIGNAL( continueBtnClicked() ), this, SLOT( recountIons() ) );
+   connect( ctrl, SIGNAL( continueBtnClicked() ), this, SLOT( calcEquilibrium() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), this, SLOT( disableSaveWorld() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), sim, SLOT( unpauseSim() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), sim, SLOT( resetSim() ) );
@@ -189,6 +239,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( resetProgress() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
    connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
+   connect( ctrl, SIGNAL( adjustTable() ), this, SLOT( adjustTable() ) );
    connect( ctrl, SIGNAL( worldShrunk() ), this, SLOT( shrinkWindow() ) );
 #ifdef BLR_USELINUX
    connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( update() ) );
@@ -206,7 +257,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.4<br>"
+      "Version 0.9.5<br>"
       "Copyright " + QString( 0x00A9 ) + " 2008  "
       "Jeff Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -510,71 +561,6 @@ NernstGUI::disableLoadWorld()
 }
 
 
-void
-NernstGUI::recountIons()
-{
-   int x, y;
-   initLHS_K  = 0;
-   initLHS_Na = 0;
-   initLHS_Cl = 0;
-   initRHS_K  = 0;
-   initRHS_Na = 0;
-   initRHS_Cl = 0;
-
-   // Count up the ions on the LHS
-   for( x = 0; x < o->x / 2; x++ )
-   {
-      for( y = 0; y < o->y; y++ )
-      {
-         switch( world[ idx( x, y ) ].color )
-         {
-            case ATOM_K:
-            case ATOM_K_TRACK:
-               initLHS_K++;
-               break;
-            case ATOM_Na:
-            case ATOM_Na_TRACK:
-               initLHS_Na++;
-               break;
-            case ATOM_Cl:
-            case ATOM_Cl_TRACK:
-               initLHS_Cl++;
-               break;
-            default:
-               break;
-         }
-      }
-   }
-
-   // Count up the ions on the RHS
-   for( x = o->x / 2 + 1; x < o->x; x++ )
-   {
-      for( y = 0; y < o->y; y++ )
-      {
-         switch( world[ idx( x, y ) ].color )
-         {
-            case ATOM_K:
-            case ATOM_K_TRACK:
-               initRHS_K++;
-               break;
-            case ATOM_Na:
-            case ATOM_Na_TRACK:
-               initRHS_Na++;
-               break;
-            case ATOM_Cl:
-            case ATOM_Cl_TRACK:
-               initRHS_Cl++;
-               break;
-            default:
-               break;
-         }
-      }
-   }
-
-   calcEquilibrium();
-}
-
-
 double
 NernstGUI::gibbsEnergy( int q )
 {
@@ -796,6 +782,71 @@ NernstGUI::resetPlots()
    currentNernstCurve = 3;
    updatePlots( -1 );
    voltsPlot->replot();
+}
+
+
+void
+NernstGUI::adjustTable()
+{
+   // Adjust the concentration value in the table to agree with changing settings.
+   KInLbl->setText( QString::number( o->lK ) + " mM" );
+   KOutLbl->setText( QString::number( o->rK ) + " mM" );
+   NaInLbl->setText( QString::number( o->lNa ) + " mM" );
+   NaOutLbl->setText( QString::number( o->rNa ) + " mM" );
+   ClInLbl->setText( QString::number( o->lCl ) + " mM" );
+   ClOutLbl->setText( QString::number( o->rCl ) + " mM" );
+
+   int chargeLeft  = o->lK + o->lNa - o->lCl;
+   int chargeRight = o->rK + o->rNa - o->rCl;
+
+   if( chargeLeft > 0 )
+   {
+      ImpChargeInLbl->setText( "(-) " + QString::number( abs( chargeLeft ) ) + " mM" );
+   } else {
+      ImpChargeInLbl->setText( "(+) " + QString::number( abs( chargeLeft ) ) + " mM" );
+   }
+
+   if( chargeRight > 0 )
+   {
+      ImpChargeOutLbl->setText( "(-) " + QString::number( abs( chargeRight ) ) + " mM" );
+   } else {
+      ImpChargeOutLbl->setText( "(+) " + QString::number( abs( chargeRight ) ) + " mM" );
+   }
+
+   int partLeft  = o->lK + o->lNa + o->lCl + abs( chargeLeft );
+   int partRight = o->rK + o->rNa + o->rCl + abs( chargeRight );
+
+   if( partLeft > partRight )
+   {
+      ImpPartInLbl->setText( "0 mM" );
+      ImpPartOutLbl->setText( QString::number( partLeft - partRight ) + " mM " );
+   } else {
+      ImpPartOutLbl->setText( "0 mM" );
+      ImpPartInLbl->setText( QString::number( partRight - partLeft ) + " mM " );
+   }
+}
+
+void
+NernstGUI::updateTable()
+{
+   // Fill the concentration table with the current concentrations.
+   int numK, numNa, numCl;
+
+   numK  = (int)( (double)initLHS_K  / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numNa = (int)( (double)initLHS_Na / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numCl = (int)( (double)initLHS_Cl / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+
+   KInLbl->setText( QString::number( numK ) + " mM" );
+   NaInLbl->setText( QString::number( numNa ) + " mM" );
+   ClInLbl->setText( QString::number( numCl ) + " mM" );
+
+   numK  = (int)( (double)initRHS_K  / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numNa = (int)( (double)initRHS_Na / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numCl = (int)( (double)initRHS_Cl / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+
+   KOutLbl->setText( QString::number( numK ) + " mM" );
+   NaOutLbl->setText( QString::number( numNa ) + " mM" );
+   ClOutLbl->setText( QString::number( numCl ) + " mM" );
 }
 
 

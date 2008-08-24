@@ -14,6 +14,7 @@ class NernstPainter;
 class NernstStatusBar;
 class QVBoxLayout;
 class QGridLayout;
+class QGroupBox;
 class QFrame;
 class QLabel;
 class QProgressBar;
@@ -50,10 +51,11 @@ class NernstGUI : public QMainWindow
       void enableLoadWorld();
       void disableLoadWorld();
 
-      void recountIons();
       void calcEquilibrium();
       void updatePlots( int currentIter );
       void resetPlots();
+      void adjustTable();
+      void updateTable();
       void fixRedraw();
       void shrinkWindow();
 
@@ -76,7 +78,27 @@ class NernstGUI : public QMainWindow
       QFrame *canvasFrame;
       QVBoxLayout *canvasLayout;
 
+      QLabel *inLbl;
+      QLabel *outLbl;
+      QLabel *KLbl;
+      QLabel *NaLbl;
+      QLabel *ClLbl;
+      QLabel *ImpChargeLbl;
+      QLabel *ImpPartLbl;
+      QLabel *KInLbl;
+      QLabel *KOutLbl;
+      QLabel *NaInLbl;
+      QLabel *NaOutLbl;
+      QLabel *ClInLbl;
+      QLabel *ClOutLbl;
+      QLabel *ImpChargeInLbl;
+      QLabel *ImpChargeOutLbl;
+      QLabel *ImpPartInLbl;
+      QLabel *ImpPartOutLbl;
+
       QGridLayout *mainLayout;
+      QGroupBox *concBox;
+      QGridLayout *concLayout;
       QWidget *mainWidget;
       NernstStatusBar *statusBar;
 

@@ -621,6 +621,7 @@ moveAtoms()
       current_idx = idx( o->x / 2, y );
       if( isPore( current_idx ) )
       {
+         // Try movement from left to right
          from = idx( o->x / 2 - 1, y );
          to   = idx( o->x / 2 + 1, y );
          if( isAtom( from ) &&
@@ -631,7 +632,31 @@ moveAtoms()
             int q = ionCharge( from );
             copyAtom( from, to, 2, 0 );
             LRcharge += -2 * q;
+            switch( world[ to ].color )
+            {
+               case ATOM_K:
+               case ATOM_K_TRACK:
+                  initLHS_K--;
+                  initRHS_K++;
+                  break;
+               case ATOM_Na:
+               case ATOM_Na_TRACK:
+                  initLHS_Na--;
+                  initRHS_Na++;
+                  break;
+               case ATOM_Cl:
+               case ATOM_Cl_TRACK:
+                  initLHS_Cl--;
+                  initRHS_Cl++;
+                  break;
+               default:
+#ifndef QT_NO_DEBUG
+                  ASSERT( isAtom( from ) );
+#endif /* QT_NO_DEBUG */
+                  break;
+            }
          } else {
+            // Try movement from right to left
             from = idx( o->x / 2 + 1, y );
             to   = idx( o->x / 2 - 1, y );
             if( isAtom( from ) &&
@@ -642,6 +667,29 @@ moveAtoms()
                int q = ionCharge( from );
                copyAtom( from, to, -2, 0 );
                LRcharge += 2 * q;
+               switch( world[ to ].color )
+               {
+                  case ATOM_K:
+                  case ATOM_K_TRACK:
+                     initLHS_K++;
+                     initRHS_K--;
+                     break;
+                  case ATOM_Na:
+                  case ATOM_Na_TRACK:
+                     initLHS_Na++;
+                     initRHS_Na--;
+                     break;
+                  case ATOM_Cl:
+                  case ATOM_Cl_TRACK:
+                     initLHS_Cl++;
+                     initRHS_Cl--;
+                     break;
+                  default:
+#ifndef QT_NO_DEBUG
+                     ASSERT( isAtom( from ) );
+#endif /* QT_NO_DEBUG */
+                     break;
+               }
             }
          }
       }

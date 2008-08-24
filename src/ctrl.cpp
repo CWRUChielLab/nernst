@@ -125,54 +125,79 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    outLbl = new QLabel( "Extracellular" );
    permLbl = new QLabel( "Permeability" );
 
-   KLbl = new QLabel( "<font color=#ff2600>K<sup>+</sup></font>" );
-   NaLbl = new QLabel( "<font color=#0000ff>Na<sup>+</sup></font>" );
-   ClLbl = new QLabel( "<font color=#00b259>Cl<sup>-</sup></font>" );
+   mMLbl1 = new QLabel( "mM" );
+   mMLbl2 = new QLabel( "mM" );
+   mMLbl3 = new QLabel( "mM" );
+   mMLbl4 = new QLabel( "mM" );
+   mMLbl5 = new QLabel( "mM" );
+   mMLbl6 = new QLabel( "mM" );
+
+   KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
+   NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
+   ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>-</sup></b></font>" );
 
    lKSld = new QSlider( Qt::Horizontal );
    lKSld->setRange( MIN_CONC, MAX_CONC );
    lKSld->setValue( lKDefault );
-   lKLbl = new QLabel( QString::number( lKDefault ) + " mM" );
+   lKVal = new QLineEdit( QString::number( lKDefault ) );
+   lKVal->setAlignment( Qt::AlignRight );
+   lKVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
 
    lNaSld = new QSlider( Qt::Horizontal );
    lNaSld->setRange( MIN_CONC, MAX_CONC );
    lNaSld->setValue( lNaDefault );
-   lNaLbl = new QLabel( QString::number( lNaDefault ) + " mM" );
+   lNaVal = new QLineEdit( QString::number( lNaDefault ) );
+   lNaVal->setAlignment( Qt::AlignRight );
+   lNaVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
 
    lClSld = new QSlider( Qt::Horizontal );
    lClSld->setRange( MIN_CONC, MAX_CONC );
    lClSld->setValue( lClDefault );
-   lClLbl = new QLabel( QString::number( lClDefault ) + " mM" );
+   lClVal = new QLineEdit( QString::number( lClDefault ) );
+   lClVal->setAlignment( Qt::AlignRight );
+   lClVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
 
    rKSld = new QSlider( Qt::Horizontal );
    rKSld->setRange( MIN_CONC, MAX_CONC );
    rKSld->setValue( rKDefault );
-   rKLbl = new QLabel( QString::number( rKDefault ) + " mM" );
+   rKVal = new QLineEdit( QString::number( rKDefault ) );
+   rKVal->setAlignment( Qt::AlignRight );
+   rKVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
 
    rNaSld = new QSlider( Qt::Horizontal );
    rNaSld->setRange( MIN_CONC, MAX_CONC );
    rNaSld->setValue( rNaDefault );
-   rNaLbl = new QLabel( QString::number( rNaDefault ) + " mM" );
+   rNaVal = new QLineEdit( QString::number( rNaDefault ) );
+   rNaVal->setAlignment( Qt::AlignRight );
+   rNaVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
 
    rClSld = new QSlider( Qt::Horizontal );
    rClSld->setRange( MIN_CONC, MAX_CONC );
    rClSld->setValue( rClDefault );
-   rClLbl = new QLabel( QString::number( rClDefault ) + " mM" );
+   rClVal = new QLineEdit( QString::number( rClDefault ) );
+   rClVal->setAlignment( Qt::AlignRight );
+   rClVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
 
    pKSld = new QSlider( Qt::Horizontal );
    pKSld->setRange( 0, 100 );
    pKSld->setValue( (int)( (double)pKDefault * 100.0 ) );
-   pKLbl = new QLabel( QString::number( pKDefault ) );
+   pKVal = new QLineEdit( QString::number( pKDefault ) );
+   pKVal->setAlignment( Qt::AlignRight );
+   pKVal->setValidator( new QDoubleValidator( 0.00, 1.00, 2, this ) );
 
    pNaSld = new QSlider( Qt::Horizontal );
    pNaSld->setRange( 0, 100 );
    pNaSld->setValue( (int)( (double)pNaDefault * 100.0 ) );
-   pNaLbl = new QLabel( QString::number( pNaDefault ) );
+   pNaVal = new QLineEdit( QString::number( pNaDefault ) );
+   pNaVal->setAlignment( Qt::AlignRight );
+   pNaVal->setValidator( new QDoubleValidator( 0.00, 1.00, 2, this ) );
 
    pClSld = new QSlider( Qt::Horizontal );
    pClSld->setRange( 0, 100 );
    pClSld->setValue( (int)( (double)pClDefault * 100.0 ) );
-   pClLbl = new QLabel( QString::number( pClDefault ) );
+   pClVal = new QLineEdit( QString::number( pClDefault ) );
+   pClVal->setAlignment( Qt::AlignRight );
+   pClVal->setValidator( new QDoubleValidator( 0.00, 1.00, 2, this ) );
 
    // Selectivity control
    selectivity = new QCheckBox( "Se&lective Permeability" );
@@ -223,33 +248,43 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    sldBox = new QGroupBox();
    sldLayout = new QGridLayout( sldBox );
 
-   sldLayout->addWidget( inLbl, 0, 1 );
-   sldLayout->addWidget( outLbl, 0, 2 );
-   sldLayout->addWidget( permLbl, 0, 3 );
+   sldLayout->addWidget( inLbl, 0, 1, 1, 2 );
+   sldLayout->addWidget( outLbl, 0, 3, 1, 2 );
+   sldLayout->addWidget( permLbl, 0, 5 );
 
-   sldLayout->addWidget( KLbl, 1, 0 );
-   sldLayout->addWidget( lKSld, 1, 1 );
-   sldLayout->addWidget( lKLbl, 2, 1 );
-   sldLayout->addWidget( rKSld, 1, 2 );
-   sldLayout->addWidget( rKLbl, 2, 2 );
-   sldLayout->addWidget( pKSld, 1, 3 );
-   sldLayout->addWidget( pKLbl, 2, 3 );
+   sldLayout->addWidget( KLbl, 1, 0, 2, 1 );
+   sldLayout->addWidget( lKSld, 1, 1, 1, 2 );
+   sldLayout->addWidget( lKVal, 2, 1 );
+   sldLayout->addWidget( mMLbl1, 2, 2 );
+   sldLayout->addWidget( rKSld, 1, 3, 1, 2 );
+   sldLayout->addWidget( rKVal, 2, 3 );
+   sldLayout->addWidget( mMLbl2, 2, 4 );
+   sldLayout->addWidget( pKSld, 1, 5 );
+   sldLayout->addWidget( pKVal, 2, 5 );
 
-   sldLayout->addWidget( NaLbl, 3, 0 );
-   sldLayout->addWidget( lNaSld, 3, 1 );
-   sldLayout->addWidget( lNaLbl, 4, 1 );
-   sldLayout->addWidget( rNaSld, 3, 2 );
-   sldLayout->addWidget( rNaLbl, 4, 2 );
-   sldLayout->addWidget( pNaSld, 3, 3 );
-   sldLayout->addWidget( pNaLbl, 4, 3 );
+   sldLayout->addWidget( NaLbl, 4, 0, 2, 1 );
+   sldLayout->addWidget( lNaSld, 4, 1, 1, 2 );
+   sldLayout->addWidget( lNaVal, 5, 1 );
+   sldLayout->addWidget( mMLbl3, 5, 2 );
+   sldLayout->addWidget( rNaSld, 4, 3, 1, 2 );
+   sldLayout->addWidget( rNaVal, 5, 3 );
+   sldLayout->addWidget( mMLbl4, 5, 4 );
+   sldLayout->addWidget( pNaSld, 4, 5 );
+   sldLayout->addWidget( pNaVal, 5, 5 );
 
-   sldLayout->addWidget( ClLbl, 5, 0 );
-   sldLayout->addWidget( lClSld, 5, 1 );
-   sldLayout->addWidget( lClLbl, 6, 1 );
-   sldLayout->addWidget( rClSld, 5, 2 );
-   sldLayout->addWidget( rClLbl, 6, 2 );
-   sldLayout->addWidget( pClSld, 5, 3 );
-   sldLayout->addWidget( pClLbl, 6, 3 );
+   sldLayout->addWidget( ClLbl, 7, 0, 2, 1 );
+   sldLayout->addWidget( lClSld, 7, 1, 1, 2 );
+   sldLayout->addWidget( lClVal, 8, 1 );
+   sldLayout->addWidget( mMLbl5, 8, 2 );
+   sldLayout->addWidget( rClSld, 7, 3, 1, 2 );
+   sldLayout->addWidget( rClVal, 8, 3 );
+   sldLayout->addWidget( mMLbl6, 8, 4 );
+   sldLayout->addWidget( pClSld, 7, 5 );
+   sldLayout->addWidget( pClVal, 8, 5 );
+
+   sldLayout->setRowMinimumHeight( 3, 10 );
+   sldLayout->setRowMinimumHeight( 6, 10 );
+   sldBox->setMaximumWidth( sldBox->minimumSizeHint().rwidth() );
 
    ctrlLayout->addWidget( sldBox, 6, 0, 1, 3 );
 
@@ -278,15 +313,28 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( ySld, SIGNAL( valueChanged( int ) ), this, SLOT( changeY( int ) ) );
    connect( capSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeCapacitance( int ) ) );
    connect( seedVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
+
    connect( lKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLeftK( int ) ) );
+   connect( lKVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeLeftK( QString ) ) );
    connect( rKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRightK( int ) ) );
+   connect( rKVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeRightK( QString ) ) );
    connect( pKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePermK( int ) ) );
+   connect( pKVal, SIGNAL( textChanged( QString ) ), this, SLOT( changePermK( QString ) ) );
+
    connect( lNaSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLeftNa( int ) ) );
+   connect( lNaVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeLeftNa( QString ) ) );
    connect( rNaSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRightNa( int ) ) );
+   connect( rNaVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeRightNa( QString ) ) );
    connect( pNaSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePermNa( int ) ) );
+   connect( pNaVal, SIGNAL( textChanged( QString ) ), this, SLOT( changePermNa( QString ) ) );
+
    connect( lClSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLeftCl( int ) ) );
+   connect( lClVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeLeftCl( QString ) ) );
    connect( rClSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeRightCl( int ) ) );
+   connect( rClVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeRightCl( QString ) ) );
    connect( pClSld, SIGNAL( valueChanged( int ) ), this, SLOT( changePermCl( int ) ) );
+   connect( pClVal, SIGNAL( textChanged( QString ) ), this, SLOT( changePermCl( QString ) ) );
+
    connect( selectivity, SIGNAL( toggled( bool ) ), this, SLOT( changeSelectivity( bool ) ) );
    connect( electrostatics, SIGNAL( toggled ( bool ) ), this, SLOT( changeElectrostatics( bool ) ) );
 
@@ -390,84 +438,270 @@ NernstCtrl::changeSeed( QString seed )
 void
 NernstCtrl::changeLeftK( int lK )
 {
-   o->lK = lK;
-   lKLbl->setText( QString::number( o->lK ) + " mM" );
-   emit updatePreview();
+   if( lK != o->lK )
+   {
+      o->lK = lK;
+      lKVal->setText( QString::number( o->lK ) );
+      emit updatePreview();
+      emit adjustTable();
+   }
+}
+
+
+void
+NernstCtrl::changeLeftK( QString lK )
+{
+   if( lK.toInt() != o->lK )
+   {
+      o->lK = lK.toInt();
+      lKSld->setValue( o->lK );
+      emit updatePreview();
+      emit adjustTable();
+   }
 }
 
 
 void
 NernstCtrl::changeLeftNa( int lNa )
 {
-   o->lNa = lNa;
-   lNaLbl->setText( QString::number( o->lNa ) + " mM" );
-   emit updatePreview();
+   if( lNa != o->lNa )
+   {
+      o->lNa = lNa;
+      lNaVal->setText( QString::number( o->lNa ) );
+      emit updatePreview();
+      emit adjustTable();
+   }
+}
+
+
+void
+NernstCtrl::changeLeftNa( QString lNa )
+{
+   if( lNa.toInt() != o->lNa )
+   {
+      o->lNa = lNa.toInt();
+      lNaSld->setValue( o->lNa );
+      emit updatePreview();
+      emit adjustTable();
+   }
 }
 
 
 void
 NernstCtrl::changeLeftCl( int lCl )
 {
-   o->lCl = lCl;
-   lClLbl->setText( QString::number( o->lCl ) + " mM" );
-   emit updatePreview();
+   if( lCl != o->lCl )
+   {
+      o->lCl = lCl;
+      lClVal->setText( QString::number( o->lCl ) );
+      emit updatePreview();
+      emit adjustTable();
+   }
+}
+
+
+void
+NernstCtrl::changeLeftCl( QString lCl )
+{
+   if( lCl.toInt() != o->lCl )
+   {
+      o->lCl = lCl.toInt();
+      lClSld->setValue( o->lCl );
+      emit updatePreview();
+      emit adjustTable();
+   }
 }
 
 
 void
 NernstCtrl::changeRightK( int rK )
 {
-   o->rK = rK;
-   rKLbl->setText( QString::number( o->rK ) + " mM" );
-   emit updatePreview();
+   if( rK != o->rK )
+   {
+      o->rK = rK;
+      rKVal->setText( QString::number( o->rK ) );
+      emit updatePreview();
+      emit adjustTable();
+   }
+}
+
+
+void
+NernstCtrl::changeRightK( QString rK )
+{
+   if( rK.toInt() != o->rK )
+   {
+      o->rK = rK.toInt();
+      rKSld->setValue( o->rK );
+      emit updatePreview();
+      emit adjustTable();
+   }
 }
 
 
 void
 NernstCtrl::changeRightNa( int rNa )
 {
-   o->rNa = rNa;
-   rNaLbl->setText( QString::number( o->rNa ) + " mM" );
-   emit updatePreview();
+   if( rNa != o->rNa )
+   {
+      o->rNa = rNa;
+      rNaVal->setText( QString::number( o->rNa ) );
+      emit updatePreview();
+      emit adjustTable();
+   }
+}
+
+
+void
+NernstCtrl::changeRightNa( QString rNa )
+{
+   if( rNa.toInt() != o->rNa )
+   {
+      o->rNa = rNa.toInt();
+      rNaSld->setValue( o->rNa );
+      emit updatePreview();
+      emit adjustTable();
+   }
 }
 
 
 void
 NernstCtrl::changeRightCl( int rCl )
 {
-   o->rCl = rCl;
-   rClLbl->setText( QString::number( o->rCl ) + " mM" );
-   emit updatePreview();
+   if( rCl != o->rCl )
+   {
+      o->rCl = rCl;
+      rClVal->setText( QString::number( o->rCl ) );
+      emit updatePreview();
+      emit adjustTable();
+   }
+}
+
+
+void
+NernstCtrl::changeRightCl( QString rCl )
+{
+   if( rCl.toInt() != o->rCl )
+   {
+      o->rCl = rCl.toInt();
+      rClSld->setValue( o->rCl );
+      emit updatePreview();
+      emit adjustTable();
+   }
 }
 
 
 void
 NernstCtrl::changePermK( int pK )
 {
-   o->pK = (double)pK / 100.0;
-   pKLbl->setNum( o->pK );
-   distributePores( o );
-   emit updatePreview();
+   if( (double)pK / 100.0 != o->pK )
+   {
+      o->pK = (double)pK / 100.0;
+      pKVal->setText( QString::number( o->pK ) );
+      distributePores( o );
+      emit updatePreview();
+   }
+}
+
+
+void
+NernstCtrl::changePermK( QString pK )
+{
+   if( pK.toDouble() < 0 )
+   {
+      pK = QString::number( 0.00 );
+      pKVal->setText( pK );
+   }
+
+   if( pK.toDouble() > 1 )
+   {
+      pK = QString::number( 1.00 );
+      pKVal->setText( pK );
+   }
+
+   if( pK.toDouble() != o->pK )
+   {
+      o->pK = pK.toDouble();
+      pKSld->setValue( (int)( o->pK * 100.0 ) );
+      distributePores( o );
+      emit updatePreview();
+   }
 }
 
 
 void
 NernstCtrl::changePermNa( int pNa )
 {
-   o->pNa = (double)pNa / 100.0;
-   pNaLbl->setNum( o->pNa );
-   distributePores( o );
-   emit updatePreview();
+   if( (double)pNa / 100.0 != o->pNa )
+   {
+      o->pNa = (double)pNa / 100.0;
+      pNaVal->setText( QString::number( o->pNa ) );
+      distributePores( o );
+      emit updatePreview();
+   }
+}
+
+
+void
+NernstCtrl::changePermNa( QString pNa )
+{
+   if( pNa.toDouble() < 0 )
+   {
+      pNa = QString::number( 0.00 );
+      pNaVal->setText( pNa );
+   }
+
+   if( pNa.toDouble() > 1 )
+   {
+      pNa = QString::number( 1.00 );
+      pNaVal->setText( pNa );
+   }
+
+   if( pNa.toDouble() != o->pNa )
+   {
+      o->pNa = pNa.toDouble();
+      pNaSld->setValue( (int)( o->pNa * 100.0 ) );
+      distributePores( o );
+      emit updatePreview();
+   }
 }
 
 
 void
 NernstCtrl::changePermCl( int pCl )
 {
-   o->pCl = (double)pCl / 100.0;
-   pClLbl->setNum( o->pCl );
-   distributePores( o );
-   emit updatePreview();
+   if( (double)pCl / 100.0 != o->pCl )
+   {
+      o->pCl = (double)pCl / 100.0;
+      pClVal->setText( QString::number( o->pCl ) );
+      distributePores( o );
+      emit updatePreview();
+   }
+}
+
+
+void
+NernstCtrl::changePermCl( QString pCl )
+{
+   if( pCl.toDouble() < 0 )
+   {
+      pCl = QString::number( 0.00 );
+      pClVal->setText( pCl );
+   }
+
+   if( pCl.toDouble() > 1 )
+   {
+      pCl = QString::number( 1.00 );
+      pClVal->setText( pCl );
+   }
+
+   if( pCl.toDouble() != o->pCl )
+   {
+      o->pCl = pCl.toDouble();
+      pClSld->setValue( (int)( o->pCl * 100.0 ) );
+      distributePores( o );
+      emit updatePreview();
+   }
 }
 
 
@@ -577,19 +811,31 @@ NernstCtrl::disableCtrl()
 
    inLbl->setEnabled( 0 );
    outLbl->setEnabled( 0 );
+   permLbl->setEnabled( 0 );
+   mMLbl1->setEnabled( 0 );
+   mMLbl2->setEnabled( 0 );
+   mMLbl3->setEnabled( 0 );
+   mMLbl4->setEnabled( 0 );
+   mMLbl5->setEnabled( 0 );
+   mMLbl6->setEnabled( 0 );
    lKSld->setEnabled( 0 );
-   lKLbl->setEnabled( 0 );
+   lKVal->setEnabled( 0 );
    lNaSld->setEnabled( 0 );
-   lNaLbl->setEnabled( 0 );
+   lNaVal->setEnabled( 0 );
    lClSld->setEnabled( 0 );
-   lClLbl->setEnabled( 0 );
+   lClVal->setEnabled( 0 );
    rKSld->setEnabled( 0 );
-   rKLbl->setEnabled( 0 );
+   rKVal->setEnabled( 0 );
    rNaSld->setEnabled( 0 );
-   rNaLbl->setEnabled( 0 );
+   rNaVal->setEnabled( 0 );
    rClSld->setEnabled( 0 );
-   rClLbl->setEnabled( 0 );
-   sldBox->setEnabled( 0 );
+   rClVal->setEnabled( 0 );
+   pKSld->setEnabled( 0 );
+   pKVal->setEnabled( 0 );
+   pNaSld->setEnabled( 0 );
+   pNaVal->setEnabled( 0 );
+   pClSld->setEnabled( 0 );
+   pClVal->setEnabled( 0 );
 
    selectivity->setEnabled( 0 );
    electrostatics->setEnabled( 0 );
@@ -611,7 +857,13 @@ NernstCtrl::reenableCtrl()
    capSld->setEnabled( 1 );
    capVal->setEnabled( 1 );
 
-   sldBox->setEnabled( 1 );
+   permLbl->setEnabled( 1 );
+   pKSld->setEnabled( 1 );
+   pKVal->setEnabled( 1 );
+   pNaSld->setEnabled( 1 );
+   pNaVal->setEnabled( 1 );
+   pClSld->setEnabled( 1 );
+   pClVal->setEnabled( 1 );
 
    selectivity->setEnabled( 1 );
    electrostatics->setEnabled( 1 );
@@ -653,28 +905,40 @@ NernstCtrl::resetCtrl()
 
    inLbl->setEnabled( 1 );
    outLbl->setEnabled( 1 );
+   permLbl->setEnabled( 1 );
+   mMLbl1->setEnabled( 1 );
+   mMLbl2->setEnabled( 1 );
+   mMLbl3->setEnabled( 1 );
+   mMLbl4->setEnabled( 1 );
+   mMLbl5->setEnabled( 1 );
+   mMLbl6->setEnabled( 1 );
    lKSld->setEnabled( 1 );
    lKSld->setValue( lKDefault );
-   lKLbl->setEnabled( 1 );
+   lKVal->setEnabled( 1 );
    lNaSld->setEnabled( 1 );
    lNaSld->setValue( lNaDefault );
-   lNaLbl->setEnabled( 1 );
+   lNaVal->setEnabled( 1 );
    lClSld->setEnabled( 1 );
    lClSld->setValue( lClDefault );
-   lClLbl->setEnabled( 1 );
+   lClVal->setEnabled( 1 );
    rKSld->setEnabled( 1 );
    rKSld->setValue( rKDefault );
-   rKLbl->setEnabled( 1 );
+   rKVal->setEnabled( 1 );
    rNaSld->setEnabled( 1 );
    rNaSld->setValue( rNaDefault );
-   rNaLbl->setEnabled( 1 );
+   rNaVal->setEnabled( 1 );
    rClSld->setEnabled( 1 );
    rClSld->setValue( rClDefault );
-   rClLbl->setEnabled( 1 );
+   rClVal->setEnabled( 1 );
+   pKSld->setEnabled( 1 );
    pKSld->setValue( (int)( pKDefault * 100.0 ) );
+   pKVal->setEnabled( 1 );
+   pNaSld->setEnabled( 1 );
    pNaSld->setValue( (int)( pNaDefault * 100.0 ) );
+   pNaVal->setEnabled( 1 );
+   pClSld->setEnabled( 1 );
    pClSld->setValue( (int)( pClDefault * 100.0 ) );
-   sldBox->setEnabled( 1 );
+   pClVal->setEnabled( 1 );
 
    selectivity->setEnabled( 1 );
    selectivity->setChecked( selectivityDefault );
