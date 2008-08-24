@@ -134,7 +134,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
    NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
-   ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>-</sup></b></font>" );
+   ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" );
 
    lKSld = new QSlider( Qt::Horizontal );
    lKSld->setRange( MIN_CONC, MAX_CONC );
@@ -750,6 +750,7 @@ NernstCtrl::reloadSettings()
    pClSld->setValue( (int)( o->pCl * 100.0 ) );
    selectivity->setChecked( o->selectivity );
    electrostatics->setChecked( o->electrostatics );
+   adjustTable();
 }
 
 
@@ -944,5 +945,7 @@ NernstCtrl::resetCtrl()
    selectivity->setChecked( selectivityDefault );
    electrostatics->setEnabled( 1 );
    electrostatics->setChecked( electrostaticsDefault );
+
+   adjustTable();
 }
 

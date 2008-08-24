@@ -96,7 +96,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    outLbl = new QLabel( "<b>Extracellular</b>" );
    KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
    NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
-   ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>-</sup></b></font>" );
+   ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" );
    ImpChargeLbl = new QLabel( "<b>Impermeable<br>Charge</b>" );
    ImpPartLbl = new QLabel( "<b>Impermeable<br>Particles</b>" );
 
@@ -116,7 +116,13 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainLayout = new QGridLayout();
    mainLayout->addWidget( ctrlFrame, 0, 0, 2, 1 );
    mainLayout->addWidget( canvasFrame, 0, 1, 2, 1 );
-   mainLayout->addWidget( voltsPlot, 0, 2 );
+
+   plotBox = new QGroupBox();
+   plotLayout = new QVBoxLayout( plotBox );
+   plotLayout->addWidget( voltsPlot );
+   curveLbl = new QLabel();
+   plotLayout->addWidget( curveLbl );
+   mainLayout->addWidget( plotBox, 0, 2 );
 
    concBox = new QGroupBox();
    concLayout = new QGridLayout( concBox );
@@ -151,7 +157,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.5" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.6" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -257,8 +263,8 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.5<br>"
-      "Copyright " + QString( 0x00A9 ) + " 2008  "
+      "Version 0.9.6<br>"
+      "Copyright &copy; 2008  "
       "Jeff Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
       "and Dr. Hillel J. Chiel.<br>"
@@ -738,6 +744,14 @@ NernstGUI::updatePlots( int currentIter )
       curves[ currentNernstCurve ]->setData( x_iters + beganThisNernstCurve,
                                              y_ghk + beganThisNernstCurve,
                                              currentIter - beganThisNernstCurve + 1 );
+      if( o->pK >  0 && o->pNa == 0 && o->pCl == 0 ||
+          o->pK == 0 && o->pNa >  0 && o->pCl == 0 ||
+          o->pK == 0 && o->pNa == 0 && o->pCl >  0 )
+      {
+         curveLbl->setText( "<font color=#ff0000>Nernst: " + QString::number( voltsGHK ) + " mV</font>" );
+      } else {
+         curveLbl->setText( "<font color=#ff0000>Goldman-Hodgkin-Katz: " + QString::number( voltsGHK ) + " mV</font>" );
+      }
    } else {
       if( nernstHasSomeData )
       {
@@ -762,6 +776,7 @@ NernstGUI::updatePlots( int currentIter )
          curves[ currentNernstCurve ]->attach( voltsPlot );
          nernstHasSomeData = 0;
       }
+      curveLbl->setText( "<font color=#ff0000>Goldman-Hodgkin-Katz: N/A</font>" );
    }
    voltsPlot->replot();
 }
@@ -801,14 +816,14 @@ NernstGUI::adjustTable()
 
    if( chargeLeft > 0 )
    {
-      ImpChargeInLbl->setText( "(-) " + QString::number( abs( chargeLeft ) ) + " mM" );
+      ImpChargeInLbl->setText( "(<html>&ndash;</html>) " + QString::number( abs( chargeLeft ) ) + " mM" );
    } else {
       ImpChargeInLbl->setText( "(+) " + QString::number( abs( chargeLeft ) ) + " mM" );
    }
 
    if( chargeRight > 0 )
    {
-      ImpChargeOutLbl->setText( "(-) " + QString::number( abs( chargeRight ) ) + " mM" );
+      ImpChargeOutLbl->setText( "(<html>&ndash;</html>) " + QString::number( abs( chargeRight ) ) + " mM" );
    } else {
       ImpChargeOutLbl->setText( "(+) " + QString::number( abs( chargeRight ) ) + " mM" );
    }

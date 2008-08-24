@@ -78,6 +78,10 @@ class NernstGUI : public QMainWindow
       QFrame *canvasFrame;
       QVBoxLayout *canvasLayout;
 
+      QGroupBox *plotBox;
+      QVBoxLayout *plotLayout;
+      QLabel *curveLbl;
+
       QLabel *inLbl;
       QLabel *outLbl;
       QLabel *KLbl;
