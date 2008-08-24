@@ -383,36 +383,22 @@ NernstCtrl::changeIters( int iters )
 void
 NernstCtrl::changeX( int xpow )
 {
-   int oldx = o->x;
-
    o->x = (int)pow( 2, xpow );
    xVal->setNum( o->x );
 
    shufflePositions( o );
    emit updatePreview();
-
-   if( o->x < oldx )
-   {
-      emit worldShrunk();
-   }
 }
 
 
 void
 NernstCtrl::changeY( int ypow )
 {
-   int oldy = o->y;
-
    o->y = (int)pow( 2, ypow );
    yVal->setNum( o->y );
 
    shufflePositions( o );
    emit updatePreview();
-
-   if( o->y < oldy )
-   {
-      emit worldShrunk();
-   }
 }
 
 

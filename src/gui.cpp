@@ -53,8 +53,12 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    canvasFrame = new QFrame();
    canvasFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
 
+   canvasScroll = new QScrollArea();
+   canvasScroll->setWidget( canvas );
+   canvasScroll->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+   canvasScroll->setMinimumWidth( 300 );
    canvasLayout = new QVBoxLayout();
-   canvasLayout->addWidget( canvas );
+   canvasLayout->addWidget( canvasScroll );
    canvasFrame->setLayout( canvasLayout );
 
    // Potential plot   
@@ -97,7 +101,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
    NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
    ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" );
-   ImpChargeLbl = new QLabel( "<b>Impermeable<br>Charge</b>" );
+   ImpChargeLbl = new QLabel( "<b>Impermeable<br>Charges</b>" );
    ImpPartLbl = new QLabel( "<b>Impermeable<br>Particles</b>" );
 
    KInLbl = new QLabel();
@@ -117,15 +121,19 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainLayout->addWidget( ctrlFrame, 0, 0, 2, 1 );
    mainLayout->addWidget( canvasFrame, 0, 1, 2, 1 );
 
-   plotBox = new QGroupBox();
-   plotLayout = new QVBoxLayout( plotBox );
+   plotFrame = new QFrame();
+   plotFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
+   plotLayout = new QVBoxLayout();
+   plotFrame->setLayout( plotLayout );
    plotLayout->addWidget( voltsPlot );
    curveLbl = new QLabel();
    plotLayout->addWidget( curveLbl );
-   mainLayout->addWidget( plotBox, 0, 2 );
+   mainLayout->addWidget( plotFrame, 0, 2 );
 
-   concBox = new QGroupBox();
-   concLayout = new QGridLayout( concBox );
+   concFrame = new QFrame();
+   concFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
+   concLayout = new QGridLayout();
+   concFrame->setLayout( concLayout );
 
    concLayout->addWidget( inLbl, 0, 1 );
    concLayout->addWidget( outLbl, 0, 2 );
@@ -150,14 +158,14 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    concLayout->addWidget( ImpPartInLbl, 5, 1 );
    concLayout->addWidget( ImpPartOutLbl, 5, 2 );
 
-   mainLayout->addWidget( concBox, 1, 2 );
+   mainLayout->addWidget( concFrame, 1, 2 );
    mainLayout->setColumnMinimumWidth( 2, 350 );
-   mainLayout->setColumnStretch( 2, 1 );
+   mainLayout->setColumnStretch( 1, 1 );
 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.6" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.7" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -246,7 +254,6 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
    connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
    connect( ctrl, SIGNAL( adjustTable() ), this, SLOT( adjustTable() ) );
-   connect( ctrl, SIGNAL( worldShrunk() ), this, SLOT( shrinkWindow() ) );
 #ifdef BLR_USELINUX
    connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( update() ) );
 #else
@@ -263,7 +270,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.6<br>"
+      "Version 0.9.7<br>"
       "Copyright &copy; 2008  "
       "Jeff Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -623,25 +630,25 @@ NernstGUI::calcEquilibrium()
 
    // Equilibrium predicted by Gibbs energy minimumization
    q = 1;
-   double currentEnergy    = gibbsEnergy( 0 ); 
-   double testEnergy       = gibbsEnergy( q ); 
+   double currentEnergy       = gibbsEnergy( 0 ); 
+   double testEnergy          = gibbsEnergy( q ); 
    double nextTestEnergy;
 
    if( abs( currentEnergy ) > abs( testEnergy ) )              // If this first test moved the value
    {                                                           // closer to zero,
       if( currentEnergy * testEnergy > 0 )                     // and if this first test didn't already
       {                                                        // make the value cross zero,
-         nextTestEnergy    = gibbsEnergy( q + 1 ); 
+         nextTestEnergy       = gibbsEnergy( q + 1 ); 
          while( testEnergy * nextTestEnergy > 0 )              // Keep incrementing q until the
          {                                                     // value crosses zero.
             q++;
-            testEnergy     = nextTestEnergy; 
-            nextTestEnergy = gibbsEnergy( q + 1 );
+            testEnergy        = nextTestEnergy; 
+            nextTestEnergy    = gibbsEnergy( q + 1 );
          }
       }
    } else {                                                    // Else, try the test in the other
       q = -1;                                                  // direction.
-      testEnergy           = gibbsEnergy( q );
+      testEnergy              = gibbsEnergy( q );
       if( abs( currentEnergy ) > abs( testEnergy ) )           // If this first test moved the value
       {                                                        // closer to zero,
          if( currentEnergy * testEnergy > 0 )                  // and if this first test didn't already
@@ -661,25 +668,25 @@ NernstGUI::calcEquilibrium()
 
    // Equilibrium predicted when probability of crossing the membrane is closest to 50/50
    q = 1;
-   double currentProbDiff    = boltzmannProbDiff( 0 );
-   double testProbDiff       = boltzmannProbDiff( q );
+   double currentProbDiff       = boltzmannProbDiff( 0 );
+   double testProbDiff          = boltzmannProbDiff( q );
    double nextTestProbDiff;
 
    if( abs( currentProbDiff ) > abs( testProbDiff ) )          // If this first test moved the value
    {                                                           // closer to zero,
       if( currentProbDiff * testProbDiff > 0 )                 // and if this first test didn't already
       {                                                        // make the value cross zero,
-         nextTestProbDiff    = boltzmannProbDiff( q + 1 );
+         nextTestProbDiff       = boltzmannProbDiff( q + 1 );
          while( testProbDiff * nextTestProbDiff > 0 )          // Keep incrementing q until the
          {                                                     // value crosses zero.
             q++;
-            testProbDiff     = nextTestProbDiff;
-            nextTestProbDiff = boltzmannProbDiff( q + 1 );
+            testProbDiff        = nextTestProbDiff;
+            nextTestProbDiff    = boltzmannProbDiff( q + 1 );
          }
       }
    } else {                                                    // Else, try the test in the other
       q = -1;                                                  // direction.
-      testProbDiff           = boltzmannProbDiff( q );
+      testProbDiff              = boltzmannProbDiff( q );
       if( abs( currentProbDiff ) > abs( testProbDiff ) )       // If this first test moved the value
       {                                                        // closer to zero,
          if( currentProbDiff * testProbDiff > 0 )              // and if this first test didn't already
@@ -797,6 +804,8 @@ NernstGUI::resetPlots()
    currentNernstCurve = 3;
    updatePlots( -1 );
    voltsPlot->replot();
+
+   curveLbl->setText( "" );
 }
 
 
@@ -873,17 +882,6 @@ NernstGUI::fixRedraw()
    canvasFrame->show();
    voltsPlot->hide();
    voltsPlot->show();
-}
-
-
-void
-NernstGUI::shrinkWindow()
-{
-   // Shrinks the window to a managable size if it was enlarged too much.
-   if( !isMaximized() )
-   {
-      resize( sizeHint() );
-   }
 }
 
 

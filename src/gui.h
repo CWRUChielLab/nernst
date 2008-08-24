@@ -12,6 +12,7 @@ class XNernstSim;
 class NernstCtrl;
 class NernstPainter;
 class NernstStatusBar;
+class QScrollArea;
 class QVBoxLayout;
 class QGridLayout;
 class QGroupBox;
@@ -57,7 +58,6 @@ class NernstGUI : public QMainWindow
       void adjustTable();
       void updateTable();
       void fixRedraw();
-      void shrinkWindow();
 
    signals:
       void settingsLoaded();
@@ -75,10 +75,11 @@ class NernstGUI : public QMainWindow
       QVBoxLayout *ctrlLayout;
 
       NernstPainter *canvas;
+      QScrollArea *canvasScroll;
       QFrame *canvasFrame;
       QVBoxLayout *canvasLayout;
 
-      QGroupBox *plotBox;
+      QFrame *plotFrame;
       QVBoxLayout *plotLayout;
       QLabel *curveLbl;
 
@@ -101,7 +102,7 @@ class NernstGUI : public QMainWindow
       QLabel *ImpPartOutLbl;
 
       QGridLayout *mainLayout;
-      QGroupBox *concBox;
+      QFrame *concFrame;
       QGridLayout *concLayout;
       QWidget *mainWidget;
       NernstStatusBar *statusBar;

@@ -70,7 +70,6 @@ class NernstCtrl : public QWidget
 
       void adjustTable();
       void updatePreview();
-      void worldShrunk();
  
    private:
       struct options *o;
