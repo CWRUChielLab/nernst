@@ -67,7 +67,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    ctrlFrame->setLayout( ctrlLayout );
 
    // World visualization
-   canvas = new NernstPainter( o, this );
+   canvas = new NernstPainter( o, 0, this );
 
    /*
    inCanvasLbl = new QLabel( "Intracellular" );
@@ -89,6 +89,26 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    canvasScroll->setAlignment( Qt::AlignCenter );
    canvasScroll->setMinimumWidth( 300 );
    canvasScroll->setFrameStyle( QFrame::Box | QFrame::Sunken );
+
+   zoom = new NernstPainter( o, 1, this );
+   zoom->setMinimumWidth( 300 );
+   inZoom = new QLabel( "In" );
+   outZoom = new QLabel( "Out" );
+
+   zoomInBtn = new QPushButton( "+" );
+   zoomOutBtn = new QPushButton( "-" );
+
+   zoomFrame = new QFrame();
+   zoomFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
+
+   zoomLayout = new QGridLayout();
+   zoomLayout->addWidget( inZoom, 0, 0 );
+   zoomLayout->addWidget( zoom, 0, 1, 1, 2 );
+   zoomLayout->addWidget( outZoom, 0, 3 );
+   zoomLayout->addWidget( zoomOutBtn, 1, 1 );
+   zoomLayout->addWidget( zoomInBtn, 1, 2 );
+   zoomLayout->setAlignment( Qt::AlignCenter );
+   zoomFrame->setLayout( zoomLayout );
 
    // Potential plot   
    voltsPlot = new QwtPlot();
@@ -125,6 +145,8 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    voltsGHK = 0;
 
    // Concentration table
+   measuredLbl = new QLabel( "<b>Measured Concentrations</b>" );
+   measuredLbl->setAlignment( Qt::AlignHCenter );
    inLbl = new QLabel( "<b>Intracellular</b>" );
    outLbl = new QLabel( "<b>Extracellular</b>" );
    KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
@@ -145,56 +167,65 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    ImpPartOutLbl = new QLabel();
    adjustTable();
 
-   // Main window
+   // Main window layout
    mainLayout = new QGridLayout();
-   mainLayout->addWidget( ctrlFrame, 0, 0, 2, 1 );
-   mainLayout->addWidget( canvasScroll, 0, 1, 2, 1 );
+   mainLayout->addWidget( ctrlFrame, 0, 0 );
 
+   worldLayout = new QVBoxLayout();
+   worldLayout->addWidget( canvasScroll );
+   worldLayout->addWidget( zoomFrame );
+   mainLayout->addLayout( worldLayout, 0, 1 );
+
+   resultsLayout = new QVBoxLayout();
    plotFrame = new QFrame();
    plotFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
+   plotFrame->setMaximumWidth( 350 );
    plotLayout = new QVBoxLayout();
    plotFrame->setLayout( plotLayout );
    plotLayout->addWidget( voltsPlot );
    curveLbl = new QLabel();
    plotLayout->addWidget( curveLbl );
-   mainLayout->addWidget( plotFrame, 0, 2 );
+   resultsLayout->addWidget( plotFrame );
 
    concFrame = new QFrame();
    concFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
    concLayout = new QGridLayout();
    concFrame->setLayout( concLayout );
 
-   concLayout->addWidget( inLbl, 0, 1 );
-   concLayout->addWidget( outLbl, 0, 2 );
+   concLayout->addWidget( measuredLbl, 0, 0, 1, 3 );
 
-   concLayout->addWidget( KLbl, 1, 0 );
-   concLayout->addWidget( KInLbl, 1, 1 );
-   concLayout->addWidget( KOutLbl, 1, 2 );
+   concLayout->addWidget( inLbl, 1, 1 );
+   concLayout->addWidget( outLbl, 1, 2 );
 
-   concLayout->addWidget( NaLbl, 2, 0 );
-   concLayout->addWidget( NaInLbl, 2, 1 );
-   concLayout->addWidget( NaOutLbl, 2, 2 );
+   concLayout->addWidget( KLbl, 2, 0 );
+   concLayout->addWidget( KInLbl, 2, 1 );
+   concLayout->addWidget( KOutLbl, 2, 2 );
 
-   concLayout->addWidget( ClLbl, 3, 0 );
-   concLayout->addWidget( ClInLbl, 3, 1 );
-   concLayout->addWidget( ClOutLbl, 3, 2 );
+   concLayout->addWidget( NaLbl, 3, 0 );
+   concLayout->addWidget( NaInLbl, 3, 1 );
+   concLayout->addWidget( NaOutLbl, 3, 2 );
 
-   concLayout->addWidget( ImpChargeLbl, 4, 0 );
-   concLayout->addWidget( ImpChargeInLbl, 4, 1 );
-   concLayout->addWidget( ImpChargeOutLbl, 4, 2 );
+   concLayout->addWidget( ClLbl, 4, 0 );
+   concLayout->addWidget( ClInLbl, 4, 1 );
+   concLayout->addWidget( ClOutLbl, 4, 2 );
 
-   concLayout->addWidget( ImpPartLbl, 5, 0 );
-   concLayout->addWidget( ImpPartInLbl, 5, 1 );
-   concLayout->addWidget( ImpPartOutLbl, 5, 2 );
+   concLayout->addWidget( ImpChargeLbl, 5, 0 );
+   concLayout->addWidget( ImpChargeInLbl, 5, 1 );
+   concLayout->addWidget( ImpChargeOutLbl, 5, 2 );
 
-   mainLayout->addWidget( concFrame, 1, 2 );
+   concLayout->addWidget( ImpPartLbl, 6, 0 );
+   concLayout->addWidget( ImpPartInLbl, 6, 1 );
+   concLayout->addWidget( ImpPartOutLbl, 6, 2 );
+
+   resultsLayout->addWidget( concFrame );
+   mainLayout->addLayout( resultsLayout, 0, 2 );
    mainLayout->setColumnMinimumWidth( 2, 350 );
    mainLayout->setColumnStretch( 1, 1 );
 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.9" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.10" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -216,6 +247,24 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    loadWorldAct = new QAction( "Load W&orld", this );
    loadWorldAct->setStatusTip( "Load a world state to continue a simulation" );
    connect( loadWorldAct, SIGNAL( triggered() ), this, SLOT( loadWorld() ) );
+
+   zoomInAct = new QAction( "Zoom &In", this );
+   zoomInAct->setStatusTip( "Zoom in for a closer look" );
+   connect( zoomInAct, SIGNAL( triggered() ), zoom, SLOT( zoomIn() ) );
+
+   zoomOutAct= new QAction( "Zoom &Out", this );
+   zoomOutAct->setStatusTip( "Zoom out to see the more of the world" );
+   connect( zoomOutAct, SIGNAL( triggered() ), zoom, SLOT( zoomOut() ) );
+
+   fullScreenAct = new QAction( "&Full Screen", this );
+   fullScreenAct->setStatusTip( "Toggle between full screen mode and normal mode" );
+   fullScreenAct->setCheckable( 1 );
+   fullScreenAct->setChecked( 0 );
+   connect( fullScreenAct, SIGNAL( triggered( bool ) ), this, SLOT( toggleFullScreen( bool ) ) );
+
+   clearTrackedAct = new QAction( "&Clear Tracked Ions", this );
+   clearTrackedAct->setStatusTip( "Remove tracking from every ion" );
+   connect( clearTrackedAct, SIGNAL( triggered() ), this, SLOT( clearTrackedIons() ) );
 
    quitAct = new QAction( "&Quit", this );
    quitAct->setStatusTip( "Quit the simulator" );
@@ -239,23 +288,35 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    fileMenu->addSeparator();
    fileMenu->addAction( quitAct );
 
+   viewMenu = menuBar()->addMenu( "&View" );
+   viewMenu->addAction( zoomInAct );
+   viewMenu->addAction( zoomOutAct );
+   viewMenu->addAction( fullScreenAct );
+   viewMenu->addSeparator();
+   viewMenu->addAction( clearTrackedAct );
+
    helpMenu = menuBar()->addMenu( "&Help" );
    helpMenu->addAction( aboutAct );
    helpMenu->addAction( aboutQtAct );
 
    // Signals
+   connect( zoomInBtn, SIGNAL( clicked() ), zoom, SLOT( zoomIn() ) );
+   connect( zoomOutBtn, SIGNAL( clicked() ), zoom, SLOT( zoomOut() ) );
+
    connect( this, SIGNAL( settingsLoaded() ), ctrl, SLOT( reloadSettings() ) );
    connect( this, SIGNAL( settingsLoaded() ), ctrl, SLOT( setNewLoadedSettings() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( reloadSettings() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( disableCtrl() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( reenableCtrl() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), canvas, SLOT( startPaint() ) );
+   connect( this, SIGNAL( worldLoaded( int ) ), zoom, SLOT( startPaint() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), statusBar, SLOT( recalcProgress() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), sim, SLOT( loadWorld( int ) ) );
 
    connect( sim, SIGNAL( calcEquilibrium() ), this, SLOT( calcEquilibrium() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), ctrl, SLOT( updateIter( int ) ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), canvas, SLOT( update() ) );
+   connect( sim, SIGNAL( moveCompleted( int ) ), zoom, SLOT( update() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updatePlots( int ) ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updateTable() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), statusBar, SLOT( updateProgressBar( int ) ) );
@@ -264,6 +325,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( sim, SIGNAL( finished() ), ctrl, SLOT( reenableCtrl() ) );
 
    connect( ctrl, SIGNAL( startBtnClicked() ), canvas, SLOT( startPaint() ) );
+   connect( ctrl, SIGNAL( startBtnClicked() ), zoom, SLOT( startPaint() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), this, SLOT( disableLoadInit() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), this, SLOT( disableLoadWorld() ) );
@@ -277,42 +339,47 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( continueBtnClicked() ), this, SLOT( disableSaveWorld() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), sim, SLOT( unpauseSim() ) );
 
-   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), sim, SLOT( resetSim() ) );
-   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), canvas, SLOT( resetPaint() ) );
-   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( enableLoadInit() ) );
-   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( enableLoadWorld() ) );
-   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( disableSaveWorld() ) );
-   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( resetPlots() ) );
-   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), statusBar, SLOT( resetProgress() ) );
-   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), sim, SLOT( resetSim() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), canvas, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), zoom, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( enableLoadInit() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( enableLoadWorld() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( disableSaveWorld() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( resetPlots() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), statusBar, SLOT( resetProgress() ) );
+   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
 
-   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), sim, SLOT( resetSim() ) );
-   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), canvas, SLOT( resetPaint() ) );
-   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( enableLoadInit() ) );
-   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( enableLoadWorld() ) );
-   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( disableSaveWorld() ) );
-   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( resetPlots() ) );
-   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), statusBar, SLOT( resetProgress() ) );
-   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), sim, SLOT( resetSim() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), canvas, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), zoom, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( enableLoadInit() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( enableLoadWorld() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( disableSaveWorld() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( resetPlots() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), statusBar, SLOT( resetProgress() ) );
+   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
 
-   connect( ctrl, SIGNAL( resetBtnClicked() ), sim, SLOT( resetSim() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), canvas, SLOT( resetPaint() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( enableLoadInit() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( enableLoadWorld() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( disableSaveWorld() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( resetPlots() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( resetProgress() ) );
-   connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), sim, SLOT( resetSim() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), canvas, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), zoom, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( enableLoadInit() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( enableLoadWorld() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( disableSaveWorld() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( resetPlots() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), statusBar, SLOT( resetProgress() ) );
+   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
 
    connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
    connect( ctrl, SIGNAL( adjustTable() ), this, SLOT( adjustTable() ) );
-#ifdef BLR_USELINUX
+   connect( ctrl, SIGNAL( worldSizeChange() ), canvas, SLOT( adjustPaintRegion() ) );
+   connect( ctrl, SIGNAL( worldSizeChange() ), zoom, SLOT( adjustPaintRegion() ) );
    connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( update() ) );
-#else
-   connect( ctrl, SIGNAL( updatePreview() ), canvas, SLOT( cleanUpdate() ) );
-#endif
+   connect( ctrl, SIGNAL( updatePreview() ), zoom, SLOT( update() ) );
 
-   connect( canvas, SIGNAL( previewRedrawn() ), this, SLOT( fixRedraw() ) );
+   connect( canvas, SIGNAL( ionMarked() ), canvas, SLOT( update() ) );
+   connect( canvas, SIGNAL( ionMarked() ), zoom, SLOT( update() ) );
+   connect( zoom, SIGNAL( ionMarked() ), canvas, SLOT( update() ) );
+   connect( zoom, SIGNAL( ionMarked() ), zoom, SLOT( update() ) );
 }
 
 
@@ -322,7 +389,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.9<br>"
+      "Version 0.9.10<br>"
       "Copyright &copy; 2008  "
       "Jeffrey Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -573,6 +640,18 @@ NernstGUI::loadWorld()
 
 
 void
+NernstGUI::toggleFullScreen( bool checked )
+{
+   if( checked )
+   {
+      showFullScreen();
+   } else {
+      showNormal();
+   }
+}
+
+
+void
 NernstGUI::enableSaveInit()
 {
    saveInitAct->setEnabled( 1 );
@@ -625,6 +704,37 @@ void
 NernstGUI::disableLoadWorld()
 {
    loadWorldAct->setEnabled( 0 );
+}
+
+
+void
+NernstGUI::clearTrackedIons()
+{
+   if( world != NULL )
+   {
+      for( int x = 0; x < o->x; x++ )
+      {
+         for( int y = 0; y < o->y; y++ )
+         {
+            switch( world[ idx( x, y ) ].color )
+            {
+               case ATOM_K_TRACK:
+                  world[ idx( x, y ) ].color = ATOM_K;
+                  break;
+               case ATOM_Na_TRACK:
+                  world[ idx( x, y ) ].color = ATOM_Na;
+                  break;
+               case ATOM_Cl_TRACK:
+                  world[ idx( x, y ) ].color = ATOM_Cl;
+                  break;
+               default:
+                  break;
+            }
+         }
+      }
+      canvas->update();
+      zoom->update();
+   }
 }
 
 
@@ -925,17 +1035,6 @@ NernstGUI::updateTable()
    KOutLbl->setText( QString::number( numK ) + " mM" );
    NaOutLbl->setText( QString::number( numNa ) + " mM" );
    ClOutLbl->setText( QString::number( numCl ) + " mM" );
-}
-
-
-void
-NernstGUI::fixRedraw()
-{
-   // Fixes a redraw issue whenever the world size is changed in Windows.
-   canvasScroll->hide();
-   canvasScroll->show();
-   voltsPlot->hide();
-   voltsPlot->show();
 }
 
 

@@ -75,7 +75,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    electrostaticsLoaded = o->electrostatics;
 
    // Header
-   headerLbl = new QLabel( "Control Panel" );
+   headerLbl = new QLabel( "<b>Control Panel</b>" );
    headerLbl->setAlignment( Qt::AlignHCenter );
 
    // Iterations control
@@ -112,7 +112,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    xVal->setAlignment( Qt::AlignRight );
 
    // World height control
-   yLbl = new QLabel( "&Height" );
+   yLbl = new QLabel( "Hei&ght" );
    yLbl->setToolTip( "Set the height of the world." );
 
    ySld = new QSlider( Qt::Horizontal );
@@ -127,7 +127,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    yVal->setAlignment( Qt::AlignRight );
 
    // Capacitance control
-   capLbl = new QLabel( "&Capacitance" );
+   capLbl = new QLabel( "C&apacitance" );
    capLbl->setToolTip( "Set the dielectric constant for the membrane." );
 
    capSld = new QSlider( Qt::Horizontal );
@@ -148,7 +148,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    */
 
    // Seed control
-   seedLbl = new QLabel( "R&andom Start" );
+   seedLbl = new QLabel( "Ra&ndom Start" );
    seedLbl->setToolTip( "Set the seed for the random number generator.\nSimulations with matching seeds and world settings\nare identical." );
 
    seedVal = new QLineEdit( QString::number( o->randseed ) );
@@ -237,7 +237,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    pClVal->setValidator( new QDoubleValidator( 0.00, 1.00, 2, this ) );
 
    // Selectivity control
-   selectivity = new QCheckBox( "Se&lective Permeability" );
+   selectivity = new QCheckBox( "Selective &Permeability" );
    selectivity->setChecked( selectivityDefault );
    selectivity->setToolTip( "Toggle selectivity of the membrane's pores so that\nonly ions of the right type can pass through any\ngiven pore." );
 
@@ -250,12 +250,11 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    startBtn = new QPushButton( "&Start" );
    pauseBtn = new QPushButton( "&Pause" );
    continueBtn = new QPushButton( "&Continue" );
-   clearTrackingBtn = new QPushButton( "Clear &Tracked Ions" );
-   clearTrackingBtn->setEnabled( 0 );
-   restartCurrentBtn = new QPushButton( "&Restart with Same Initial Conditions" );
-   restartLoadedBtn = new QPushButton( "Restart with &Loaded Initial Conditions" );
-   restartLoadedBtn->setEnabled( 0 );
-   resetBtn = new QPushButton( "Reset with &Default Settings" );
+   resetCurrentBtn = new QPushButton( "&Reset with Same Initial Conditions" );
+   resetCurrentBtn->setEnabled( 0 );
+   resetLoadedBtn = new QPushButton( "Reset with &Loaded Initial Conditions" );
+   resetLoadedBtn->setEnabled( 0 );
+   resetDefaultBtn = new QPushButton( "Reset with &Default Settings" );
    quitBtn = new QPushButton( "&Quit" );
 
    // Layout
@@ -328,8 +327,11 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    ctrlLayout->addWidget( sldBox, 6, 0, 1, 3 );
 
-   ctrlLayout->addWidget( selectivity, 7, 0, 1, 3 );
-   ctrlLayout->addWidget( electrostatics, 8, 0, 1, 3 );
+   checkBoxesLayout = new QHBoxLayout();
+   checkBoxesLayout->addWidget( selectivity );
+   checkBoxesLayout->addWidget( electrostatics );
+
+   ctrlLayout->addLayout( checkBoxesLayout, 7, 0, 1, 3 );
 
    mainLayout->addLayout( ctrlLayout );
    mainLayout->addStretch( 1 );
@@ -341,10 +343,9 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    stackedBtnLayout->setCurrentWidget( startBtn );
 
    mainLayout->addLayout( stackedBtnLayout );
-   mainLayout->addWidget( clearTrackingBtn );
-   mainLayout->addWidget( restartCurrentBtn );
-   mainLayout->addWidget( restartLoadedBtn );
-   mainLayout->addWidget( resetBtn );
+   mainLayout->addWidget( resetCurrentBtn );
+   mainLayout->addWidget( resetLoadedBtn );
+   mainLayout->addWidget( resetDefaultBtn );
    mainLayout->addWidget( quitBtn );
 
    setLayout( mainLayout );
@@ -383,19 +384,17 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( startBtn, SIGNAL( clicked() ), this, SIGNAL( startBtnClicked() ) );
    connect( pauseBtn, SIGNAL( clicked() ), this, SIGNAL( pauseBtnClicked() ) );
    connect( continueBtn, SIGNAL( clicked() ), this, SIGNAL( continueBtnClicked() ) );
-   connect( clearTrackingBtn, SIGNAL( clicked() ), this, SIGNAL( clearTrackingBtnClicked() ) );
-   connect( restartCurrentBtn, SIGNAL( clicked() ), this, SIGNAL( restartCurrentBtnClicked() ) );
-   connect( restartLoadedBtn, SIGNAL( clicked() ), this, SIGNAL( restartLoadedBtnClicked() ) );
-   connect( resetBtn, SIGNAL( clicked() ), this, SIGNAL( resetBtnClicked() ) );
+   connect( resetCurrentBtn, SIGNAL( clicked() ), this, SIGNAL( resetCurrentBtnClicked() ) );
+   connect( resetLoadedBtn, SIGNAL( clicked() ), this, SIGNAL( resetLoadedBtnClicked() ) );
+   connect( resetDefaultBtn, SIGNAL( clicked() ), this, SIGNAL( resetDefaultBtnClicked() ) );
    connect( quitBtn, SIGNAL( clicked() ), this, SIGNAL( quitBtnClicked() ) );
 
    connect( this, SIGNAL( startBtnClicked() ), this, SLOT( disableCtrl() ) );
    connect( this, SIGNAL( pauseBtnClicked() ), this, SLOT( reenableCtrl() ) );
    connect( this, SIGNAL( continueBtnClicked() ), this, SLOT( disableCtrl() ) );
-   connect( this, SIGNAL( clearTrackingBtnClicked() ), this, SLOT( clearTrackedIons() ) );
-   connect( this, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( restartCurrentCtrl() ) );
-   connect( this, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( restartLoadedCtrl() ) );
-   connect( this, SIGNAL( resetBtnClicked() ), this, SLOT( resetCtrl() ) );
+   connect( this, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( resetCurrentCtrl() ) );
+   connect( this, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( resetLoadedCtrl() ) );
+   connect( this, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( resetDefaultCtrl() ) );
 }
 
 
@@ -426,7 +425,7 @@ NernstCtrl::setNewLoadedSettings()
    selectivityLoaded = o->selectivity;
    electrostaticsLoaded = o->electrostatics;
 
-   restartLoadedBtn->setEnabled( 1 );
+   resetLoadedBtn->setEnabled( 1 );
 }
 
 
@@ -457,6 +456,7 @@ NernstCtrl::changeX( int xpow )
    xVal->setNum( o->x );
 
    shufflePositions( o );
+   emit worldSizeChange();
    emit updatePreview();
 }
 
@@ -468,6 +468,7 @@ NernstCtrl::changeY( int ypow )
    yVal->setNum( o->y );
 
    shufflePositions( o );
+   emit worldSizeChange();
    emit updatePreview();
 }
 
@@ -821,41 +822,11 @@ NernstCtrl::reloadSettings()
 
 
 void
-NernstCtrl::clearTrackedIons()
-{
-   if( world != NULL )
-   {
-      for( int x = 0; x < o->x; x++ )
-      {
-         for( int y = 0; y < o->y; y++ )
-         {
-            switch( world[ idx( x, y ) ].color )
-            {
-               case ATOM_K_TRACK:
-                  world[ idx( x, y ) ].color = ATOM_K;
-                  break;
-               case ATOM_Na_TRACK:
-                  world[ idx( x, y ) ].color = ATOM_Na;
-                  break;
-               case ATOM_Cl_TRACK:
-                  world[ idx( x, y ) ].color = ATOM_Cl;
-                  break;
-               default:
-                  break;
-            }
-         }
-      }
-      emit updatePreview();
-   }
-}
-
-
-void
 NernstCtrl::disableCtrl()
 {
-   // Set the first push button to "Pause" and disable (most) controls.
+   // Set the first push button to "Pause" and disable the controls.
    stackedBtnLayout->setCurrentWidget( pauseBtn );
-   clearTrackingBtn->setEnabled( 1 );
+   resetCurrentBtn->setEnabled( 1 );
 
    xLbl->setEnabled( 0 );
    xSld->setEnabled( 0 );
@@ -914,6 +885,7 @@ NernstCtrl::reenableCtrl()
 {
    // Set the first push button to "Continue" and reenable a few controls.
    stackedBtnLayout->setCurrentWidget( continueBtn );
+   resetCurrentBtn->setEnabled( 1 );
 
    itersLbl->setEnabled( 1 );
    itersSld->setEnabled( 1 );
@@ -938,12 +910,12 @@ NernstCtrl::reenableCtrl()
 
 
 void
-NernstCtrl::restartCurrentCtrl()
+NernstCtrl::resetCurrentCtrl()
 {
    // Set the first push button to "Start", reenable all controls, but keep the current values.
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
-   clearTrackingBtn->setEnabled( 0 );
+   resetCurrentBtn->setEnabled( 0 );
 
    xLbl->setEnabled( 1 );
    xSld->setEnabled( 1 );
@@ -1001,12 +973,12 @@ NernstCtrl::restartCurrentCtrl()
 
 
 void
-NernstCtrl::restartLoadedCtrl()
+NernstCtrl::resetLoadedCtrl()
 {
    // Set the first push button to "Start", reenable all controls, and load the most recent loaded values.
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
-   clearTrackingBtn->setEnabled( 0 );
+   resetCurrentBtn->setEnabled( 0 );
 
    xLbl->setEnabled( 1 );
    xSld->setEnabled( 1 );
@@ -1080,12 +1052,12 @@ NernstCtrl::restartLoadedCtrl()
 
 
 void
-NernstCtrl::resetCtrl()
+NernstCtrl::resetDefaultCtrl()
 {
    // Set the first push button to "Start", reenable all controls, and reset all control values to defaults.
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
-   clearTrackingBtn->setEnabled( 0 );
+   resetCurrentBtn->setEnabled( 0 );
 
    xLbl->setEnabled( 1 );
    xSld->setEnabled( 1 );

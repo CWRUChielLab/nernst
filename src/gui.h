@@ -33,9 +33,11 @@ class NernstPainter;
 class NernstStatusBar;
 class QScrollArea;
 class QVBoxLayout;
+class QHBoxLayout;
 class QGridLayout;
 class QGroupBox;
 class QFrame;
+class QPushButton;
 class QLabel;
 class QProgressBar;
 class QwtPlot;
@@ -61,6 +63,7 @@ class NernstGUI : public QMainWindow
       void loadInit();
       void saveWorld();
       void loadWorld();
+      void toggleFullScreen( bool checked );
 
       void enableSaveInit();
       void disableSaveInit();
@@ -71,12 +74,12 @@ class NernstGUI : public QMainWindow
       void enableLoadWorld();
       void disableLoadWorld();
 
+      void clearTrackedIons();
       void calcEquilibrium();
       void updatePlots( int currentIter );
       void resetPlots();
       void adjustTable();
       void updateTable();
-      void fixRedraw();
 
    signals:
       void settingsLoaded();
@@ -93,16 +96,29 @@ class NernstGUI : public QMainWindow
       QFrame *ctrlFrame;
       QVBoxLayout *ctrlLayout;
 
+      QVBoxLayout *worldLayout;
       QLabel *inCanvasLbl;
       QLabel *outCanvasLbl;
       NernstPainter *canvas;
       QGridLayout *canvasLayout;
       QScrollArea *canvasScroll;
 
+      NernstPainter *zoom;
+      QLabel *inZoom;
+      QLabel *outZoom;
+      QPushButton *zoomInBtn;
+      QPushButton *zoomOutBtn;
+      QFrame *zoomFrame;
+      QGridLayout *zoomLayout;
+
+      QVBoxLayout *resultsLayout;
       QFrame *plotFrame;
       QVBoxLayout *plotLayout;
       QLabel *curveLbl;
 
+      QFrame *concFrame;
+      QGridLayout *concLayout;
+      QLabel *measuredLbl;
       QLabel *inLbl;
       QLabel *outLbl;
       QLabel *KLbl;
@@ -122,17 +138,20 @@ class NernstGUI : public QMainWindow
       QLabel *ImpPartOutLbl;
 
       QGridLayout *mainLayout;
-      QFrame *concFrame;
-      QGridLayout *concLayout;
       QWidget *mainWidget;
       NernstStatusBar *statusBar;
 
       QMenu *fileMenu;
       QMenu *helpMenu;
+      QMenu *viewMenu;
       QAction *saveInitAct;
       QAction *loadInitAct;
       QAction *saveWorldAct;
       QAction *loadWorldAct;
+      QAction *zoomInAct;
+      QAction *zoomOutAct;
+      QAction *fullScreenAct;
+      QAction *clearTrackedAct;
       QAction *quitAct;
       QAction *aboutAct;
       QAction *aboutQtAct;

@@ -33,6 +33,7 @@ class QSlider;
 class QCheckBox;
 class QPushButton;
 class QVBoxLayout;
+class QHBoxLayout;
 class QGridLayout;
 class QGroupBox;
 class QStackedLayout;
@@ -75,24 +76,23 @@ class NernstCtrl : public QWidget
       void reloadSettings();
       void setNewLoadedSettings();
 
-      void clearTrackedIons();
       void disableCtrl();
       void reenableCtrl();
-      void restartCurrentCtrl();
-      void restartLoadedCtrl();
-      void resetCtrl();
+      void resetCurrentCtrl();
+      void resetLoadedCtrl();
+      void resetDefaultCtrl();
 
    signals:
       void startBtnClicked();
       void pauseBtnClicked();
       void continueBtnClicked();
-      void clearTrackingBtnClicked();
-      void restartCurrentBtnClicked();
-      void restartLoadedBtnClicked();
-      void resetBtnClicked();
+      void resetCurrentBtnClicked();
+      void resetLoadedBtnClicked();
+      void resetDefaultBtnClicked();
       void quitBtnClicked();
 
       void adjustTable();
+      void worldSizeChange();
       void updatePreview();
  
    private:
@@ -190,16 +190,16 @@ class NernstCtrl : public QWidget
       QPushButton *startBtn;
       QPushButton *pauseBtn;
       QPushButton *continueBtn;
-      QPushButton *clearTrackingBtn;
-      QPushButton *restartCurrentBtn;
-      QPushButton *restartLoadedBtn;
-      QPushButton *resetBtn;
+      QPushButton *resetCurrentBtn;
+      QPushButton *resetLoadedBtn;
+      QPushButton *resetDefaultBtn;
       QPushButton *quitBtn;
 
       QVBoxLayout *mainLayout;
       QGridLayout *ctrlLayout;
       QGroupBox *sldBox;
       QGridLayout *sldLayout;
+      QHBoxLayout *checkBoxesLayout;
       QStackedLayout *stackedBtnLayout;
 };
 

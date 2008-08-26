@@ -15,15 +15,17 @@ class NernstPainter : public QGLWidget
    Q_OBJECT
 
    public:
-      NernstPainter( struct options *o, QWidget *parent = 0 );
+      NernstPainter( struct options *o, int zoomOn = 0, QWidget *parent = 0 );
 
    public slots:
-      void cleanUpdate();
+      void adjustPaintRegion();
+      void zoomIn();
+      void zoomOut();
       void startPaint();
       void resetPaint();
 
    signals:
-      void previewRedrawn();
+      void ionMarked();
 
    protected:
       void mousePressEvent( QMouseEvent *event );
@@ -34,7 +36,15 @@ class NernstPainter : public QGLWidget
    private:
       struct options *o;
       int running;
-      int cleanRedraw;
+      int zoom;
+      int zoomXRange;
+      int zoomYRange;
+      int zoomXWindow;
+      int zoomYWindow;
+      int minX;
+      int minY;
+      int maxX;
+      int maxY;
 
       GLfloat rotationX;
       GLfloat rotationY;

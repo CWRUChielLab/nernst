@@ -35,12 +35,13 @@
 #include "sim.h"
 
 
-NernstPainter::NernstPainter( struct options *options, QWidget *parent ) 
+NernstPainter::NernstPainter( struct options *options, int zoomOn, QWidget *parent ) 
 	: QGLWidget( parent )
 {
    o = options;
    running = 0;
-   cleanRedraw = 0;
+   zoom = zoomOn;
+
    shufflePositions( o );
  
    setFormat( QGLFormat( QGL::DoubleBuffer | QGL::DepthBuffer ) );
@@ -48,7 +49,74 @@ NernstPainter::NernstPainter( struct options *options, QWidget *parent )
    rotationY = 0.0;
    rotationZ = 0.0;
 
-   setFixedSize( o->x, o->y );
+   if( zoom )
+   {
+      zoomXRange  = 64;    // lattice sqaures wide
+      zoomYRange  = 64;    // lattice squares high
+      zoomXWindow = 256;   // pixels wide
+      zoomYWindow = 256;   // pixels high
+   }
+
+   adjustPaintRegion();
+}
+
+
+void
+NernstPainter::adjustPaintRegion()
+{
+   if( !zoom )
+   {
+      zoomXRange  = o->x;
+      zoomYRange  = o->y;
+      zoomXWindow = o->x;
+      zoomYWindow = o->y;
+   }
+
+   minX = o->x / 2 - zoomXRange / 2;
+   maxX = o->x / 2 + zoomXRange / 2;
+   minY = o->y / 2 - zoomYRange / 2;
+   maxY = o->y / 2 + zoomYRange / 2;
+   setFixedSize( zoomXWindow, zoomYWindow );
+}
+
+
+void
+NernstPainter::zoomIn()
+{
+   if( zoom )
+   {
+      zoomXRange /= 2;
+      zoomYRange /= 2;
+
+      if( zoomXRange < 16 || zoomYRange < 16 )
+      {
+         zoomXRange = 16;
+         zoomYRange = 16;
+      }
+
+      adjustPaintRegion();
+      update();
+   }
+}
+
+
+void
+NernstPainter::zoomOut()
+{
+   if( zoom )
+   {
+      zoomXRange *= 2;
+      zoomYRange *= 2;
+
+      if( zoomXRange > 2 * o->x && zoomYRange > 2 * o->y )
+      {
+         zoomXRange /= 2;
+         zoomYRange /= 2;
+      }
+
+      adjustPaintRegion();
+      update();
+   }
 }
 
 
@@ -56,8 +124,8 @@ void
 NernstPainter::mousePressEvent( QMouseEvent *event )
 {
    int mouseX, mouseY, x, y;
-   mouseX = event->x();
-   mouseY = o->y - 1 - event->y();
+   mouseX = event->x() * ( zoomXRange ) / ( zoomXWindow ) + minX;
+   mouseY = ( zoomYWindow - 1 - event->y() ) * ( zoomYRange ) / ( zoomYWindow ) + minY;
 
    if( !running )
    {
@@ -73,7 +141,9 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
    if( !isUntrackedAtom( idx( x, y ) ) )
    {
       int offset = 1, done = 0;
-      while( !done && offset < 5 )
+      double offsetMax = 5.0 * (double)zoomXWindow / (double)zoomXRange;
+
+      while( !done && offset < offsetMax )
       {
          for( x = mouseX - offset; x <= mouseX + offset && !done; x++ )
          {
@@ -108,15 +178,7 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
          break;
    }
 
-   update();
-}
-
-
-void
-NernstPainter::cleanUpdate()
-{
-   cleanRedraw = 1;
-   update();
+   emit ionMarked();
 }
 
 
@@ -132,6 +194,8 @@ void
 NernstPainter::resetPaint()
 {
    running = 0;
+   zoomXRange = 64;
+   zoomYRange = 64;
    update();
 }
 
@@ -170,19 +234,7 @@ NernstPainter::paintGL()
 void
 NernstPainter::draw()
 {
-   setFixedSize( o->x, o->y );
-
-   /*
-   static const GLfloat P1[ 3 ] = { 0.0, -1.0, +2.0 };
-   static const GLfloat P2[ 3 ] = { +1.73205081, -1.0, -1.0 };
-   static const GLfloat P3[ 3 ] = { -1.73205081, -1.0, -1.0 };
-   static const GLfloat P4[ 3 ] = { 0.0, +2.0, 0.0 };
-
-   static const GLfloat * const coords[ 4 ][ 3 ] =
-   {
-      { P1, P2, P3 }, { P1, P3, P4 }, { P1, P4, P2 }, { P2, P4, P3 }
-   };
-   */
+   adjustPaintRegion();
 
    glMatrixMode( GL_MODELVIEW );
    glLoadIdentity();
@@ -191,131 +243,131 @@ NernstPainter::draw()
    glRotatef( rotationY, 0.0, 1.0, 0.0 );
    glRotatef( rotationZ, 0.0, 0.0, 1.0 );
 
-   /*
-   glLoadName( i );
+   double xWindowPerLatticeSquare = 1.0 / (double)zoomXRange;
+   double yWindowPerLatticeSquare = 1.0 / (double)zoomYRange;
 
-   for( int i = 0; i < 4; ++i )
-   {
-      qglColor( faceColors[ i ] );
-      for( int j = 0; j < 3; ++j )
-      {
-         glVertex3f( coords[ i ][ j ][ 0 ], coords[ i ][ j ][ 1 ], coords[ i ][ j ][ 2 ] );
-      }
-   }
-   */
+   double atomDiameterX        = 1.0 * xWindowPerLatticeSquare;      // in percentage of the window
+   double atomDiameterY        = 1.0 * yWindowPerLatticeSquare;      // in percentage of the window
+   double atomRadiusX          = atomDiameterX / 2.0;                // in percentage of the window
+   double atomRadiusY          = atomDiameterY / 2.0;                // in percentage of the window
+
+   double trackedAtomDiameterX = 5.0 * xWindowPerLatticeSquare;      // in percentage of the window
+   double trackedAtomDiameterY = 5.0 * yWindowPerLatticeSquare;      // in percentage of the window
+   double trackedAtomRadiusX   = trackedAtomDiameterX / 2.0;         // in percentage of the window
+   double trackedAtomRadiusY   = trackedAtomDiameterY / 2.0;         // in percentage of the window
 
    // Realtime world visualization
    if( running )
    {
       glBegin( GL_POINTS );
-      for( int y = 0; y < o->y; y++ )
+
+      for( int y = minY; y < maxY; y++ )
       {
-         for( int x = 0; x < o->x; x++ )
+         for( int x = minX; x < maxX; x++ )
          {
-            int tracked = 0;
-
-            // Nontracked atoms
-            switch( world[ idx( x, y ) ].color )
+            if( x >= 0 && x < o->x && y >= 0 && y < o->y )
             {
-               case SOLVENT:
-                  continue;
-               case ATOM_K:
-                  if( o->electrostatics )
-                  {
+               int tracked = 0;
+
+               switch( world[ idx( x, y ) ].color )
+               {
+                  case SOLVENT:
+                     continue;
+                  case ATOM_K:
+                     if( o->electrostatics )
+                     {
+                        glColor3f( 1.f, 0.15f, 0.f );    // Red
+                     } else {
+                        glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
+                     }
+                     break;
+                  case ATOM_Na:
+                     if( o->electrostatics )
+                     {
+                        glColor3f( 0.f, 0.f, 1.f );      // Blue
+                     } else {
+                        glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
+                     }
+                     break;
+                  case ATOM_Cl:
+                     if( o->electrostatics )
+                     {
+                        glColor3f( 0.f, 0.70f, 0.35f );  // Green
+                     } else {
+                        glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
+                     }
+                     break;
+                  case ATOM_K_TRACK:
                      glColor3f( 1.f, 0.15f, 0.f );    // Red
-                  } else {
-                     glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
-                  }
-                  break;
-               case ATOM_Na:
-                  if( o->electrostatics )
-                  {
+                     tracked = 1;
+                     break;
+                  case ATOM_Na_TRACK:
                      glColor3f( 0.f, 0.f, 1.f );      // Blue
-                  } else {
-                     glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
-                  }
-                  break;
-               case ATOM_Cl:
-                  if( o->electrostatics )
-                  {
+                     tracked = 1;
+                     break;
+                  case ATOM_Cl_TRACK:
                      glColor3f( 0.f, 0.70f, 0.35f );  // Green
-                  } else {
-                     glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
-                  }
-                  break;
-               case ATOM_K_TRACK:
-                  glColor3f( 1.f, 0.15f, 0.f );    // Red
-                  tracked = 1;
-                  break;
-               case ATOM_Na_TRACK:
-                  glColor3f( 0.f, 0.f, 1.f );      // Blue
-                  tracked = 1;
-                  break;
-               case ATOM_Cl_TRACK:
-                  glColor3f( 0.f, 0.70f, 0.35f );  // Green
-                  tracked = 1;
-                  break;
-               case PORE_K:
-                  if( o->selectivity )
-                  {
-                     glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
-                  } else {
+                     tracked = 1;
+                     break;
+                  case PORE_K:
+                     if( o->selectivity )
+                     {
+                        glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
+                     } else {
+                        glColor3f( 1.f, 1.f, 1.f );      // White
+                     }
+                     break;
+                  case PORE_Na:
+                     if( o->selectivity )
+                     {
+                        glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
+                     } else {
+                        glColor3f( 1.f, 1.f, 1.f );      // White
+                     }
+                     break;
+                  case PORE_Cl:
+                     if( o->selectivity )
+                     {
+                        glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
+                     } else {
+                        glColor3f( 1.f, 1.f, 1.f );      // White
+                     }
+                     break;
+                  case MEMBRANE:
+                     glColor3f( 0.f, 0.f, 0.f );      // Black
+                     break;
+                  default:
                      glColor3f( 1.f, 1.f, 1.f );      // White
-                  }
-                  break;
-               case PORE_Na:
-                  if( o->selectivity )
+                     break;
+               }
+
+               if( tracked )
+               {
+                  // Tracked ions
+                  for( double xOff = -trackedAtomRadiusX; xOff < trackedAtomRadiusX; xOff += 1.0 / (double)zoomXWindow )
                   {
-                     glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
-                  } else {
-                     glColor3f( 1.f, 1.f, 1.f );      // White
+                     for( double yOff = -trackedAtomRadiusY; yOff < trackedAtomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+                     {
+                        if( abs( xOff ) + abs( yOff ) < trackedAtomRadiusX * trackedAtomRadiusY )
+                        {
+                           glVertex3f( (GLfloat)( ( x - minX + 1 ) / (double)zoomXRange + xOff ),
+                                       (GLfloat)( ( y - minY + 1 ) / (double)zoomYRange + yOff ),
+                                       (GLfloat)0.0 );
+                        }
+                     }
                   }
-                  break;
-               case PORE_Cl:
-                  if( o->selectivity )
+               } else {
+                  // Nontracked ions
+                  for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
                   {
-                     glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
-                  } else {
-                     glColor3f( 1.f, 1.f, 1.f );      // White
+                     for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+                     {
+                        glVertex3f( (GLfloat)( ( x + 1 - minX ) / (double)zoomXRange + xOff ),
+                                    (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                                    (GLfloat)0.0 );
+                     }
                   }
-                  break;
-               case MEMBRANE:
-                  glColor3f( 0.f, 0.f, 0.f );      // Black
-                  break;
-               default:
-                  glColor3f( 1.f, 1.f, 1.f );      // White
-                  break;
-            }
-
-            if( tracked )
-            {
-               glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x - 2 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-
-               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x - 1 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
-
-               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x     ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
-
-               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y - 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x + 1 ) / (GLfloat)o->x, (GLfloat)( y + 2 ) / (GLfloat)o->y, (GLfloat)0.0 );
-                  
-               glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y - 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y     ) / (GLfloat)o->y, (GLfloat)0.0 );
-               glVertex3f( (GLfloat)( x + 2 ) / (GLfloat)o->x, (GLfloat)( y + 1 ) / (GLfloat)o->y, (GLfloat)0.0 );
-            } else {
-               glVertex3f( (GLfloat)( x ) / (GLfloat)o->x, (GLfloat)( y ) / (GLfloat)o->y, (GLfloat)0.0 );
+               }
             }
          }
       }
@@ -340,7 +392,16 @@ NernstPainter::draw()
       {
          // Left membrane
          glColor3f( 0.f, 0.f, 0.f );   // Black
-         glVertex3f( (GLfloat)0.0, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( 0.0 + 1 - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
 
          // Central membrane with pores
          glColor3f( 0.f, 0.f, 0.f );   // Black
@@ -380,12 +441,30 @@ NernstPainter::draw()
                }
             }
          }
-         glVertex3f( (GLfloat)0.5, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( o->x / 2 + 1 - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
 
          // Right membrane
          glColor3f( 0.f, 0.f, 0.f );   // Black
-         glVertex3f( (GLfloat)( o->x - 1 ) / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
-      }
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( o->x - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
+     }
 
       // Draw LHS atoms.
       numK  = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lK  ) / (double)MAX_CONC + 0.5 );
@@ -407,7 +486,16 @@ NernstPainter::draw()
          } else {
             glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
          }
-         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( x + 1 - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
          placed++;
       }
 
@@ -422,7 +510,16 @@ NernstPainter::draw()
          } else {
             glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
          }
-         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( x + 1 - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
          placed++;
       }
 
@@ -437,7 +534,16 @@ NernstPainter::draw()
          } else {
             glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
          }
-         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( x + 1 - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
          placed++;
       }
 
@@ -461,8 +567,17 @@ NernstPainter::draw()
          } else {
             glColor3f( 1.f, 0.64f, 0.57f );  // Pale red
          }
-         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
-         placed++;
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( x + 1 - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
+        placed++;
       }
 
       for( i = 0; i < numNa && placed < o->max_atoms; i++ )
@@ -476,7 +591,16 @@ NernstPainter::draw()
          } else {
             glColor3f( 0.57f, 0.57f, 1.f );  // Pale blue
          }
-         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( x + 1 - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
          placed++;
       }
 
@@ -491,17 +615,20 @@ NernstPainter::draw()
          } else {
             glColor3f( 0.57f, 0.87f, 0.72f );// Pale green
          }
-         glVertex3f( (GLfloat)x / (GLfloat)o->x, (GLfloat)y / (GLfloat)o->y, (GLfloat)0.0 );
+
+         for( double xOff = -atomRadiusX; xOff < atomRadiusX; xOff += 1.0 / (double)zoomXWindow )
+         {
+            for( double yOff = -atomRadiusY; yOff < atomRadiusY; yOff += 1.0 / (double)zoomYWindow )
+            {
+               glVertex3f( (GLfloat)( ( x + 1 - minX ) / (double)zoomXRange + xOff ),
+                           (GLfloat)( ( y + 1 - minY ) / (double)zoomYRange + yOff ),
+                           (GLfloat)0.0 );
+            }
+         }
          placed++;
       }
 
       glEnd();
-
-      if( cleanRedraw )
-      {
-         cleanRedraw = 0;
-         emit previewRedrawn();
-      }
    }
 }
 
