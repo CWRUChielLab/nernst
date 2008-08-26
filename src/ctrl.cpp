@@ -56,6 +56,24 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    selectivityDefault = o->selectivity;
    electrostaticsDefault = o->electrostatics;
 
+   // Loaded values
+   itersLoaded = o->iters;
+   xLoaded = o->x;
+   yLoaded = o->y;
+   capLoaded = eps;
+   seedLoaded = o->randseed;
+   lKLoaded = o->lK;
+   lNaLoaded = o->lNa;
+   lClLoaded = o->lCl;
+   rKLoaded = o->rK;
+   rNaLoaded = o->rNa;
+   rClLoaded = o->rCl;
+   pKLoaded = o->pK;
+   pNaLoaded = o->pNa;
+   pClLoaded = o->pCl;
+   selectivityLoaded = o->selectivity;
+   electrostaticsLoaded = o->electrostatics;
+
    // Header
    headerLbl = new QLabel( "Control Panel" );
    headerLbl->setAlignment( Qt::AlignHCenter );
@@ -234,7 +252,10 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    continueBtn = new QPushButton( "&Continue" );
    clearTrackingBtn = new QPushButton( "Clear &Tracked Ions" );
    clearTrackingBtn->setEnabled( 0 );
-   resetBtn = new QPushButton( "&Reset" );
+   restartCurrentBtn = new QPushButton( "&Restart with Same Initial Conditions" );
+   restartLoadedBtn = new QPushButton( "Restart with &Loaded Initial Conditions" );
+   restartLoadedBtn->setEnabled( 0 );
+   resetBtn = new QPushButton( "Reset with &Default Settings" );
    quitBtn = new QPushButton( "&Quit" );
 
    // Layout
@@ -321,6 +342,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    mainLayout->addLayout( stackedBtnLayout );
    mainLayout->addWidget( clearTrackingBtn );
+   mainLayout->addWidget( restartCurrentBtn );
+   mainLayout->addWidget( restartLoadedBtn );
    mainLayout->addWidget( resetBtn );
    mainLayout->addWidget( quitBtn );
 
@@ -361,6 +384,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( pauseBtn, SIGNAL( clicked() ), this, SIGNAL( pauseBtnClicked() ) );
    connect( continueBtn, SIGNAL( clicked() ), this, SIGNAL( continueBtnClicked() ) );
    connect( clearTrackingBtn, SIGNAL( clicked() ), this, SIGNAL( clearTrackingBtnClicked() ) );
+   connect( restartCurrentBtn, SIGNAL( clicked() ), this, SIGNAL( restartCurrentBtnClicked() ) );
+   connect( restartLoadedBtn, SIGNAL( clicked() ), this, SIGNAL( restartLoadedBtnClicked() ) );
    connect( resetBtn, SIGNAL( clicked() ), this, SIGNAL( resetBtnClicked() ) );
    connect( quitBtn, SIGNAL( clicked() ), this, SIGNAL( quitBtnClicked() ) );
 
@@ -368,6 +393,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( this, SIGNAL( pauseBtnClicked() ), this, SLOT( reenableCtrl() ) );
    connect( this, SIGNAL( continueBtnClicked() ), this, SLOT( disableCtrl() ) );
    connect( this, SIGNAL( clearTrackingBtnClicked() ), this, SLOT( clearTrackedIons() ) );
+   connect( this, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( restartCurrentCtrl() ) );
+   connect( this, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( restartLoadedCtrl() ) );
    connect( this, SIGNAL( resetBtnClicked() ), this, SLOT( resetCtrl() ) );
 }
 
@@ -376,6 +403,30 @@ void
 NernstCtrl::updateIter( int iter )
 {
    currentIter = iter + 1;
+}
+
+
+void
+NernstCtrl::setNewLoadedSettings()
+{
+   itersLoaded = o->iters;
+   xLoaded = o->x;
+   yLoaded = o->y;
+   capLoaded = eps;
+   seedLoaded = o->randseed;
+   lKLoaded = o->lK;
+   lNaLoaded = o->lNa;
+   lClLoaded = o->lCl;
+   rKLoaded = o->rK;
+   rNaLoaded = o->rNa;
+   rClLoaded = o->rCl;
+   pKLoaded = o->pK;
+   pNaLoaded = o->pNa;
+   pClLoaded = o->pCl;
+   selectivityLoaded = o->selectivity;
+   electrostaticsLoaded = o->electrostatics;
+
+   restartLoadedBtn->setEnabled( 1 );
 }
 
 
@@ -883,6 +934,148 @@ NernstCtrl::reenableCtrl()
 
    selectivity->setEnabled( 1 );
    electrostatics->setEnabled( 1 );
+}
+
+
+void
+NernstCtrl::restartCurrentCtrl()
+{
+   // Set the first push button to "Start", reenable all controls, but keep the current values.
+   stackedBtnLayout->setCurrentWidget( startBtn );
+   startBtn->setEnabled( 1 );
+   clearTrackingBtn->setEnabled( 0 );
+
+   xLbl->setEnabled( 1 );
+   xSld->setEnabled( 1 );
+   xVal->setEnabled( 1 );
+
+   yLbl->setEnabled( 1 );
+   ySld->setEnabled( 1 );
+   yVal->setEnabled( 1 );
+
+   itersLbl->setEnabled( 1 );
+   itersSld->setEnabled( 1 );
+   itersSld->setMinimum( 1 );
+   itersVal->setEnabled( 1 );
+
+   capLbl->setEnabled( 1 );
+   capSld->setEnabled( 1 );
+   capVal->setEnabled( 1 );
+
+   seedLbl->setEnabled( 1 );
+   seedVal->setEnabled( 1 );
+
+   inLbl->setEnabled( 1 );
+   outLbl->setEnabled( 1 );
+   permLbl->setEnabled( 1 );
+   mMLbl1->setEnabled( 1 );
+   mMLbl2->setEnabled( 1 );
+   mMLbl3->setEnabled( 1 );
+   mMLbl4->setEnabled( 1 );
+   mMLbl5->setEnabled( 1 );
+   mMLbl6->setEnabled( 1 );
+   lKSld->setEnabled( 1 );
+   lKVal->setEnabled( 1 );
+   lNaSld->setEnabled( 1 );
+   lNaVal->setEnabled( 1 );
+   lClSld->setEnabled( 1 );
+   lClVal->setEnabled( 1 );
+   rKSld->setEnabled( 1 );
+   rKVal->setEnabled( 1 );
+   rNaSld->setEnabled( 1 );
+   rNaVal->setEnabled( 1 );
+   rClSld->setEnabled( 1 );
+   rClVal->setEnabled( 1 );
+   pKSld->setEnabled( 1 );
+   pKVal->setEnabled( 1 );
+   pNaSld->setEnabled( 1 );
+   pNaVal->setEnabled( 1 );
+   pClSld->setEnabled( 1 );
+   pClVal->setEnabled( 1 );
+
+   selectivity->setEnabled( 1 );
+   electrostatics->setEnabled( 1 );
+
+   adjustTable();
+}
+
+
+void
+NernstCtrl::restartLoadedCtrl()
+{
+   // Set the first push button to "Start", reenable all controls, and load the most recent loaded values.
+   stackedBtnLayout->setCurrentWidget( startBtn );
+   startBtn->setEnabled( 1 );
+   clearTrackingBtn->setEnabled( 0 );
+
+   xLbl->setEnabled( 1 );
+   xSld->setEnabled( 1 );
+   xSld->setValue( (int)( log( xLoaded ) / log( 2 ) ) );
+   xVal->setEnabled( 1 );
+
+   yLbl->setEnabled( 1 );
+   ySld->setEnabled( 1 );
+   ySld->setValue( (int)( log( yLoaded ) / log( 2 ) ) );
+   yVal->setEnabled( 1 );
+
+   itersLbl->setEnabled( 1 );
+   itersSld->setEnabled( 1 );
+   itersSld->setMinimum( 1 );
+   itersSld->setValue( itersLoaded );
+   itersVal->setEnabled( 1 );
+
+   capLbl->setEnabled( 1 );
+   capSld->setEnabled( 1 );
+   capSld->setValue( (int)( capLoaded * 10.0 ) );
+   capVal->setEnabled( 1 );
+
+   seedLbl->setEnabled( 1 );
+   seedVal->setEnabled( 1 );
+   seedVal->setText( QString::number( seedLoaded ) );
+
+   inLbl->setEnabled( 1 );
+   outLbl->setEnabled( 1 );
+   permLbl->setEnabled( 1 );
+   mMLbl1->setEnabled( 1 );
+   mMLbl2->setEnabled( 1 );
+   mMLbl3->setEnabled( 1 );
+   mMLbl4->setEnabled( 1 );
+   mMLbl5->setEnabled( 1 );
+   mMLbl6->setEnabled( 1 );
+   lKSld->setEnabled( 1 );
+   lKSld->setValue( lKLoaded );
+   lKVal->setEnabled( 1 );
+   lNaSld->setEnabled( 1 );
+   lNaSld->setValue( lNaLoaded );
+   lNaVal->setEnabled( 1 );
+   lClSld->setEnabled( 1 );
+   lClSld->setValue( lClLoaded );
+   lClVal->setEnabled( 1 );
+   rKSld->setEnabled( 1 );
+   rKSld->setValue( rKLoaded );
+   rKVal->setEnabled( 1 );
+   rNaSld->setEnabled( 1 );
+   rNaSld->setValue( rNaLoaded );
+   rNaVal->setEnabled( 1 );
+   rClSld->setEnabled( 1 );
+   rClSld->setValue( rClLoaded );
+   rClVal->setEnabled( 1 );
+   pKSld->setEnabled( 1 );
+   pKSld->setValue( (int)( pKLoaded * 100.0 ) );
+   pKVal->setEnabled( 1 );
+   pNaSld->setEnabled( 1 );
+   pNaSld->setValue( (int)( pNaLoaded * 100.0 ) );
+   pNaVal->setEnabled( 1 );
+   pClSld->setEnabled( 1 );
+   pClSld->setValue( (int)( pClLoaded * 100.0 ) );
+   pClVal->setEnabled( 1 );
+
+   selectivity->setEnabled( 1 );
+   selectivity->setChecked( selectivityLoaded );
+   electrostatics->setEnabled( 1 );
+   electrostatics->setChecked( electrostaticsLoaded );
+
+   adjustTable();
 }
 
 

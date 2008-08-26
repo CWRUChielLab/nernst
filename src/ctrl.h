@@ -73,10 +73,13 @@ class NernstCtrl : public QWidget
       void changeSelectivity( bool selectivity );
       void changeElectrostatics( bool electrostatics );
       void reloadSettings();
+      void setNewLoadedSettings();
 
       void clearTrackedIons();
       void disableCtrl();
       void reenableCtrl();
+      void restartCurrentCtrl();
+      void restartLoadedCtrl();
       void resetCtrl();
 
    signals:
@@ -84,6 +87,8 @@ class NernstCtrl : public QWidget
       void pauseBtnClicked();
       void continueBtnClicked();
       void clearTrackingBtnClicked();
+      void restartCurrentBtnClicked();
+      void restartLoadedBtnClicked();
       void resetBtnClicked();
       void quitBtnClicked();
 
@@ -92,8 +97,8 @@ class NernstCtrl : public QWidget
  
    private:
       struct options *o;
-
       int currentIter;
+
       int itersDefault;
       int xDefault;
       int yDefault;
@@ -109,6 +114,23 @@ class NernstCtrl : public QWidget
       double pClDefault;
       int selectivityDefault;
       int electrostaticsDefault;
+
+      int itersLoaded;
+      int xLoaded;
+      int yLoaded;
+      double capLoaded;
+      int seedLoaded;
+      int lKLoaded;
+      int lNaLoaded;
+      int lClLoaded;
+      int rKLoaded;
+      int rNaLoaded;
+      int rClLoaded;
+      double pKLoaded;
+      double pNaLoaded;
+      double pClLoaded;
+      int selectivityLoaded;
+      int electrostaticsLoaded;
 
       QLabel *headerLbl;
 
@@ -169,6 +191,8 @@ class NernstCtrl : public QWidget
       QPushButton *pauseBtn;
       QPushButton *continueBtn;
       QPushButton *clearTrackingBtn;
+      QPushButton *restartCurrentBtn;
+      QPushButton *restartLoadedBtn;
       QPushButton *resetBtn;
       QPushButton *quitBtn;
 

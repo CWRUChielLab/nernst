@@ -194,7 +194,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.8" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.9" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -245,6 +245,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
 
    // Signals
    connect( this, SIGNAL( settingsLoaded() ), ctrl, SLOT( reloadSettings() ) );
+   connect( this, SIGNAL( settingsLoaded() ), ctrl, SLOT( setNewLoadedSettings() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( reloadSettings() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( disableCtrl() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( reenableCtrl() ) );
@@ -267,12 +268,33 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( startBtnClicked() ), this, SLOT( disableLoadInit() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), this, SLOT( disableLoadWorld() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), sim, SLOT( runSim() ) );
+
    connect( ctrl, SIGNAL( pauseBtnClicked() ), sim, SLOT( pauseSim() ) );
    connect( ctrl, SIGNAL( pauseBtnClicked() ), this, SLOT( enableSaveWorld() ) );
+
    connect( ctrl, SIGNAL( continueBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), this, SLOT( calcEquilibrium() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), this, SLOT( disableSaveWorld() ) );
    connect( ctrl, SIGNAL( continueBtnClicked() ), sim, SLOT( unpauseSim() ) );
+
+   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), sim, SLOT( resetSim() ) );
+   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), canvas, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( enableLoadInit() ) );
+   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( enableLoadWorld() ) );
+   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( disableSaveWorld() ) );
+   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), this, SLOT( resetPlots() ) );
+   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), statusBar, SLOT( resetProgress() ) );
+   connect( ctrl, SIGNAL( restartCurrentBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
+
+   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), sim, SLOT( resetSim() ) );
+   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), canvas, SLOT( resetPaint() ) );
+   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( enableLoadInit() ) );
+   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( enableLoadWorld() ) );
+   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( disableSaveWorld() ) );
+   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), this, SLOT( resetPlots() ) );
+   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), statusBar, SLOT( resetProgress() ) );
+   connect( ctrl, SIGNAL( restartLoadedBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
+
    connect( ctrl, SIGNAL( resetBtnClicked() ), sim, SLOT( resetSim() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), canvas, SLOT( resetPaint() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( enableLoadInit() ) );
@@ -281,6 +303,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( resetBtnClicked() ), this, SLOT( resetPlots() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( resetProgress() ) );
    connect( ctrl, SIGNAL( resetBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
+
    connect( ctrl, SIGNAL( quitBtnClicked() ), this, SLOT( close() ) );
    connect( ctrl, SIGNAL( adjustTable() ), this, SLOT( adjustTable() ) );
 #ifdef BLR_USELINUX
@@ -299,7 +322,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.8<br>"
+      "Version 0.9.9<br>"
       "Copyright &copy; 2008  "
       "Jeffrey Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
