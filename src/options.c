@@ -13,16 +13,24 @@
  * 7.  Finally, update dump_options().
  */
 
-#ifdef BLR_USEMAC
-#include <sys/malloc.h>
-#else
-#include <malloc.h>
-#endif
-#include <assert.h>
-#include <stdlib.h>  // strtol()
-#include <limits.h>
-#include <stdio.h>
-#include <errno.h>
+//options that only take long-opt form should be indexed here.
+//In order not to clash with single-letter options, start from
+//'z'+1 (recall that 'z' > 'Z').
+enum{
+	OPT_ELEMENTARY_CHARGE = 'z'+1,
+	OPT_BOLTZMAN,
+	OPT_MOLAR_GAS,
+	OPT_FARADAY,
+	OPT_TEMPERATURE,
+	OPT_LATTICE_LENGTH,
+	OPT_MEMBRANE_AREA,
+	OPT_VACUUM_PERM,
+	OPT_MEMBRANE_DIELECTRIC,
+	OPT_MEMBRANE_CAPACITACE,
+	OPT_CBOLTZ,
+	OPT_NUM_OPTIONS_THAT_ONLY_TAKE_LONG_FORM	//bleah.
+};	
+
 #define _GNU_SOURCE
 #include <getopt.h>
 #include <time.h>
@@ -83,9 +91,20 @@ char
    "                             Default=256.",
    "-y, --y                   Vertical world size.  Must be a power of 2.",
    "                             Default=256.",
+   "",
+   "--const-elementary-charge        Charge of one proton, (C).         (1.60218e-19)",
+   "--const-boltzmann		     Boltzmann's constant (J K^-1).     (1.38056e-23)",
+   "--const-molar-gas                Molar gas constant (C mol^-1).     (8.31447)",
+   "--const-faraday                  Faraday's constant (C mol^-1).     (96485.3)",
+   "--const-temperature	             Temperature (K).                   (298)",
+   "--const-lattice-length           Length of a lattice square (m).    (3.5e-10)",
+   "--const-membrane-area            Membrane area per lattice (m^2).   ((3.5e-10)^2)",
+   "--const-vacuum-perm              Vacuum permittivity (F m^-1)       (8.85419e-12)",
+   "--const-membrane-dielectric      Membrane dielectric (unitless)     (250)",
+   "--const-membrane-capacitance     Membrane capacitance (F m^-2)      (see doc)", //FIXME
+   "--const-cboltz                   Constant used in Boltzmann coef    (see doc)",
    NULL
 };
-
 
 int 
 safe_strtol( char *str )
@@ -173,6 +192,18 @@ set_defaults( struct options *o )
 
    o->profiling      = 0;
    o->progress       = 0;
+
+   o->e 	= 1.60218e-19;     // Elementary charge (C)
+   o->k 	= 1.38056e-23;     // Boltzmann's constant (J K^-1)
+   o->R 	= 8.31447;         // Molar gas constant (J K^-1 mol^-1)
+   o->F 	= 96485.3;         // Faraday's constant (C mol^-1)
+   o->t 	= 298;             // Temperature (K)
+   o->d 	= 3.5e-10;         // Length of a lattice square (m)
+   o->a 	= o->d * o->d;           // Membrane area per lattice quare (m^2)
+   o->eps0 	= 8.85419e-12;  // Vacuum permittivity (F m^-1)
+   o->eps 	= 250;           // Membrane dielectric constant
+   o->c 	= o->eps * o->eps0 / o->d;  // Membrane capacitance (F m^-2)
+   o->cBoltz 	= o->e * o->e / ( 2 * o->k * o->t * o->c * o->a ); //used in Boltzmann calc
 }
 
 
@@ -209,6 +240,18 @@ dump_options( struct options *o )
 
    fprintf( stderr, "progress =       %d\n", o->progress );
    fprintf( stderr, "profiling =      %d\n", o->profiling );
+   fprintf( stderr, "---------------------------------------------------------------------------\n" );
+   fprintf( stderr, "const-elementary-charge     %lf\n", o->e		)
+   fprintf( stderr, "const-boltzmann		 %lf\n", o->k		)
+   fprintf( stderr, "const-molar-gas             %lf\n", o->R		)
+   fprintf( stderr, "const-faraday               %lf\n", o->F		)
+   fprintf( stderr, "const-temperature	         %lf\n", o->t		)
+   fprintf( stderr, "const-lattice-length        %lf\n", o->d		)
+   fprintf( stderr, "const-membrane-area         %lf\n", o->a		)
+   fprintf( stderr, "const-vacuum-perm           %lf\n", o->eps0	)
+   fprintf( stderr, "const-membrane-dielectric   %lf\n", o->eps		)
+   fprintf( stderr, "const-membrane-capacitance  %lf\n", o->c		)
+   fprintf( stderr, "const-cboltz                %lf\n", o->cBoltz 	)
 
    fprintf( stderr, "---------------------------------------------------------------------------\n" );
 }
@@ -265,6 +308,17 @@ parseOptions(int argc, char **argv)
       { "version",           0, 0, 'V' },
       { "x",                 1, 0, 'x' },
       { "y",                 1, 0, 'y' },
+      { "-elementary-charge"    	1, 0, OPT_ELEMENTARY_CHARGE},
+      { "-boltzmann"	 		1, 0, OPT_BOLTZMAN},
+      { "-molar-gas"            	1, 0, OPT_MOLAR_GAS},
+      { "-faraday"              	1, 0, OPT_FARADAY},
+      { "-temperature"         		1, 0, OPT_TEMPERATURE},
+      { "-lattice-length"       	1, 0, OPT_LATTICE_LENGTH},
+      { "-membrane-area"        	1, 0, OPT_MEMBRANE_AREA},
+      { "-vacuum-perm"          	1, 0, OPT_VACUUM_PERM},
+      { "-membrane-dielectric"  	1, 0, OPT_MEMBRANE_DIELECTRIC},
+      { "-membrane-capacitance" 	1, 0, OPT_MEMBRANE_CAPACITACE},
+      { "-cboltz"               	1, 0, OPT_CBOLTZ},
       { 0,                   0, 0,  0  }
    };
 
@@ -356,6 +410,39 @@ parseOptions(int argc, char **argv)
          case 'y':
             options->y = safe_strtol( optarg );
             break;
+	 case OPT_ELEMENTARY_CHARGE:
+            o->e	=safeStrtod( optarg );
+	    break;
+	 case OPT_BOLTZMAN:
+            o->k	=safeStrtod( optarg );
+	    break;
+	 case OPT_MOLAR_GAS:
+            o->R	=safeStrtod( optarg );
+	    break;
+	 case OPT_FARADAY:
+            o->F	=safeStrtod( optarg );
+	    break;
+	 case OPT_TEMPERATURE:
+            o->t	=safeStrtod( optarg );
+	    break;
+	 case OPT_LATTICE_LENGTH:
+            o->d	=safeStrtod( optarg );
+	    break;
+	 case OPT_MEMBRANE_AREA:
+            o->a	=safeStrtod( optarg );
+	    break;
+	 case OPT_VACUUM_PERM:
+            o->eps0	=safeStrtod( optarg );
+	    break;
+	 case OPT_MEMBRANE_DIELECTRIC:
+            o->eps	=safeStrtod( optarg );
+	    break;
+	 case OPT_MEMBRANE_CAPACITACE:
+            o->c	=safeStrtod( optarg );
+	    break;
+	 case OPT_CBOLTZ:
+            o->cBoltz = safeStrtod( optarg );
+	    break;
          default:
             fprintf( stderr, "Unknown option.  Try --help for a full list.\n" );
             exit( -1 );
