@@ -634,7 +634,12 @@ uint32_t *get_sfmt_state32(void)
 
 uint64_t *get_sfmt_state64(void)
 {
+#if !defined(BIG_ENDIAN64) || defined(ONLY64)
    return psfmt64;
+#else
+   // not ideal, but better than nothing
+   return (uint64_t*)psfmt32;
+#endif
 }
 
 /**
