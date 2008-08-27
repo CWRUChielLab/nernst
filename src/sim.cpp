@@ -39,7 +39,7 @@ NernstSim::NernstSim( struct options *options )
    o = options;
    initConstants();
    maxatomsDefault = o->max_atoms;
-   qtime = new QTime();
+   qtime = safeNew( QTime() );
 }
 
 

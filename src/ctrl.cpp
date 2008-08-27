@@ -75,15 +75,15 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    electrostaticsLoaded = o->electrostatics;
 
    // Header
-   headerLbl = new QLabel( "<b>Control Panel</b>" );
+   headerLbl = safeNew( QLabel( "<b>Control Panel</b>" ) );
    headerLbl->setAlignment( Qt::AlignHCenter );
 
    // Iterations control
-   itersLbl = new QLabel( "&Iterations" );
+   itersLbl = safeNew( QLabel( "&Iterations" ) );
    itersLbl->setToolTip( "Set the number of iterations of the simulation\nbetween " + QString::number( MIN_ITERS )
          + " and " + QString::number( MAX_ITERS ) + "." );
 
-   itersSld = new QSlider( Qt::Horizontal );
+   itersSld = safeNew( QSlider( Qt::Horizontal ) );
    itersSld->setMinimumWidth( 100 );
    itersSld->setRange( MIN_ITERS, MAX_ITERS );
    itersSld->setPageStep( 1000 );
@@ -93,14 +93,14 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    itersLbl->setBuddy( itersSld );
 
-   itersVal = new QLabel( QString::number( itersDefault ) );
+   itersVal = safeNew( QLabel( QString::number( itersDefault ) ) );
    itersVal->setAlignment( Qt::AlignRight );
 
    // World width control
-   xLbl = new QLabel( "&Width" );
+   xLbl = safeNew( QLabel( "&Width" ) );
    xLbl->setToolTip( "Set the width of the world." );
 
-   xSld = new QSlider( Qt::Horizontal );
+   xSld = safeNew( QSlider( Qt::Horizontal ) );
    xSld->setMinimumWidth( 100 );
    xSld->setRange( (int)( log( MIN_X ) / log( 2 ) + 0.5 ), (int)( log( MAX_X ) / log( 2 ) + 0.5 ) );
    xSld->setValue( (int)( log( xDefault ) / log( 2 ) + 0.5 ) );
@@ -108,14 +108,14 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    xLbl->setBuddy( xSld );
 
-   xVal = new QLabel( QString::number( xDefault ) );
+   xVal = safeNew( QLabel( QString::number( xDefault ) ) );
    xVal->setAlignment( Qt::AlignRight );
 
    // World height control
-   yLbl = new QLabel( "Hei&ght" );
+   yLbl = safeNew( QLabel( "Hei&ght" ) );
    yLbl->setToolTip( "Set the height of the world." );
 
-   ySld = new QSlider( Qt::Horizontal );
+   ySld = safeNew( QSlider( Qt::Horizontal ) );
    ySld->setMinimumWidth( 100 );
    ySld->setRange( (int)( log( MIN_Y ) / log( 2 ) + 0.5 ), (int)( log( MAX_Y ) / log( 2 ) + 0.5 ) );
    ySld->setValue( (int)( log( yDefault ) / log( 2 ) + 0.5 ) );
@@ -123,14 +123,14 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    yLbl->setBuddy( ySld );
 
-   yVal = new QLabel( QString::number( yDefault ) );
+   yVal = safeNew( QLabel( QString::number( yDefault ) ) );
    yVal->setAlignment( Qt::AlignRight );
 
    // Capacitance control
-   capLbl = new QLabel( "C&apacitance" );
+   capLbl = safeNew( QLabel( "C&apacitance" ) );
    capLbl->setToolTip( "Set the dielectric constant for the membrane." );
 
-   capSld = new QSlider( Qt::Horizontal );
+   capSld = safeNew( QSlider( Qt::Horizontal ) );
    capSld->setMinimumWidth( 100 );
    capSld->setRange( 1, 10000 );
    capSld->setValue( (int)( capDefault * 10.0 ) );
@@ -138,7 +138,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    capLbl->setBuddy( capSld );
 
-   capVal = new QLabel( QString::number( capDefault ) );
+   capVal = safeNew( QLabel( QString::number( capDefault ) ) );
    capVal->setAlignment( Qt::AlignRight );
 
    /*
@@ -148,118 +148,118 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    */
 
    // Seed control
-   seedLbl = new QLabel( "Ra&ndom Start" );
+   seedLbl = safeNew( QLabel( "Ra&ndom Start" ) );
    seedLbl->setToolTip( "Set the seed for the random number generator.\nSimulations with matching seeds and world settings\nare identical." );
 
-   seedVal = new QLineEdit( QString::number( o->randseed ) );
-   seedVal->setValidator( new QIntValidator( this ) );
+   seedVal = safeNew( QLineEdit( QString::number( o->randseed ) ) );
+   seedVal->setValidator( safeNew( QIntValidator( this ) ) );
    seedVal->setToolTip( "Set the seed for the random number generator.\nSimulations with matching seeds and world settings\nare identical." );
 
    seedLbl->setBuddy( seedVal );
 
    // Ion controls
-   inLbl = new QLabel( "Intracellular" );
-   outLbl = new QLabel( "Extracellular" );
-   permLbl = new QLabel( "Permeability" );
+   inLbl = safeNew( QLabel( "Intracellular" ) );
+   outLbl = safeNew( QLabel( "Extracellular" ) );
+   permLbl = safeNew( QLabel( "Permeability" ) );
 
-   mMLbl1 = new QLabel( "mM" );
-   mMLbl2 = new QLabel( "mM" );
-   mMLbl3 = new QLabel( "mM" );
-   mMLbl4 = new QLabel( "mM" );
-   mMLbl5 = new QLabel( "mM" );
-   mMLbl6 = new QLabel( "mM" );
+   mMLbl1 = safeNew( QLabel( "mM" ) );
+   mMLbl2 = safeNew( QLabel( "mM" ) );
+   mMLbl3 = safeNew( QLabel( "mM" ) );
+   mMLbl4 = safeNew( QLabel( "mM" ) );
+   mMLbl5 = safeNew( QLabel( "mM" ) );
+   mMLbl6 = safeNew( QLabel( "mM" ) );
 
-   KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
-   NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
-   ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" );
+   KLbl = safeNew( QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" ) );
+   NaLbl = safeNew( QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" ) );
+   ClLbl = safeNew( QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" ) );
 
-   lKSld = new QSlider( Qt::Horizontal );
+   lKSld = safeNew( QSlider( Qt::Horizontal ) );
    lKSld->setRange( MIN_CONC, MAX_CONC );
    lKSld->setValue( lKDefault );
-   lKVal = new QLineEdit( QString::number( lKDefault ) );
+   lKVal = safeNew( QLineEdit( QString::number( lKDefault ) ) );
    lKVal->setAlignment( Qt::AlignRight );
-   lKVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
+   lKVal->setValidator( safeNew( QIntValidator( MIN_CONC, MAX_CONC, this ) ) );
 
-   lNaSld = new QSlider( Qt::Horizontal );
+   lNaSld = safeNew( QSlider( Qt::Horizontal ) );
    lNaSld->setRange( MIN_CONC, MAX_CONC );
    lNaSld->setValue( lNaDefault );
-   lNaVal = new QLineEdit( QString::number( lNaDefault ) );
+   lNaVal = safeNew( QLineEdit( QString::number( lNaDefault ) ) );
    lNaVal->setAlignment( Qt::AlignRight );
-   lNaVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
+   lNaVal->setValidator( safeNew( QIntValidator( MIN_CONC, MAX_CONC, this ) ) );
 
-   lClSld = new QSlider( Qt::Horizontal );
+   lClSld = safeNew( QSlider( Qt::Horizontal ) );
    lClSld->setRange( MIN_CONC, MAX_CONC );
    lClSld->setValue( lClDefault );
-   lClVal = new QLineEdit( QString::number( lClDefault ) );
+   lClVal = safeNew( QLineEdit( QString::number( lClDefault ) ) );
    lClVal->setAlignment( Qt::AlignRight );
-   lClVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
+   lClVal->setValidator( safeNew( QIntValidator( MIN_CONC, MAX_CONC, this ) ) );
 
-   rKSld = new QSlider( Qt::Horizontal );
+   rKSld = safeNew( QSlider( Qt::Horizontal ) );
    rKSld->setRange( MIN_CONC, MAX_CONC );
    rKSld->setValue( rKDefault );
-   rKVal = new QLineEdit( QString::number( rKDefault ) );
+   rKVal = safeNew( QLineEdit( QString::number( rKDefault ) ) );
    rKVal->setAlignment( Qt::AlignRight );
-   rKVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
+   rKVal->setValidator( safeNew( QIntValidator( MIN_CONC, MAX_CONC, this ) ) );
 
-   rNaSld = new QSlider( Qt::Horizontal );
+   rNaSld = safeNew( QSlider( Qt::Horizontal ) );
    rNaSld->setRange( MIN_CONC, MAX_CONC );
    rNaSld->setValue( rNaDefault );
-   rNaVal = new QLineEdit( QString::number( rNaDefault ) );
+   rNaVal = safeNew( QLineEdit( QString::number( rNaDefault ) ) );
    rNaVal->setAlignment( Qt::AlignRight );
-   rNaVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
+   rNaVal->setValidator( safeNew( QIntValidator( MIN_CONC, MAX_CONC, this ) ) );
 
-   rClSld = new QSlider( Qt::Horizontal );
+   rClSld = safeNew( QSlider( Qt::Horizontal ) );
    rClSld->setRange( MIN_CONC, MAX_CONC );
    rClSld->setValue( rClDefault );
-   rClVal = new QLineEdit( QString::number( rClDefault ) );
+   rClVal = safeNew( QLineEdit( QString::number( rClDefault ) ) );
    rClVal->setAlignment( Qt::AlignRight );
-   rClVal->setValidator( new QIntValidator( MIN_CONC, MAX_CONC, this ) );
+   rClVal->setValidator( safeNew( QIntValidator( MIN_CONC, MAX_CONC, this ) ) );
 
-   pKSld = new QSlider( Qt::Horizontal );
+   pKSld = safeNew( QSlider( Qt::Horizontal ) );
    pKSld->setRange( 0, 100 );
    pKSld->setValue( (int)( (double)pKDefault * 100.0 ) );
-   pKVal = new QLineEdit( QString::number( pKDefault ) );
+   pKVal = safeNew( QLineEdit( QString::number( pKDefault ) ) );
    pKVal->setAlignment( Qt::AlignRight );
-   pKVal->setValidator( new QDoubleValidator( 0.00, 1.00, 2, this ) );
+   pKVal->setValidator( safeNew( QDoubleValidator( 0.00, 1.00, 2, this ) ) );
 
-   pNaSld = new QSlider( Qt::Horizontal );
+   pNaSld = safeNew( QSlider( Qt::Horizontal ) );
    pNaSld->setRange( 0, 100 );
    pNaSld->setValue( (int)( (double)pNaDefault * 100.0 ) );
-   pNaVal = new QLineEdit( QString::number( pNaDefault ) );
+   pNaVal = safeNew( QLineEdit( QString::number( pNaDefault ) ) );
    pNaVal->setAlignment( Qt::AlignRight );
-   pNaVal->setValidator( new QDoubleValidator( 0.00, 1.00, 2, this ) );
+   pNaVal->setValidator( safeNew( QDoubleValidator( 0.00, 1.00, 2, this ) ) );
 
-   pClSld = new QSlider( Qt::Horizontal );
+   pClSld = safeNew( QSlider( Qt::Horizontal ) );
    pClSld->setRange( 0, 100 );
    pClSld->setValue( (int)( (double)pClDefault * 100.0 ) );
-   pClVal = new QLineEdit( QString::number( pClDefault ) );
+   pClVal = safeNew( QLineEdit( QString::number( pClDefault ) ) );
    pClVal->setAlignment( Qt::AlignRight );
-   pClVal->setValidator( new QDoubleValidator( 0.00, 1.00, 2, this ) );
+   pClVal->setValidator( safeNew( QDoubleValidator( 0.00, 1.00, 2, this ) ) );
 
    // Selectivity control
-   selectivity = new QCheckBox( "Selective &Permeability" );
+   selectivity = safeNew( QCheckBox( "Selective &Permeability" ) );
    selectivity->setChecked( selectivityDefault );
    selectivity->setToolTip( "Toggle selectivity of the membrane's pores so that\nonly ions of the right type can pass through any\ngiven pore." );
 
    // Electrostatics control
-   electrostatics = new QCheckBox( "&Electrostatics" );
+   electrostatics = safeNew( QCheckBox( "&Electrostatics" ) );
    electrostatics->setChecked( electrostaticsDefault );
    electrostatics->setToolTip( "Toggle electrostatic forces between ions needed for\nbalancing a diffusion gradient." );
 
    // Push buttons
-   startBtn = new QPushButton( "&Start" );
-   pauseBtn = new QPushButton( "&Pause" );
-   continueBtn = new QPushButton( "&Continue" );
-   resetCurrentBtn = new QPushButton( "&Reset with Same Initial Conditions" );
+   startBtn = safeNew( QPushButton( "&Start" ) );
+   pauseBtn = safeNew( QPushButton( "&Pause" ) );
+   continueBtn = safeNew( QPushButton( "&Continue" ) );
+   resetCurrentBtn = safeNew( QPushButton( "&Reset with Same Initial Conditions" ) );
    resetCurrentBtn->setEnabled( 0 );
-   resetLoadedBtn = new QPushButton( "Reset with &Loaded Initial Conditions" );
+   resetLoadedBtn = safeNew( QPushButton( "Reset with &Loaded Initial Conditions" ) );
    resetLoadedBtn->setEnabled( 0 );
-   resetDefaultBtn = new QPushButton( "Reset with &Default Settings" );
-   quitBtn = new QPushButton( "&Quit" );
+   resetDefaultBtn = safeNew( QPushButton( "Reset with &Default Settings" ) );
+   quitBtn = safeNew( QPushButton( "&Quit" ) );
 
    // Layout
-   mainLayout = new QVBoxLayout();
-   ctrlLayout = new QGridLayout();
+   mainLayout = safeNew( QVBoxLayout() );
+   ctrlLayout = safeNew( QGridLayout() );
 
    ctrlLayout->addWidget( headerLbl, 0, 0, 1, 3 );
 
@@ -284,8 +284,8 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    ctrlLayout->addWidget( seedLbl, 5, 0 );
    ctrlLayout->addWidget( seedVal, 5, 1, 1, 2 );
 
-   sldBox = new QGroupBox();
-   sldLayout = new QGridLayout( sldBox );
+   sldBox = safeNew( QGroupBox() );
+   sldLayout = safeNew( QGridLayout( sldBox ) );
 
    sldLayout->addWidget( inLbl, 0, 1, 1, 2 );
    sldLayout->addWidget( outLbl, 0, 3, 1, 2 );
@@ -327,7 +327,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    ctrlLayout->addWidget( sldBox, 6, 0, 1, 3 );
 
-   checkBoxesLayout = new QHBoxLayout();
+   checkBoxesLayout = safeNew( QHBoxLayout() );
    checkBoxesLayout->addWidget( selectivity );
    checkBoxesLayout->addWidget( electrostatics );
 
@@ -336,7 +336,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    mainLayout->addLayout( ctrlLayout );
    mainLayout->addStretch( 1 );
 
-   stackedBtnLayout = new QStackedLayout();
+   stackedBtnLayout = safeNew( QStackedLayout() );
    stackedBtnLayout->addWidget( startBtn );
    stackedBtnLayout->addWidget( pauseBtn );
    stackedBtnLayout->addWidget( continueBtn );

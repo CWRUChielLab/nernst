@@ -54,28 +54,28 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    o = options;
 
    // Simulation
-   sim = new XNernstSim( o, this );
+   sim = safeNew( XNernstSim( o, this ) );
 
    // Control panel
-   ctrl = new NernstCtrl( o, this );
+   ctrl = safeNew( NernstCtrl( o, this ) );
 
-   ctrlFrame = new QFrame();
+   ctrlFrame = safeNew( QFrame() );
    ctrlFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
 
-   ctrlLayout = new QVBoxLayout();
+   ctrlLayout = safeNew( QVBoxLayout() );
    ctrlLayout->addWidget( ctrl );
    ctrlFrame->setLayout( ctrlLayout );
 
    // World visualization
-   canvas = new NernstPainter( o, 0, this );
+   canvas = safeNew( NernstPainter( o, 0, this ) );
 
    /*
-   inCanvasLbl = new QLabel( "Intracellular" );
+   inCanvasLbl = safeNew( QLabel( "Intracellular" ) );
    inCanvasLbl->setAlignment( Qt::AlignCenter );
-   outCanvasLbl = new QLabel( "Extracellular" );
+   outCanvasLbl = safeNew( QLabel( "Extracellular" ) );
    outCanvasLbl->setAlignment( Qt::AlignCenter );
 
-   canvasLayout = new QGridLayout();
+   canvasLayout = safeNew( QGridLayout() );
    canvasLayout->addWidget( inCanvasLbl, 0, 0 );
    canvasLayout->addWidget( outCanvasLbl, 0, 1 );
    canvasLayout->addWidget( canvas, 1, 0, 1, 2 );
@@ -83,25 +83,25 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    canvasLayout->setAlignment( Qt::AlignCenter );
    */
 
-   canvasScroll = new QScrollArea();
+   canvasScroll = safeNew( QScrollArea() );
    //canvasScroll->setLayout( canvasLayout );
    canvasScroll->setWidget( canvas );
    canvasScroll->setAlignment( Qt::AlignCenter );
    canvasScroll->setMinimumWidth( 300 );
    canvasScroll->setFrameStyle( QFrame::Box | QFrame::Sunken );
 
-   zoom = new NernstPainter( o, 1, this );
+   zoom = safeNew( NernstPainter( o, 1, this ) );
    zoom->setMinimumWidth( 300 );
-   inZoom = new QLabel( "In" );
-   outZoom = new QLabel( "Out" );
+   inZoom = safeNew( QLabel( "In" ) );
+   outZoom = safeNew( QLabel( "Out" ) );
 
-   zoomInBtn = new QPushButton( "+" );
-   zoomOutBtn = new QPushButton( "-" );
+   zoomInBtn = safeNew( QPushButton( "+" ) );
+   zoomOutBtn = safeNew( QPushButton( "-" ) );
 
-   zoomFrame = new QFrame();
+   zoomFrame = safeNew( QFrame() );
    zoomFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
 
-   zoomLayout = new QGridLayout();
+   zoomLayout = safeNew( QGridLayout() );
    zoomLayout->addWidget( inZoom, 0, 0 );
    zoomLayout->addWidget( zoom, 0, 1, 1, 2 );
    zoomLayout->addWidget( outZoom, 0, 3 );
@@ -111,85 +111,85 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    zoomFrame->setLayout( zoomLayout );
 
    // Potential plot   
-   voltsPlot = new QwtPlot();
+   voltsPlot = safeNew( QwtPlot() );
    voltsPlot->setTitle( "Membrane Potential" );
    voltsPlot->setAxisTitle( 0, "Potential (mV)" );
    voltsPlot->setAxisTitle( 2, "Time (iters)" );
 
    numCurves = 4;
-   curves = new QwtPlotCurve *[ numCurves ];
+   curves = safeNew( QwtPlotCurve *[ numCurves ] );
    currentNernstCurve = 3;
 
-   curves[ 0 ] = new QwtPlotCurve( "Membrane Potential" );
+   curves[ 0 ] = safeNew( QwtPlotCurve( "Membrane Potential" ) );
    curves[ 0 ]->setData( x_iters, y_volts, 0 );
    curves[ 0 ]->attach( voltsPlot );
 
    /*
-   curves[ 1 ] = new QwtPlotCurve( "Equilibrium Potential (Gibbs)" );
+   curves[ 1 ] = safeNew( QwtPlotCurve( "Equilibrium Potential (Gibbs)" ) );
    curves[ 1 ]->setPen( QColor( Qt::green ) );
    curves[ 1 ]->setData( x_iters, y_gibbs, 0 );
    curves[ 1 ]->attach( voltsPlot );
    voltsGibbs = 0;
 
-   curves[ 2 ] = new QwtPlotCurve( "Equilibrium Potential (Boltzmann)" );
+   curves[ 2 ] = safeNew( QwtPlotCurve( "Equilibrium Potential (Boltzmann)" ) );
    curves[ 2 ]->setPen( QColor( Qt::blue ) );
    curves[ 2 ]->setData( x_iters, y_boltzmann, 0 );
    curves[ 2 ]->attach( voltsPlot );
    voltsBoltzmann = 0;
    */
 
-   curves[ currentNernstCurve ] = new QwtPlotCurve( "GHK Potential" );
+   curves[ currentNernstCurve ] = safeNew( QwtPlotCurve( "GHK Potential" ) );
    curves[ currentNernstCurve ]->setPen( QColor( Qt::red ) );
    curves[ currentNernstCurve ]->setData( x_iters, y_ghk, 0 );
    curves[ currentNernstCurve ]->attach( voltsPlot );
    voltsGHK = 0;
 
    // Concentration table
-   measuredLbl = new QLabel( "<b>Measured Concentrations</b>" );
+   measuredLbl = safeNew( QLabel( "<b>Measured Concentrations</b>" ) );
    measuredLbl->setAlignment( Qt::AlignHCenter );
-   inLbl = new QLabel( "<b>Intracellular</b>" );
-   outLbl = new QLabel( "<b>Extracellular</b>" );
-   KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
-   NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
-   ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" );
-   ImpChargeLbl = new QLabel( "<b>Impermeable<br>Charges</b>" );
-   ImpPartLbl = new QLabel( "<b>Impermeable<br>Particles</b>" );
+   inLbl = safeNew( QLabel( "<b>Intracellular</b>" ) );
+   outLbl = safeNew( QLabel( "<b>Extracellular</b>" ) );
+   KLbl = safeNew( QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" ) );
+   NaLbl = safeNew( QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" ) );
+   ClLbl = safeNew( QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" ) );
+   ImpChargeLbl = safeNew( QLabel( "<b>Impermeable<br>Charges</b>" ) );
+   ImpPartLbl = safeNew( QLabel( "<b>Impermeable<br>Particles</b>" ) );
 
-   KInLbl = new QLabel();
-   KOutLbl = new QLabel();
-   NaInLbl = new QLabel();
-   NaOutLbl = new QLabel();
-   ClInLbl = new QLabel();
-   ClOutLbl = new QLabel();
-   ImpChargeInLbl = new QLabel();
-   ImpChargeOutLbl = new QLabel();
-   ImpPartInLbl = new QLabel();
-   ImpPartOutLbl = new QLabel();
+   KInLbl = safeNew( QLabel() );
+   KOutLbl = safeNew( QLabel() );
+   NaInLbl = safeNew( QLabel() );
+   NaOutLbl = safeNew( QLabel() );
+   ClInLbl = safeNew( QLabel() );
+   ClOutLbl = safeNew( QLabel() );
+   ImpChargeInLbl = safeNew( QLabel() );
+   ImpChargeOutLbl = safeNew( QLabel() );
+   ImpPartInLbl = safeNew( QLabel() );
+   ImpPartOutLbl = safeNew( QLabel() );
    adjustTable();
 
    // Main window layout
-   mainLayout = new QGridLayout();
+   mainLayout = safeNew( QGridLayout() );
    mainLayout->addWidget( ctrlFrame, 0, 0 );
 
-   worldLayout = new QVBoxLayout();
+   worldLayout = safeNew( QVBoxLayout() );
    worldLayout->addWidget( canvasScroll );
    worldLayout->addWidget( zoomFrame );
    mainLayout->addLayout( worldLayout, 0, 1 );
 
-   resultsLayout = new QVBoxLayout();
-   plotFrame = new QFrame();
+   resultsLayout = safeNew( QVBoxLayout() );
+   plotFrame = safeNew( QFrame() );
    plotFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
    plotFrame->setMaximumWidth( 350 );
-   plotLayout = new QVBoxLayout();
+   plotLayout = safeNew( QVBoxLayout() );
    plotFrame->setLayout( plotLayout );
    plotLayout->addWidget( voltsPlot );
-   curveLbl = new QLabel();
+   curveLbl = safeNew( QLabel() );
    plotLayout->addWidget( curveLbl );
    resultsLayout->addWidget( plotFrame );
 
-   concFrame = new QFrame();
+   concFrame = safeNew( QFrame() );
    concFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
-   concLayout = new QGridLayout();
+   concLayout = safeNew( QGridLayout() );
    concFrame->setLayout( concLayout );
 
    concLayout->addWidget( measuredLbl, 0, 0, 1, 3 );
@@ -222,59 +222,59 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainLayout->setColumnMinimumWidth( 2, 350 );
    mainLayout->setColumnStretch( 1, 1 );
 
-   mainWidget = new QWidget();
+   mainWidget = safeNew( QWidget() );
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
    setWindowTitle( "Nernst Potential Simulator | v0.9.10" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
-   statusBar = new NernstStatusBar( o, this );
+   statusBar = safeNew( NernstStatusBar( o, this ) );
    setStatusBar( statusBar );
 
    // Actions
-   saveInitAct = new QAction( "&Save Current Conditions", this );
+   saveInitAct = safeNew( QAction( "&Save Current Conditions", this ) );
    saveInitAct->setStatusTip( "Save the control panel settings for later use" );
    connect( saveInitAct, SIGNAL( triggered() ), this, SLOT( saveInit() ) );
 
-   loadInitAct = new QAction( "&Load Initial Conditions", this );
+   loadInitAct = safeNew( QAction( "&Load Initial Conditions", this ) );
    loadInitAct->setStatusTip( "Load control panel settings from a file" );
    connect( loadInitAct, SIGNAL( triggered() ), this, SLOT( loadInit() ) );
 
-   saveWorldAct = new QAction( "Save &World", this );
+   saveWorldAct = safeNew( QAction( "Save &World", this ) );
    saveWorldAct->setStatusTip( "Save the state of the world for later simulations" );
    saveWorldAct->setEnabled( 0 );
    connect( saveWorldAct, SIGNAL( triggered() ), this, SLOT( saveWorld() ) );
 
-   loadWorldAct = new QAction( "Load W&orld", this );
+   loadWorldAct = safeNew( QAction( "Load W&orld", this ) );
    loadWorldAct->setStatusTip( "Load a world state to continue a simulation" );
    connect( loadWorldAct, SIGNAL( triggered() ), this, SLOT( loadWorld() ) );
 
-   zoomInAct = new QAction( "Zoom &In", this );
+   zoomInAct = safeNew( QAction( "Zoom &In", this ) );
    zoomInAct->setStatusTip( "Zoom in for a closer look" );
    connect( zoomInAct, SIGNAL( triggered() ), zoom, SLOT( zoomIn() ) );
 
-   zoomOutAct= new QAction( "Zoom &Out", this );
+   zoomOutAct= safeNew( QAction( "Zoom &Out", this ) );
    zoomOutAct->setStatusTip( "Zoom out to see the more of the world" );
    connect( zoomOutAct, SIGNAL( triggered() ), zoom, SLOT( zoomOut() ) );
 
-   fullScreenAct = new QAction( "&Full Screen", this );
+   fullScreenAct = safeNew( QAction( "&Full Screen", this ) );
    fullScreenAct->setStatusTip( "Toggle between full screen mode and normal mode" );
    fullScreenAct->setCheckable( 1 );
    fullScreenAct->setChecked( 0 );
    connect( fullScreenAct, SIGNAL( triggered( bool ) ), this, SLOT( toggleFullScreen( bool ) ) );
 
-   clearTrackedAct = new QAction( "&Clear Tracked Ions", this );
+   clearTrackedAct = safeNew( QAction( "&Clear Tracked Ions", this ) );
    clearTrackedAct->setStatusTip( "Remove tracking from every ion" );
    connect( clearTrackedAct, SIGNAL( triggered() ), this, SLOT( clearTrackedIons() ) );
 
-   quitAct = new QAction( "&Quit", this );
+   quitAct = safeNew( QAction( "&Quit", this ) );
    quitAct->setStatusTip( "Quit the simulator" );
    connect( quitAct, SIGNAL( triggered() ), this, SLOT( close() ) );
 
-   aboutAct = new QAction( "&About", this );
+   aboutAct = safeNew( QAction( "&About", this ) );
    aboutAct->setStatusTip( "" );
    connect( aboutAct, SIGNAL( triggered() ), this, SLOT( about() ) );
 
-   aboutQtAct = new QAction( "About &Qt", this );
+   aboutQtAct = safeNew( QAction( "About &Qt", this ) );
    aboutQtAct->setStatusTip( "" );
    connect( aboutQtAct, SIGNAL( triggered() ), qApp, SLOT( aboutQt() ) );
 
@@ -936,13 +936,13 @@ NernstGUI::updatePlots( int currentIter )
                temp[ i ] = curves[ i ];
             }
             numCurves *= 2;
-            curves = new QwtPlotCurve *[ numCurves ];
+            curves = safeNew( QwtPlotCurve *[ numCurves ] );
             for( int i = 0; i < numCurves / 2; i++ )
             {
                curves[ i ] = temp[ i ];
             }
          }
-         curves[ currentNernstCurve ] = new QwtPlotCurve( "GHK Potential" );
+         curves[ currentNernstCurve ] = safeNew( QwtPlotCurve( "GHK Potential" ) );
          curves[ currentNernstCurve ]->setPen( QColor( Qt::red ) );
          curves[ currentNernstCurve ]->attach( voltsPlot );
          nernstHasSomeData = 0;

@@ -41,20 +41,20 @@ NernstStatusBar::NernstStatusBar( struct options *options, QWidget *parent )
    o = options;
    mode = 1;
 
-   statusLbl = new QLabel( "Ready" );
+   statusLbl = safeNew( QLabel( "Ready" ) );
    statusLbl->setMinimumWidth( 300 );
 
-   progressBar = new QProgressBar( this );
+   progressBar = safeNew( QProgressBar( this ) );
    progressBar->setRange( 1, o->iters );
    progressBar->setValue( 1 );
    progressBar->setMinimumWidth( 350 );
    progressBar->setMaximumWidth( 350 );
 
-   voltsLbl = new QLabel( "0 mV" );
+   voltsLbl = safeNew( QLabel( "0 mV" ) );
 
    addWidget( statusLbl );
    addWidget( progressBar );
-   addWidget( new QWidget(), 1 );
+   addWidget( safeNew( QWidget(), 1 ) );
    addWidget( voltsLbl );
 
    hideOrShow( "" );
