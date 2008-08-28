@@ -31,8 +31,6 @@
 
 #include "paint.h"
 #include "options.h"
-#include "atom.h"
-#include "world.h"
 #include "sim.h"
 
 

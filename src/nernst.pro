@@ -72,6 +72,6 @@ win32 {
 }
 
 # Input
-HEADERS += atom.h ctrl.h gui.h options.h paint.h safecalls.h sim.h status.h util.h xsim.h
-SOURCES += atom.c ctrl.cpp gui.cpp main.cpp options.cpp paint.cpp safecalls.cpp sim.cpp status.cpp xsim.cpp ../SFMT/SFMT.c
+HEADERS += ctrl.h gui.h options.h paint.h safecalls.h sim.h status.h util.h xsim.h
+SOURCES += ctrl.cpp gui.cpp main.cpp options.cpp paint.cpp safecalls.cpp sim.cpp status.cpp xsim.cpp ../SFMT/SFMT.c
 

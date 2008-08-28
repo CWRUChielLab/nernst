@@ -29,8 +29,6 @@
 
 #include "ctrl.h"
 #include "options.h"
-#include "atom.h"
-#include "world.h"
 #include "safecalls.h"
 using namespace SafeCalls;
 

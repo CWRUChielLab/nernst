@@ -29,7 +29,6 @@
 #include <unistd.h>
 
 #include "xsim.h"
-#include "atom.h"
 #include "options.h"
 #include "util.h"
 

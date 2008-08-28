@@ -72,7 +72,6 @@ enum{
 #include <string.h>
 
 #include "options.h"
-#include "world.h"
 #include "safecalls.h"
 using namespace SafeCalls;
 const char
