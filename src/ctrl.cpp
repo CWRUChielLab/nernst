@@ -31,7 +31,8 @@
 #include "options.h"
 #include "atom.h"
 #include "world.h"
-
+#include "safecalls.h"
+using namespace SafeCalls;
 
 NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    : QWidget( parent )

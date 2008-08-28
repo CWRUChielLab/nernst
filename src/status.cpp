@@ -30,7 +30,8 @@
 #include "options.h"
 #include "atom.h"
 #include "world.h"
-
+#include "safecalls.h"
+using namespace SafeCalls;
 
 #include <iostream>
 
@@ -54,7 +55,7 @@ NernstStatusBar::NernstStatusBar( struct options *options, QWidget *parent )
 
    addWidget( statusLbl );
    addWidget( progressBar );
-   addWidget( safeNew( QWidget(), 1 ) );
+   addWidget( safeNew( QWidget() ), 1 );
    addWidget( voltsLbl );
 
    hideOrShow( "" );

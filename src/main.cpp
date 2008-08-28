@@ -27,7 +27,8 @@
 #include "options.h"
 #include "sim.h"
 #include "gui.h"
-
+#include "safecalls.h"
+using namespace SafeCalls;
 
 int
 main( int argc, char *argv[] )

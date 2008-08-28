@@ -39,7 +39,8 @@
 #include "options.h"
 #include "atom.h"
 #include "world.h"
-
+#include "safecalls.h"
+using namespace SafeCalls;
 
 double x_iters[ MAX_ITERS ];
 double y_volts[ MAX_ITERS ];

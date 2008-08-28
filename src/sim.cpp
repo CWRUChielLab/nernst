@@ -32,7 +32,8 @@
 #include "atom.h"
 #include "world.h"
 #include "util.h"
-
+#include "safecalls.h"
+using namespace SafeCalls;
 
 NernstSim::NernstSim( struct options *options )
 {
