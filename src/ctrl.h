@@ -1,7 +1,7 @@
 /* ctrl.h
  *
  *
- * Copyright (c) 2008, Jeffery Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.
@@ -48,6 +48,7 @@ class NernstCtrl : public QWidget
 
    public slots:
       void updateIter( int iter );
+      void generateNewSeed();
       void changeIters( int iters );
       void changeX( int xpow );
       void changeY( int ypow );
@@ -152,6 +153,7 @@ class NernstCtrl : public QWidget
 
       QLabel *seedLbl;
       QLineEdit *seedVal;
+      QPushButton *seedBtn;
 
       QLabel *inLbl;
       QLabel *outLbl;
@@ -197,6 +199,7 @@ class NernstCtrl : public QWidget
 
       QVBoxLayout *mainLayout;
       QGridLayout *ctrlLayout;
+      QHBoxLayout *seedLayout;
       QGroupBox *sldBox;
       QGridLayout *sldLayout;
       QHBoxLayout *checkBoxesLayout;

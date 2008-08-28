@@ -2,7 +2,7 @@
  *
  * The GUI's status bar.
  *
- * Copyright (c) 2008, Jeffery Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.

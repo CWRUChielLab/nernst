@@ -1,7 +1,7 @@
 /* gui.h
  *
  *
- * Copyright (c) 2008, Jeffery Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.
@@ -59,6 +59,8 @@ class NernstGUI : public QMainWindow
  
    public slots:
       void about();
+      void howDoesItWork();
+      void howDoIUse();
       void saveInit();
       void loadInit();
       void saveWorld();
@@ -99,19 +101,20 @@ class NernstGUI : public QMainWindow
       QVBoxLayout *ctrlLayout;
 
       QVBoxLayout *worldLayout;
-      QLabel *inCanvasLbl;
-      QLabel *outCanvasLbl;
+      QLabel *topCanvasLbl;
       NernstPainter *canvas;
+      QFrame *canvasFrame;
       QGridLayout *canvasLayout;
       QScrollArea *canvasScroll;
 
+      QGridLayout *zoomLayout;
       NernstPainter *zoom;
-      QLabel *inZoom;
-      QLabel *outZoom;
+      QLabel *topZoomLbl;
+      QLabel *inZoomLbl;
+      QLabel *outZoomLbl;
       QPushButton *zoomInBtn;
       QPushButton *zoomOutBtn;
       QFrame *zoomFrame;
-      QGridLayout *zoomLayout;
 
       QVBoxLayout *resultsLayout;
       QFrame *plotFrame;
@@ -156,6 +159,8 @@ class NernstGUI : public QMainWindow
       QAction *slowMotionAct;
       QAction *clearTrackedAct;
       QAction *quitAct;
+      QAction *howDoesItWorkAct;
+      QAction *howDoIUseAct;
       QAction *aboutAct;
       QAction *aboutQtAct;
 
