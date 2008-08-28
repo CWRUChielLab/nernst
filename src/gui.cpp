@@ -446,7 +446,7 @@ NernstGUI::saveInit()
    out << o->pCl;             endl( out );
    out << o->selectivity;     endl( out );
    out << o->electrostatics;  endl( out );
-   out << eps;                endl( out );
+   out << o->eps;             endl( out );
 
    QApplication::restoreOverrideCursor();
    return;
@@ -492,7 +492,7 @@ NernstGUI::loadInit()
    in >> o->pCl;
    in >> o->selectivity;
    in >> o->electrostatics;
-   in >> eps;
+   in >> o->eps;
 
    QApplication::restoreOverrideCursor();
    emit settingsLoaded();
@@ -787,7 +787,7 @@ NernstGUI::calcEquilibrium()
    //voltsNernst = R * t / F * log( (double)initRHS_K / (double)initLHS_K ) * 1000;
 
    // Equilibrium predicted by the Goldman-Hodgkin-Katz voltage equation
-   voltsGHK = R * t / F * log( ( ( o->pK * initRHS_K ) + ( o->pNa * initRHS_Na ) + ( o->pCl * initLHS_Cl ) ) /
+   voltsGHK = o->R * o->t / o->F * log( ( ( o->pK * initRHS_K ) + ( o->pNa * initRHS_Na ) + ( o->pCl * initLHS_Cl ) ) /
                                ( ( o->pK * initLHS_K ) + ( o->pNa * initLHS_Na ) + ( o->pCl * initRHS_Cl ) ) ) * 1000;
 
    /*
@@ -886,7 +886,7 @@ NernstGUI::updatePlots( int currentIter )
    }
 
    x_iters[ currentIter ] = currentIter;
-   y_volts[ currentIter ] = LRcharge * e / ( c * a * o->y ) * 1000;  // Current membrane potential (mV)
+   y_volts[ currentIter ] = LRcharge * o->e / ( o->c * o->a * o->y ) * 1000;  // Current membrane potential (mV)
    // y_gibbs[ currentIter ] = voltsGibbs;
    // y_boltzmann[ currentIter ] = voltsBoltzmann;
 

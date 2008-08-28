@@ -253,12 +253,12 @@ shouldTransport( unsigned int from, unsigned int to )
    // Moving left to right across membrane.
    if( getX( from ) == o->x / 2 - 1 && getX( to ) == o->x / 2 + 1 )
    {
-      return ( direction[ to ] % 256 <= 16 * exp( cBoltz * LRcharge * q / o->y ) );
+      return ( direction[ to ] % 256 <= 16 * exp( o->cBoltz * LRcharge * q / o->y ) );
    } else {
       // Moving right to left across membrane.
       if( getX( from ) == o->x / 2 + 1 && getX( to ) == o->x / 2 - 1 )
       {
-         return ( direction[ to ] % 256 <= 16 * exp( cBoltz * LRcharge * -q / o->y ) );
+         return ( direction[ to ] % 256 <= 16 * exp( o->cBoltz * LRcharge * -q / o->y ) );
       } else {
 #ifndef QT_NO_DEBUG
          ASSERT( ( getX( from ) == o->x / 2 - 1 && getX( to ) == o->x / 2 + 1 ) || ( getX( from ) == o->x / 2 + 1 && getX( from ) == o->x / 2 - 1 ) );

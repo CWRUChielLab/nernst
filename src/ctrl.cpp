@@ -44,7 +44,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    itersDefault = o->iters;
    xDefault = o->x;
    yDefault = o->y;
-   capDefault = eps;
+   capDefault = o->eps;
    lKDefault = o->lK;
    lNaDefault = o->lNa;
    lClDefault = o->lCl;
@@ -61,7 +61,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    itersLoaded = o->iters;
    xLoaded = o->x;
    yLoaded = o->y;
-   capLoaded = eps;
+   capLoaded = o->eps;
    seedLoaded = o->randseed;
    lKLoaded = o->lK;
    lNaLoaded = o->lNa;
@@ -412,7 +412,7 @@ NernstCtrl::setNewLoadedSettings()
    itersLoaded = o->iters;
    xLoaded = o->x;
    yLoaded = o->y;
-   capLoaded = eps;
+   capLoaded = o->eps;
    seedLoaded = o->randseed;
    lKLoaded = o->lK;
    lNaLoaded = o->lNa;
@@ -477,10 +477,10 @@ NernstCtrl::changeY( int ypow )
 void
 NernstCtrl::changeCapacitance( int cap )
 {
-   eps = (double)cap / 10.0;
-   capVal->setNum( eps );
-   c = eps * eps0 / d;
-   cBoltz = e * e / ( 2 * k * t * c * a );
+   o->eps = (double)cap / 10.0;
+   capVal->setNum( o->eps );
+   o->c = o->eps * o->eps0 / o->d;
+   o->cBoltz = o->e * o->e / ( 2 * o->k * o->t * o->c * o->a );
 }
 
 
@@ -795,8 +795,8 @@ NernstCtrl::reloadSettings()
    itersSld->setValue( o->iters );
    xSld->setValue( (int)( log( o->x ) / log( 2 ) + 0.5 ) );
    ySld->setValue( (int)( log( o->y ) / log( 2 ) + 0.5 ) );
-   capSld->setValue( (int)( eps * 10.0 ) );
-   capVal->setText( QString::number( eps ) );
+   capSld->setValue( (int)( o->eps * 10.0 ) );
+   capVal->setText( QString::number( o->eps ) );
    seedVal->setText( QString::number( o->randseed ) );
    lKSld->setValue( o->lK );
    lKVal->setText( QString::number( o->lK ) );
