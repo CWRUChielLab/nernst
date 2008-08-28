@@ -2,7 +2,7 @@
  *
  * The main application GUI.
  *
- * Copyright (c) 2008, Jeffery Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.
@@ -69,44 +69,45 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    // World visualization
    canvas = new NernstPainter( o, 0, this );
 
-   /*
-   inCanvasLbl = new QLabel( "Intracellular" );
-   inCanvasLbl->setAlignment( Qt::AlignCenter );
-   outCanvasLbl = new QLabel( "Extracellular" );
-   outCanvasLbl->setAlignment( Qt::AlignCenter );
-
-   canvasLayout = new QGridLayout();
-   canvasLayout->addWidget( inCanvasLbl, 0, 0 );
-   canvasLayout->addWidget( outCanvasLbl, 0, 1 );
-   canvasLayout->addWidget( canvas, 1, 0, 1, 2 );
-   canvasLayout->setRowStretch( 1, 1 );
-   canvasLayout->setAlignment( Qt::AlignCenter );
-   */
+   topCanvasLbl = new QLabel( "<b>Full World View</b>" );
+   topCanvasLbl->setAlignment( Qt::AlignCenter );
 
    canvasScroll = new QScrollArea();
-   //canvasScroll->setLayout( canvasLayout );
    canvasScroll->setWidget( canvas );
    canvasScroll->setAlignment( Qt::AlignCenter );
    canvasScroll->setMinimumWidth( 300 );
-   canvasScroll->setFrameStyle( QFrame::Box | QFrame::Sunken );
+
+   canvasFrame = new QFrame();
+   canvasFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
+   
+   canvasLayout = new QGridLayout();
+   canvasLayout->addWidget( topCanvasLbl, 0, 0 );
+   canvasLayout->addWidget( canvasScroll, 1, 0 );
+   canvasFrame->setLayout( canvasLayout );
 
    zoom = new NernstPainter( o, 1, this );
-   zoom->setMinimumWidth( 300 );
-   inZoom = new QLabel( "In" );
-   outZoom = new QLabel( "Out" );
+   topZoomLbl = new QLabel( "<b>Zoomed View</b>" );
+   topZoomLbl->setAlignment( Qt::AlignCenter );
+   inZoomLbl = new QLabel( "Intracellular" );
+   inZoomLbl->setAlignment( Qt::AlignCenter );
+   outZoomLbl = new QLabel( "Extracellular" );
+   outZoomLbl->setAlignment( Qt::AlignCenter );
 
    zoomInBtn = new QPushButton( "+" );
+   zoomInBtn->setMaximumWidth( 30 );
    zoomOutBtn = new QPushButton( "-" );
+   zoomOutBtn->setMaximumWidth( 30 );
 
    zoomFrame = new QFrame();
    zoomFrame->setFrameStyle( QFrame::Box | QFrame::Sunken );
 
    zoomLayout = new QGridLayout();
-   zoomLayout->addWidget( inZoom, 0, 0 );
-   zoomLayout->addWidget( zoom, 0, 1, 1, 2 );
-   zoomLayout->addWidget( outZoom, 0, 3 );
-   zoomLayout->addWidget( zoomOutBtn, 1, 1 );
-   zoomLayout->addWidget( zoomInBtn, 1, 2 );
+   zoomLayout->addWidget( topZoomLbl, 0, 0, 1, 4 );
+   zoomLayout->addWidget( zoom, 1, 0, 1, 4 );
+   zoomLayout->addWidget( inZoomLbl, 2, 0 );
+   zoomLayout->addWidget( outZoomLbl, 2, 3 );
+   zoomLayout->addWidget( zoomOutBtn, 3, 1 );
+   zoomLayout->addWidget( zoomInBtn, 3, 2 );
    zoomLayout->setAlignment( Qt::AlignCenter );
    zoomFrame->setLayout( zoomLayout );
 
@@ -152,8 +153,12 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
    NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
    ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" );
-   ImpChargeLbl = new QLabel( "<b>Initial<br>Impermeable<br>Charges for<br>Electroneutrality</b>" );
-   ImpPartLbl = new QLabel( "<b>Initial<br>Impermeable<br>Particles for<br>Osmotic Balance</b>" );
+   //ImpChargeLbl = new QLabel( "<b>Initial<br>Impermeable<br>Charges for<br>Electroneutrality</b>" );
+   //ImpPartLbl = new QLabel( "<b>Initial<br>Impermeable<br>Particles for<br>Osmotic Balance</b>" );
+   ImpChargeLbl = new QLabel( "<b>IICE</b>" );
+   ImpChargeLbl->setToolTip( "Initial impermeable charges for electroneutrality" );
+   ImpPartLbl = new QLabel( "<b>IINPOB</b>" );
+   ImpPartLbl->setToolTip( "Initial impermable neutral particles for osmotic balance" );
 
    KInLbl = new QLabel();
    KOutLbl = new QLabel();
@@ -172,7 +177,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainLayout->addWidget( ctrlFrame, 0, 0 );
 
    worldLayout = new QVBoxLayout();
-   worldLayout->addWidget( canvasScroll );
+   worldLayout->addWidget( canvasFrame );
    worldLayout->addWidget( zoomFrame );
    mainLayout->addLayout( worldLayout, 0, 1 );
 
@@ -225,7 +230,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.11" );
+   setWindowTitle( "Nernst Potential Simulator" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -276,12 +281,20 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    quitAct->setStatusTip( "Quit the simulator" );
    connect( quitAct, SIGNAL( triggered() ), this, SLOT( close() ) );
 
+   howDoesItWorkAct = new QAction( "&How does it work?", this );
+   howDoesItWorkAct->setStatusTip( "View a short introduction to the simulator" );
+   connect( howDoesItWorkAct, SIGNAL( triggered() ), this, SLOT( howDoesItWork() ) );
+
+   howDoIUseAct = new QAction( "How do I &use the simulator?", this );
+   howDoIUseAct->setStatusTip( "View a brief tutorial to the simulator" );
+   connect( howDoIUseAct, SIGNAL( triggered() ), this, SLOT( howDoIUse() ) );
+
    aboutAct = new QAction( "&About", this );
-   aboutAct->setStatusTip( "" );
+   aboutAct->setStatusTip( "View information about the simulator" );
    connect( aboutAct, SIGNAL( triggered() ), this, SLOT( about() ) );
 
    aboutQtAct = new QAction( "About &Qt", this );
-   aboutQtAct->setStatusTip( "" );
+   aboutQtAct->setStatusTip( "View information about Qt" );
    connect( aboutQtAct, SIGNAL( triggered() ), qApp, SLOT( aboutQt() ) );
 
    // Menus
@@ -303,6 +316,9 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    viewMenu->addAction( clearTrackedAct );
 
    helpMenu = menuBar()->addMenu( "&Help" );
+   helpMenu->addAction( howDoesItWorkAct );
+   helpMenu->addAction( howDoIUseAct );
+   helpMenu->addSeparator();
    helpMenu->addAction( aboutAct );
    helpMenu->addAction( aboutQtAct );
 
@@ -396,7 +412,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.11<br>"
+      "Version 1.0.0<br>"
       "Copyright &copy; 2008  "
       "Jeffrey Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -410,6 +426,98 @@ NernstGUI::about()
       "Have a suggestion? Find a bug? Send us your comments "
       "at <a href='mailto:autopoiesis@case.edu'>"
       "autopoiesis@case.edu</a>." );
+}
+
+
+void
+NernstGUI::howDoesItWork()
+{
+   QMessageBox::information( this, "How does it work?",
+      "<h3>A Brief Introduction</h3><br>"
+      "<br>"
+      "The Nernst Potential Simulator simulates the random motion of "
+      "dissolved ions in a virtual cell.  Three colors of dots "
+      "represent K<sup>+</sup> (red), Na<sup>+</sup> (blue), and "
+      "Cl<sup>&ndash;</sup> (green). Other solutes, macromolecules, "
+      "organelles, and water are ignored in this simulation.<br>"
+      "<br>"
+      "A single step through time in the world is called an "
+      "\"iteration\". During each iteration, every ion moves to a "
+      "randomly selected point adjacent to its current position. "
+      "Then, each ion channel, or pore, embedded in the central "
+      "membrane has a chance of transporting one ion next to it to "
+      "the opposite side. The probability of this transport occurring "
+      "is dependent on the current membrane potential and is calculated "
+      "using the Boltzmann equation.<br>"
+      "<br>"
+      "The membrane potential is calculated by finding the charge "
+      "difference between the intracellular space (left compartment) "
+      "and the extracelular space (right compartment) divided by the "
+      "capacitance of the membrane. When there is initially a "
+      "difference in concentrations of an ion between the two "
+      "compartments, these ions will tend to flow down their "
+      "concentration gradient until the build-up of charges causes "
+      "an electrostatic imbalance strong enough to reduce their net "
+      "flow across the membrane to zero.  This results in a non-zero "
+      "electric potential across the membrane.<br>"
+      "<br>"
+      "The values labeled IICE and IINPOB are charged particles and "
+      "noncharged particles, respectively, that reside in either "
+      "compartment (not shown).  The charged particles are placed "
+      "so that, initially, each compartment is electrically neutral "
+      "regardless of the user's ion concentration settings.  The "
+      "noncharged particles are present to ensure osmotic balance "
+      "between the compartments (at least initially)." );
+}
+
+
+void
+NernstGUI::howDoIUse()
+{
+   QMessageBox::information( this, "How do I use the simulator?",
+      "<b>Iterations:</b> Move this slider to increase or decrease "
+      "the length of time the simulation will run. Additional iterations "
+      "can be added while the simulation is paused or after it has "
+      "finished.<br>"
+      "<b>Width and height:</b> These sliders control the size of the "
+      "world.<br>"
+      "<b>Dielectric constant:</b> This is a property of the membrane. "
+      "Changing its value affects the dynamics of the system.<br>"
+      "<b>Random start:</b> The integer input here, called the seed, "
+      "determines the set of random numbers used in the simulation. "
+      "Running the simulation twice with the same seed and parameters "
+      "will result in identical runs.<br>"
+      "<b>Concentration sliders:</b> Move these sliders to change the "
+      "initial values of the concentrations of each ion type in each "
+      "compartment. You can also enter a value in the text box.  Units "
+      "are in millimolar.<br>"
+      "<b>Permeability sliders:</b> The number of pores in the membrane "
+      "is proportional to these values. Each ion type has its own "
+      "selective ion channel that only allows that type to pass through. "
+      "Increasing or decreasing the permeability of an ion will increase "
+      "or decrease the number of pores for that ion.<br>"
+      "<b>Selective Permeability:</b> Unchecking this box allows ions of "
+      "any type to pass through any channel.<br>"
+      "<b>Electrostatics:</b> Unchecking this box causes the ions to "
+      "be treated like neutral particles. The current membrane potential "
+      "is ignored for determining the probability of ion transport, and "
+      "each ion has a 50/50 chance of moving across the membrane when "
+      "it approaches a pore.<br>"
+      "<b>Tracking ions:</b> Clicking on ions in either the full world "
+      "view or the zoomed view after a simulation has begun will cause "
+      "them to become highlighted. This makes following the movements of "
+      "an individual ion much easier. Tracking can be removed from all "
+      "ions through the \"View\" menu.<br>"
+      "<b>Zoomed view:</b> This window provides a closer look at the "
+      "central membrane and ion transport activity. The level of "
+      "magnification can be manipulated with the buttons marked "
+      "\"+\" and \"-\".<br>"
+      "<b>Membrane potential plot:</b> This plots the potential across "
+      "the membrane in millivolts every iteration. A red line indicates "
+      "the steady state value predicted by either the Nernst equation or "
+      "the Goldman-Hodgkin-Katz voltage equation.<br>"
+      "<b>Measured concentrations table:</b> This table displays the "
+      "current concentrations of ions in each compartment." );
 }
 
 

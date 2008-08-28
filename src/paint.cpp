@@ -2,7 +2,7 @@
  *
  * GUI visualization
  *
- * Copyright (c) 2008, Jeffery Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.
@@ -54,8 +54,8 @@ NernstPainter::NernstPainter( struct options *options, int zoomOn, QWidget *pare
    {
       zoomXRange  = 64;    // lattice sqaures wide
       zoomYRange  = 64;    // lattice squares high
-      zoomXWindow = 256;   // pixels wide
-      zoomYWindow = 256;   // pixels high
+      zoomXWindow = 210;   // pixels wide
+      zoomYWindow = 210;   // pixels high
    }
 
    adjustPaintRegion();
@@ -109,7 +109,7 @@ NernstPainter::zoomOut()
       zoomXRange *= 2;
       zoomYRange *= 2;
 
-      if( zoomXRange > 2 * o->x && zoomYRange > 2 * o->y )
+      if( zoomXRange > o->x && zoomYRange > o->y )
       {
          zoomXRange /= 2;
          zoomYRange /= 2;
@@ -349,12 +349,9 @@ NernstPainter::draw()
                   {
                      for( double yOff = -trackedAtomRadiusY; yOff < trackedAtomRadiusY; yOff += 1.0 / (double)zoomYWindow )
                      {
-                        if( abs( xOff ) + abs( yOff ) < trackedAtomRadiusX * trackedAtomRadiusY )
-                        {
-                           glVertex3f( (GLfloat)( ( x - minX + 1 ) / (double)zoomXRange + xOff ),
-                                       (GLfloat)( ( y - minY + 1 ) / (double)zoomYRange + yOff ),
-                                       (GLfloat)0.0 );
-                        }
+                        glVertex3f( (GLfloat)( ( x - minX + 1 ) / (double)zoomXRange + xOff ),
+                                    (GLfloat)( ( y - minY + 1 ) / (double)zoomYRange + yOff ),
+                                    (GLfloat)0.0 );
                      }
                   }
                } else {

@@ -2,7 +2,7 @@
  *
  * The engine of the simulation without GUI support.
  *
- * Copyright (c) 2008, Jeffery Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.
@@ -52,7 +52,7 @@ NernstSim::initNernstSim()
    shufflePositions( o );
    initWorld( o );
    initAtoms( o );
-   takeCensus( 0 );
+   //takeCensus( 0 );
 
    if( o->progress )
 	{
@@ -79,10 +79,12 @@ NernstSim::Iter()
 void 
 NernstSim::postIter()
 {
+   /*
    if( currentIter % 4 == 0 )
    {
       takeCensus( currentIter );
    }
+   */
 
    if( o->progress && currentIter % 256 == 0 )
    {
@@ -96,7 +98,7 @@ NernstSim::postIter()
 void 
 NernstSim::completeNernstSim()
 {
-   finalizeAtoms();
+   //finalizeAtoms();
 
    if( o->progress )
    {

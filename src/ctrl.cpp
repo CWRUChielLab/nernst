@@ -2,7 +2,7 @@
  *
  * GUI control panel
  *
- * Copyright (c) 2008, Jeffery Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.
@@ -31,9 +31,6 @@
 #include "options.h"
 #include "atom.h"
 #include "world.h"
-
-
-#include <iostream>
 
 
 NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
@@ -130,7 +127,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    yVal->setAlignment( Qt::AlignRight );
 
    // Capacitance control
-   capLbl = new QLabel( "&Dielectric<br>Constant" );
+   capLbl = new QLabel( "Die&lectric<br>Constant" );
    capLbl->setToolTip( "Set the dielectric constant for the membrane." );
 
    capSld = new QSlider( Qt::Horizontal );
@@ -142,7 +139,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    capLbl->setBuddy( capSld );
 
    capVal = new QLabel( QString::number( capDefault ) );
-   capVal->setAlignment( Qt::AlignRight );
+   capVal->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
 
    /*
    capLbl->hide();
@@ -151,7 +148,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    */
 
    // Seed control
-   seedLbl = new QLabel( "Ra&ndom Start" );
+   seedLbl = new QLabel( "Rando&m Start" );
    seedLbl->setToolTip( "Set the seed for the random number generator.\nSimulations with matching seeds and world settings\nare identical." );
 
    seedVal = new QLineEdit( QString::number( o->randseed ) );
@@ -159,6 +156,10 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    seedVal->setToolTip( "Set the seed for the random number generator.\nSimulations with matching seeds and world settings\nare identical." );
 
    seedLbl->setBuddy( seedVal );
+
+   seedBtn = new QPushButton( "Get &New" );
+   seedBtn->setToolTip( "Generate a new seed." );
+   seedBtn->setMaximumWidth( 70 );
 
    // Ion controls
    inLbl = new QLabel( "Intracellular" );
@@ -285,8 +286,11 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    ctrlLayout->setColumnMinimumWidth( 2, 50 );
 
-   ctrlLayout->addWidget( seedLbl, 5, 0 );
-   ctrlLayout->addWidget( seedVal, 5, 1, 1, 2 );
+   seedLayout = new QHBoxLayout();
+   seedLayout->addWidget( seedLbl );
+   seedLayout->addWidget( seedVal );
+   seedLayout->addWidget( seedBtn );
+   ctrlLayout->addLayout( seedLayout, 5, 0, 1, 3 );
 
    sldBox = new QGroupBox();
    sldLayout = new QGridLayout( sldBox );
@@ -360,6 +364,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    connect( ySld, SIGNAL( valueChanged( int ) ), this, SLOT( changeY( int ) ) );
    connect( capSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeCapacitance( int ) ) );
    connect( seedVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeSeed( QString ) ) );
+   connect( seedBtn, SIGNAL( clicked() ), this, SLOT( generateNewSeed() ) );
 
    connect( lKSld, SIGNAL( valueChanged( int ) ), this, SLOT( changeLeftK( int ) ) );
    connect( lKVal, SIGNAL( textChanged( QString ) ), this, SLOT( changeLeftK( QString ) ) );
@@ -406,6 +411,13 @@ void
 NernstCtrl::updateIter( int iter )
 {
    currentIter = iter + 1;
+}
+
+
+void
+NernstCtrl::generateNewSeed()
+{
+   seedVal->setText( QString::number( time( NULL ) ) );
 }
 
 
@@ -496,7 +508,6 @@ NernstCtrl::changeSeed( QString seed )
 {
    o->randseed = seed.toInt();
    shufflePositions( o );
-   resetDefaultBtn->setEnabled( 1 );
    emit updatePreview();
 }
 
@@ -852,6 +863,58 @@ NernstCtrl::reloadSettings()
    startBtn->setEnabled( 1 );
    resetCurrentBtn->setEnabled( 0 );
    resetDefaultBtn->setEnabled( 1 );
+
+   xLbl->setEnabled( 1 );
+   xSld->setEnabled( 1 );
+   xVal->setEnabled( 1 );
+
+   yLbl->setEnabled( 1 );
+   ySld->setEnabled( 1 );
+   yVal->setEnabled( 1 );
+
+   itersLbl->setEnabled( 1 );
+   itersSld->setEnabled( 1 );
+   itersSld->setMinimum( 1 );
+   itersVal->setEnabled( 1 );
+
+   capLbl->setEnabled( 1 );
+   capSld->setEnabled( 1 );
+   capVal->setEnabled( 1 );
+
+   seedLbl->setEnabled( 1 );
+   seedVal->setEnabled( 1 );
+   seedBtn->setEnabled( 1 );
+
+   inLbl->setEnabled( 1 );
+   outLbl->setEnabled( 1 );
+   permLbl->setEnabled( 1 );
+   mMLbl1->setEnabled( 1 );
+   mMLbl2->setEnabled( 1 );
+   mMLbl3->setEnabled( 1 );
+   mMLbl4->setEnabled( 1 );
+   mMLbl5->setEnabled( 1 );
+   mMLbl6->setEnabled( 1 );
+   lKSld->setEnabled( 1 );
+   lKVal->setEnabled( 1 );
+   lNaSld->setEnabled( 1 );
+   lNaVal->setEnabled( 1 );
+   lClSld->setEnabled( 1 );
+   lClVal->setEnabled( 1 );
+   rKSld->setEnabled( 1 );
+   rKVal->setEnabled( 1 );
+   rNaSld->setEnabled( 1 );
+   rNaVal->setEnabled( 1 );
+   rClSld->setEnabled( 1 );
+   rClVal->setEnabled( 1 );
+   pKSld->setEnabled( 1 );
+   pKVal->setEnabled( 1 );
+   pNaSld->setEnabled( 1 );
+   pNaVal->setEnabled( 1 );
+   pClSld->setEnabled( 1 );
+   pClVal->setEnabled( 1 );
+
+   selectivity->setEnabled( 1 );
+   electrostatics->setEnabled( 1 );
 }
 
 
@@ -881,6 +944,7 @@ NernstCtrl::disableCtrl()
 
    seedLbl->setEnabled( 0 );
    seedVal->setEnabled( 0 );
+   seedBtn->setEnabled( 0 );
 
    inLbl->setEnabled( 0 );
    outLbl->setEnabled( 0 );
@@ -973,6 +1037,7 @@ NernstCtrl::resetCurrentCtrl()
 
    seedLbl->setEnabled( 1 );
    seedVal->setEnabled( 1 );
+   seedBtn->setEnabled( 1 );
 
    inLbl->setEnabled( 1 );
    outLbl->setEnabled( 1 );
@@ -1042,6 +1107,7 @@ NernstCtrl::resetLoadedCtrl()
    seedLbl->setEnabled( 1 );
    seedVal->setEnabled( 1 );
    seedVal->setText( QString::number( seedLoaded ) );
+   seedBtn->setEnabled( 1 );
 
    inLbl->setEnabled( 1 );
    outLbl->setEnabled( 1 );
@@ -1121,6 +1187,7 @@ NernstCtrl::resetDefaultCtrl()
    seedLbl->setEnabled( 1 );
    seedVal->setEnabled( 1 );
    seedVal->setText( QString::number( time( NULL ) ) );
+   seedBtn->setEnabled( 1 );
 
    inLbl->setEnabled( 1 );
    outLbl->setEnabled( 1 );
