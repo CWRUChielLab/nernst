@@ -26,12 +26,29 @@
 
 #include <QTime>
 
+enum
+{
+   MIN_X = 16,
+   MIN_Y = 16,
+   MAX_X = 1024,
+   MAX_Y = 1024,
+   MIN_ITERS = 1,
+   MAX_ITERS = 100000,
+   MIN_CONC = 0,     // Minimum ion concentration (mM)
+   MAX_CONC = 2000   // Maximum ion concentration (mM)
+};
+
 
 class NernstSim 
 {
    public:
       NernstSim( struct options *options );
       void runSim();
+      struct atom *world;
+      unsigned long int direction_sz64;
+      unsigned char *claimed;
+      unsigned char *direction;
+
 
    protected:
       struct options *o;
@@ -45,6 +62,8 @@ class NernstSim
       void Iter();
       void postIter();
       void completeNernstSim();
+   private:
+      void initWorld( struct options *o );
 };
 
 #endif /* SIM_H */
