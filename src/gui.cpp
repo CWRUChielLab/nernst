@@ -432,7 +432,7 @@ NernstGUI::about()
 void
 NernstGUI::howDoesItWork()
 {
-   QMessageBox::information( this, "How does it work?",
+   QString *part1 = new QString(
       "<h3>A Brief Introduction</h3><br>"
       "<br>"
       "The Nernst Potential Simulator simulates the random motion of "
@@ -448,7 +448,10 @@ NernstGUI::howDoesItWork()
       "membrane has a chance of transporting one ion next to it to "
       "the opposite side. The probability of this transport occurring "
       "is dependent on the current membrane potential and is calculated "
-      "using the Boltzmann equation.<br>"
+      "using the Boltzmann equation." );
+   
+   QString *part2 = new QString(
+      "<h3>A Brief Introduction</h3><br>"
       "<br>"
       "The membrane potential is calculated by finding the charge "
       "difference between the intracellular space (left compartment) "
@@ -468,6 +471,17 @@ NernstGUI::howDoesItWork()
       "regardless of the user's ion concentration settings.  The "
       "noncharged particles are present to ensure osmotic balance "
       "between the compartments (at least initially)." );
+
+   QMessageBox *msg1 = new QMessageBox( QMessageBox::Information, "How does it work?", *part1 );
+   QMessageBox *msg2 = new QMessageBox( QMessageBox::Information, "How does it work?", *part2 );
+   QPushButton *moreBtn = msg1->addButton( "More", QMessageBox::ActionRole );
+   
+   msg1->exec();
+   
+   if( msg1->clickedButton() == moreBtn )
+   {
+      msg2->exec();
+   }
 }
 
 

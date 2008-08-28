@@ -159,7 +159,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    seedBtn = new QPushButton( "Get &New" );
    seedBtn->setToolTip( "Generate a new seed." );
-   seedBtn->setMaximumWidth( 70 );
+   seedBtn->setMaximumWidth( 90 );
 
    // Ion controls
    inLbl = new QLabel( "Intracellular" );
