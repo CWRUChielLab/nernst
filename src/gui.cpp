@@ -495,59 +495,78 @@ NernstGUI::howDoIUse()
       "the length of time the simulation will run. Additional iterations "
       "can be added while the simulation is paused or after it has "
       "finished.<br>"
+      "<br>"
       "<b>Width and height:</b> These sliders control the size of the "
       "world.<br>"
+      "<br>"
       "<b>Dielectric constant:</b> This is a property of the membrane. "
       "Changing its value affects the dynamics of the system.<br>"
+      "<br>"
       "<b>Random start:</b> The integer input here, called the seed, "
       "determines the set of random numbers used in the simulation. "
       "Running the simulation twice with the same seed and parameters "
-      "will result in identical runs.<br>"
-      "<b>Concentration sliders:</b> Move these sliders to change the "
-      "initial values of the concentrations of each ion type in each "
-      "compartment. You can also enter a value in the text box.  Units "
-      "are in millimolar.<br>"
-      "<b>Permeability sliders:</b> The number of pores in the membrane "
-      "is proportional to these values. Each ion type has its own "
-      "selective ion channel that only allows that type to pass through. "
-      "Increasing or decreasing the permeability of an ion will increase "
-      "or decrease the number of pores for that ion." );
+      "will result in identical runs." );
 
    QString *part2 = new QString(
       "<h3>A Short Tutorial</h3><br>"
       "<br>"
+      "<b>Concentration sliders:</b> Move these sliders to change the "
+      "initial values of the concentrations of each ion type in each "
+      "compartment. You can also enter a value in the text box.  Units "
+      "are in millimolar.<br>"
+      "<br>"
+      "<b>Permeability sliders:</b> The number of pores in the membrane "
+      "is proportional to these values. Each ion type has its own "
+      "selective ion channel that only allows that type to pass through. "
+      "Increasing or decreasing the permeability of an ion will increase "
+      "or decrease the number of pores for that ion.<br>"
+      "<br>"
       "<b>Selective Permeability:</b> Unchecking this box allows ions of "
       "any type to pass through any channel.<br>"
+      "<br>"
       "<b>Electrostatics:</b> Unchecking this box causes the ions to "
       "be treated like neutral particles. The current membrane potential "
       "is ignored for determining the probability of ion transport, and "
       "each ion has a 50/50 chance of moving across the membrane when "
-      "it approaches a pore.<br>"
+      "it approaches a pore." );
+
+   QString *part3 = new QString(
+      "<h3>A Short Tutorial</h3><br>"
+      "<br>"
       "<b>Tracking ions:</b> Clicking on ions in either the full world "
       "view or the zoomed view after a simulation has begun will cause "
       "them to become highlighted. This makes following the movements of "
       "an individual ion much easier. Tracking can be removed from all "
       "ions through the \"View\" menu.<br>"
+      "<br>"
       "<b>Zoomed view:</b> This window provides a closer look at the "
       "central membrane and ion transport activity. The level of "
       "magnification can be manipulated with the buttons marked "
       "\"+\" and \"-\".<br>"
+      "<br>"
       "<b>Membrane potential plot:</b> This plots the potential across "
       "the membrane in millivolts every iteration. A red line indicates "
       "the steady state value predicted by either the Nernst equation or "
       "the Goldman-Hodgkin-Katz voltage equation.<br>"
+      "<br>"
       "<b>Measured concentrations table:</b> This table displays the "
       "current concentrations of ions in each compartment." );
 
    QMessageBox *msg1 = new QMessageBox( QMessageBox::Information, "How do I use the simulator?", *part1, NULL, this );
    QMessageBox *msg2 = new QMessageBox( QMessageBox::Information, "How do I use the simulator?", *part2, NULL, this );
-   QPushButton *moreBtn = msg1->addButton( "More", QMessageBox::ActionRole );
+   QMessageBox *msg3 = new QMessageBox( QMessageBox::Information, "How do I use the simulator?", *part3, NULL, this );
+   QPushButton *moreBtn1 = msg1->addButton( "More", QMessageBox::ActionRole );
+   QPushButton *moreBtn2 = msg2->addButton( "More", QMessageBox::ActionRole );
    
    msg1->exec();
    
-   if( msg1->clickedButton() == moreBtn )
+   if( msg1->clickedButton() == moreBtn1 )
    {
       msg2->exec();
+      if( msg2->clickedButton() == moreBtn2 )
+      {
+         msg3->exec();
+      }
    }
 }
 
