@@ -152,8 +152,8 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    KLbl = new QLabel( "<font color=#ff2600><b>K<sup>+</sup></b></font>" );
    NaLbl = new QLabel( "<font color=#0000ff><b>Na<sup>+</sup></b></font>" );
    ClLbl = new QLabel( "<font color=#00b259><b>Cl<sup>&ndash;</sup></b></font>" );
-   ImpChargeLbl = new QLabel( "<b>Impermeable<br>Charges</b>" );
-   ImpPartLbl = new QLabel( "<b>Impermeable<br>Particles</b>" );
+   ImpChargeLbl = new QLabel( "<b>Initial<br>Impermeable<br>Charges for<br>Electroneutrality</b>" );
+   ImpPartLbl = new QLabel( "<b>Initial<br>Impermeable<br>Particles for<br>Osmotic Balance</b>" );
 
    KInLbl = new QLabel();
    KOutLbl = new QLabel();
@@ -225,7 +225,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    mainWidget = new QWidget();
    mainWidget->setLayout( mainLayout );
    setCentralWidget( mainWidget );
-   setWindowTitle( "Nernst Potential Simulator | v0.9.10" );
+   setWindowTitle( "Nernst Potential Simulator | v0.9.11" );
    setWindowIcon( QIcon( ":/img/nernst.png" ) );
    statusBar = new NernstStatusBar( o, this );
    setStatusBar( statusBar );
@@ -262,6 +262,12 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    fullScreenAct->setChecked( 0 );
    connect( fullScreenAct, SIGNAL( triggered( bool ) ), this, SLOT( toggleFullScreen( bool ) ) );
 
+   slowMotionAct = new QAction( "&Slow Motion", this );
+   slowMotionAct->setStatusTip( "Toggle between slow motion mode and normal speed" );
+   slowMotionAct->setCheckable( 1 );
+   slowMotionAct->setChecked( 0 );
+   connect( slowMotionAct, SIGNAL( triggered( bool ) ), this, SLOT( toggleSlowMotion( bool ) ) );
+
    clearTrackedAct = new QAction( "&Clear Tracked Ions", this );
    clearTrackedAct->setStatusTip( "Remove tracking from every ion" );
    connect( clearTrackedAct, SIGNAL( triggered() ), this, SLOT( clearTrackedIons() ) );
@@ -293,6 +299,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    viewMenu->addAction( zoomOutAct );
    viewMenu->addAction( fullScreenAct );
    viewMenu->addSeparator();
+   viewMenu->addAction( slowMotionAct );
    viewMenu->addAction( clearTrackedAct );
 
    helpMenu = menuBar()->addMenu( "&Help" );
@@ -303,8 +310,16 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( zoomInBtn, SIGNAL( clicked() ), zoom, SLOT( zoomIn() ) );
    connect( zoomOutBtn, SIGNAL( clicked() ), zoom, SLOT( zoomOut() ) );
 
-   connect( this, SIGNAL( settingsLoaded() ), ctrl, SLOT( reloadSettings() ) );
+   connect( this, SIGNAL( resetSim() ), sim, SLOT( resetSim() ) );
+   connect( this, SIGNAL( resetSim() ), canvas, SLOT( resetPaint() ) );
+   connect( this, SIGNAL( resetSim() ), zoom, SLOT( resetPaint() ) );
+   connect( this, SIGNAL( resetSim() ), this, SLOT( disableSaveWorld() ) );
+   connect( this, SIGNAL( resetSim() ), this, SLOT( resetPlots() ) );
+   connect( this, SIGNAL( resetSim() ), statusBar, SLOT( resetProgress() ) );
+   connect( this, SIGNAL( resetSim() ), statusBar, SLOT( recalcProgress() ) );
+
    connect( this, SIGNAL( settingsLoaded() ), ctrl, SLOT( setNewLoadedSettings() ) );
+   connect( this, SIGNAL( settingsLoaded() ), ctrl, SLOT( reloadSettings() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( reloadSettings() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( disableCtrl() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), ctrl, SLOT( reenableCtrl() ) );
@@ -313,6 +328,8 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( this, SIGNAL( worldLoaded( int ) ), statusBar, SLOT( recalcProgress() ) );
    connect( this, SIGNAL( worldLoaded( int ) ), sim, SLOT( loadWorld( int ) ) );
 
+   connect( sim, SIGNAL( updateVoltsStatus( int, int ) ), statusBar, SLOT( setVoltsLbl( int, int ) ) );
+   connect( sim, SIGNAL( updateStatus( QString ) ), statusBar, SLOT( setStatusLbl( QString ) ) ); 
    connect( sim, SIGNAL( calcEquilibrium() ), this, SLOT( calcEquilibrium() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), ctrl, SLOT( updateIter( int ) ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), canvas, SLOT( update() ) );
@@ -320,15 +337,11 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updatePlots( int ) ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), this, SLOT( updateTable() ) );
    connect( sim, SIGNAL( moveCompleted( int ) ), statusBar, SLOT( updateProgressBar( int ) ) );
-   connect( sim, SIGNAL( updateStatus( QString ) ), statusBar, SLOT( setStatusLbl( QString ) ) ); 
-   connect( sim, SIGNAL( updateVoltsStatus( int, int ) ), statusBar, SLOT( setVoltsLbl( int, int ) ) );
    connect( sim, SIGNAL( finished() ), ctrl, SLOT( reenableCtrl() ) );
 
    connect( ctrl, SIGNAL( startBtnClicked() ), canvas, SLOT( startPaint() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), zoom, SLOT( startPaint() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), statusBar, SLOT( recalcProgress() ) );
-   connect( ctrl, SIGNAL( startBtnClicked() ), this, SLOT( disableLoadInit() ) );
-   connect( ctrl, SIGNAL( startBtnClicked() ), this, SLOT( disableLoadWorld() ) );
    connect( ctrl, SIGNAL( startBtnClicked() ), sim, SLOT( runSim() ) );
 
    connect( ctrl, SIGNAL( pauseBtnClicked() ), sim, SLOT( pauseSim() ) );
@@ -342,8 +355,6 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), sim, SLOT( resetSim() ) );
    connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), canvas, SLOT( resetPaint() ) );
    connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), zoom, SLOT( resetPaint() ) );
-   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( enableLoadInit() ) );
-   connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( enableLoadWorld() ) );
    connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( disableSaveWorld() ) );
    connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), this, SLOT( resetPlots() ) );
    connect( ctrl, SIGNAL( resetCurrentBtnClicked() ), statusBar, SLOT( resetProgress() ) );
@@ -352,8 +363,6 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), sim, SLOT( resetSim() ) );
    connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), canvas, SLOT( resetPaint() ) );
    connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), zoom, SLOT( resetPaint() ) );
-   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( enableLoadInit() ) );
-   connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( enableLoadWorld() ) );
    connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( disableSaveWorld() ) );
    connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), this, SLOT( resetPlots() ) );
    connect( ctrl, SIGNAL( resetLoadedBtnClicked() ), statusBar, SLOT( resetProgress() ) );
@@ -362,8 +371,6 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), sim, SLOT( resetSim() ) );
    connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), canvas, SLOT( resetPaint() ) );
    connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), zoom, SLOT( resetPaint() ) );
-   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( enableLoadInit() ) );
-   connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( enableLoadWorld() ) );
    connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( disableSaveWorld() ) );
    connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), this, SLOT( resetPlots() ) );
    connect( ctrl, SIGNAL( resetDefaultBtnClicked() ), statusBar, SLOT( resetProgress() ) );
@@ -389,7 +396,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 0.9.10<br>"
+      "Version 0.9.11<br>"
       "Copyright &copy; 2008  "
       "Jeffrey Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
@@ -455,47 +462,55 @@ NernstGUI::saveInit()
 void
 NernstGUI::loadInit()
 {
-   QString fileName;
-   fileName = QFileDialog::getOpenFileName( this, "Load Initial Conditions", "", "Initial Conditions (*.init)" );
-
-   if( fileName == "" )
+   if( sim->getCurrentIter() == 0 ||
+         QMessageBox::warning( this, "Nernst Potential Simulator",
+                                     "Loading new conditions will discard your current simulation. Do you want to continue?",
+                                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No ) == QMessageBox::Yes )
    {
+      emit resetSim();
+
+      QString fileName;
+      fileName = QFileDialog::getOpenFileName( this, "Load Initial Conditions", "", "Initial Conditions (*.init)" );
+
+      if( fileName == "" )
+      {
+         return;
+      }
+
+      QFile file( fileName );
+      if( !file.open( QIODevice::ReadOnly ) )
+      {
+         QMessageBox::warning( this, "Initial Conditions", QString("Cannot read file %1:\n%2.")
+               .arg( file.fileName() )
+               .arg( file.errorString() ) );
+         return;
+      }
+
+      QTextStream in( &file );
+      QApplication::setOverrideCursor( Qt::WaitCursor );
+
+      // Begin reading file
+      in >> o->iters;
+      in >> o->x;
+      in >> o->y;
+      in >> o->randseed;
+      in >> o->lK;
+      in >> o->lNa;
+      in >> o->lCl;
+      in >> o->rK;
+      in >> o->rNa;
+      in >> o->rCl;
+      in >> o->pK;
+      in >> o->pNa;
+      in >> o->pCl;
+      in >> o->selectivity;
+      in >> o->electrostatics;
+      in >> eps;
+
+      QApplication::restoreOverrideCursor();
+      emit settingsLoaded();
       return;
    }
-
-   QFile file( fileName );
-   if( !file.open( QIODevice::ReadOnly ) )
-   {
-      QMessageBox::warning( this, "Initial Conditions", QString("Cannot read file %1:\n%2.")
-            .arg( file.fileName() )
-            .arg( file.errorString() ) );
-      return;
-   }
-
-   QTextStream in( &file );
-   QApplication::setOverrideCursor( Qt::WaitCursor );
-
-   // Begin reading file
-   in >> o->iters;
-   in >> o->x;
-   in >> o->y;
-   in >> o->randseed;
-   in >> o->lK;
-   in >> o->lNa;
-   in >> o->lCl;
-   in >> o->rK;
-   in >> o->rNa;
-   in >> o->rCl;
-   in >> o->pK;
-   in >> o->pNa;
-   in >> o->pCl;
-   in >> o->selectivity;
-   in >> o->electrostatics;
-   in >> eps;
-
-   QApplication::restoreOverrideCursor();
-   emit settingsLoaded();
-   return;
 }
 
 
@@ -647,6 +662,18 @@ NernstGUI::toggleFullScreen( bool checked )
       showFullScreen();
    } else {
       showNormal();
+   }
+}
+
+
+void
+NernstGUI::toggleSlowMotion( bool checked )
+{
+   if( checked )
+   {
+      o->sleep = 1;
+   } else {
+      o->sleep = 0;
    }
 }
 

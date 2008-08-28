@@ -32,9 +32,6 @@
 #include "world.h"
 
 
-#include <iostream>
-
-
 NernstStatusBar::NernstStatusBar( struct options *options, QWidget *parent )
    : QStatusBar( parent )
 {

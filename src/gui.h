@@ -64,6 +64,7 @@ class NernstGUI : public QMainWindow
       void saveWorld();
       void loadWorld();
       void toggleFullScreen( bool checked );
+      void toggleSlowMotion( bool checked );
 
       void enableSaveInit();
       void disableSaveInit();
@@ -82,6 +83,7 @@ class NernstGUI : public QMainWindow
       void updateTable();
 
    signals:
+      void resetSim();
       void settingsLoaded();
       void worldLoaded( int iter );
       void repaintWorld();
@@ -151,6 +153,7 @@ class NernstGUI : public QMainWindow
       QAction *zoomInAct;
       QAction *zoomOutAct;
       QAction *fullScreenAct;
+      QAction *slowMotionAct;
       QAction *clearTrackedAct;
       QAction *quitAct;
       QAction *aboutAct;

@@ -33,6 +33,9 @@
 #include "world.h"
 
 
+#include <iostream>
+
+
 NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    : QWidget( parent )
 {
@@ -127,7 +130,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    yVal->setAlignment( Qt::AlignRight );
 
    // Capacitance control
-   capLbl = new QLabel( "C&apacitance" );
+   capLbl = new QLabel( "&Dielectric<br>Constant" );
    capLbl->setToolTip( "Set the dielectric constant for the membrane." );
 
    capSld = new QSlider( Qt::Horizontal );
@@ -255,6 +258,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    resetLoadedBtn = new QPushButton( "Reset with &Loaded Initial Conditions" );
    resetLoadedBtn->setEnabled( 0 );
    resetDefaultBtn = new QPushButton( "Reset with &Default Settings" );
+   resetDefaultBtn->setEnabled( 0 );
    quitBtn = new QPushButton( "&Quit" );
 
    // Layout
@@ -446,6 +450,7 @@ NernstCtrl::changeIters( int iters )
 
    o->iters = iters;
    itersVal->setNum( o->iters );
+   resetDefaultBtn->setEnabled( 1 );
 }
 
 
@@ -456,6 +461,7 @@ NernstCtrl::changeX( int xpow )
    xVal->setNum( o->x );
 
    shufflePositions( o );
+   resetDefaultBtn->setEnabled( 1 );
    emit worldSizeChange();
    emit updatePreview();
 }
@@ -468,6 +474,7 @@ NernstCtrl::changeY( int ypow )
    yVal->setNum( o->y );
 
    shufflePositions( o );
+   resetDefaultBtn->setEnabled( 1 );
    emit worldSizeChange();
    emit updatePreview();
 }
@@ -478,6 +485,7 @@ NernstCtrl::changeCapacitance( int cap )
 {
    eps = (double)cap / 10.0;
    capVal->setNum( eps );
+   resetDefaultBtn->setEnabled( 1 );
    c = eps * eps0 / d;
    cBoltz = e * e / ( 2 * k * t * c * a );
 }
@@ -488,6 +496,7 @@ NernstCtrl::changeSeed( QString seed )
 {
    o->randseed = seed.toInt();
    shufflePositions( o );
+   resetDefaultBtn->setEnabled( 1 );
    emit updatePreview();
 }
 
@@ -499,6 +508,7 @@ NernstCtrl::changeLeftK( int lK )
    {
       o->lK = lK;
       lKVal->setText( QString::number( o->lK ) );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -512,6 +522,7 @@ NernstCtrl::changeLeftK( QString lK )
    {
       o->lK = lK.toInt();
       lKSld->setValue( o->lK );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -525,6 +536,7 @@ NernstCtrl::changeLeftNa( int lNa )
    {
       o->lNa = lNa;
       lNaVal->setText( QString::number( o->lNa ) );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -538,6 +550,7 @@ NernstCtrl::changeLeftNa( QString lNa )
    {
       o->lNa = lNa.toInt();
       lNaSld->setValue( o->lNa );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -551,6 +564,7 @@ NernstCtrl::changeLeftCl( int lCl )
    {
       o->lCl = lCl;
       lClVal->setText( QString::number( o->lCl ) );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -564,6 +578,7 @@ NernstCtrl::changeLeftCl( QString lCl )
    {
       o->lCl = lCl.toInt();
       lClSld->setValue( o->lCl );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -577,6 +592,7 @@ NernstCtrl::changeRightK( int rK )
    {
       o->rK = rK;
       rKVal->setText( QString::number( o->rK ) );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -590,6 +606,7 @@ NernstCtrl::changeRightK( QString rK )
    {
       o->rK = rK.toInt();
       rKSld->setValue( o->rK );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -603,6 +620,7 @@ NernstCtrl::changeRightNa( int rNa )
    {
       o->rNa = rNa;
       rNaVal->setText( QString::number( o->rNa ) );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -616,6 +634,7 @@ NernstCtrl::changeRightNa( QString rNa )
    {
       o->rNa = rNa.toInt();
       rNaSld->setValue( o->rNa );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -629,6 +648,7 @@ NernstCtrl::changeRightCl( int rCl )
    {
       o->rCl = rCl;
       rClVal->setText( QString::number( o->rCl ) );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -642,6 +662,7 @@ NernstCtrl::changeRightCl( QString rCl )
    {
       o->rCl = rCl.toInt();
       rClSld->setValue( o->rCl );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
       emit adjustTable();
    }
@@ -656,6 +677,7 @@ NernstCtrl::changePermK( int pK )
       o->pK = (double)pK / 100.0;
       pKVal->setText( QString::number( o->pK ) );
       distributePores( o );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
 }
@@ -681,6 +703,7 @@ NernstCtrl::changePermK( QString pK )
       o->pK = pK.toDouble();
       pKSld->setValue( (int)( o->pK * 100.0 ) );
       distributePores( o );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
 }
@@ -694,6 +717,7 @@ NernstCtrl::changePermNa( int pNa )
       o->pNa = (double)pNa / 100.0;
       pNaVal->setText( QString::number( o->pNa ) );
       distributePores( o );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
 }
@@ -719,6 +743,7 @@ NernstCtrl::changePermNa( QString pNa )
       o->pNa = pNa.toDouble();
       pNaSld->setValue( (int)( o->pNa * 100.0 ) );
       distributePores( o );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
 }
@@ -732,6 +757,7 @@ NernstCtrl::changePermCl( int pCl )
       o->pCl = (double)pCl / 100.0;
       pClVal->setText( QString::number( o->pCl ) );
       distributePores( o );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
 }
@@ -757,6 +783,7 @@ NernstCtrl::changePermCl( QString pCl )
       o->pCl = pCl.toDouble();
       pClSld->setValue( (int)( o->pCl * 100.0 ) );
       distributePores( o );
+      resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
 }
@@ -771,6 +798,7 @@ NernstCtrl::changeSelectivity( bool selectivity )
    } else {
       o->selectivity = 0;
    }
+   resetDefaultBtn->setEnabled( 1 );
    emit updatePreview();
 }
 
@@ -784,6 +812,7 @@ NernstCtrl::changeElectrostatics( bool electrostatics )
    } else {
       o->electrostatics = 0;
    }
+   resetDefaultBtn->setEnabled( 1 );
    emit updatePreview();
 }
 
@@ -818,6 +847,11 @@ NernstCtrl::reloadSettings()
    selectivity->setChecked( o->selectivity );
    electrostatics->setChecked( o->electrostatics );
    adjustTable();
+
+   stackedBtnLayout->setCurrentWidget( startBtn );
+   startBtn->setEnabled( 1 );
+   resetCurrentBtn->setEnabled( 0 );
+   resetDefaultBtn->setEnabled( 1 );
 }
 
 
@@ -827,6 +861,7 @@ NernstCtrl::disableCtrl()
    // Set the first push button to "Pause" and disable the controls.
    stackedBtnLayout->setCurrentWidget( pauseBtn );
    resetCurrentBtn->setEnabled( 1 );
+   resetDefaultBtn->setEnabled( 1 );
 
    xLbl->setEnabled( 0 );
    xSld->setEnabled( 0 );
@@ -886,6 +921,7 @@ NernstCtrl::reenableCtrl()
    // Set the first push button to "Continue" and reenable a few controls.
    stackedBtnLayout->setCurrentWidget( continueBtn );
    resetCurrentBtn->setEnabled( 1 );
+   resetDefaultBtn->setEnabled( 1 );
 
    itersLbl->setEnabled( 1 );
    itersSld->setEnabled( 1 );
@@ -916,6 +952,7 @@ NernstCtrl::resetCurrentCtrl()
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
    resetCurrentBtn->setEnabled( 0 );
+   resetDefaultBtn->setEnabled( 1 );
 
    xLbl->setEnabled( 1 );
    xSld->setEnabled( 1 );
@@ -979,15 +1016,16 @@ NernstCtrl::resetLoadedCtrl()
    stackedBtnLayout->setCurrentWidget( startBtn );
    startBtn->setEnabled( 1 );
    resetCurrentBtn->setEnabled( 0 );
+   resetDefaultBtn->setEnabled( 1 );
 
    xLbl->setEnabled( 1 );
    xSld->setEnabled( 1 );
-   xSld->setValue( (int)( log( xLoaded ) / log( 2 ) ) );
+   xSld->setValue( (int)( log( xLoaded ) / log( 2 ) + 0.5 ) );
    xVal->setEnabled( 1 );
 
    yLbl->setEnabled( 1 );
    ySld->setEnabled( 1 );
-   ySld->setValue( (int)( log( yLoaded ) / log( 2 ) ) );
+   ySld->setValue( (int)( log( yLoaded ) / log( 2 ) + 0.5 ) );
    yVal->setEnabled( 1 );
 
    itersLbl->setEnabled( 1 );
@@ -1127,5 +1165,7 @@ NernstCtrl::resetDefaultCtrl()
    electrostatics->setChecked( electrostaticsDefault );
 
    adjustTable();
+
+   resetDefaultBtn->setEnabled( 0 );
 }
 
