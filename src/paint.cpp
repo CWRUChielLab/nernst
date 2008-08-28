@@ -157,10 +157,10 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
          }
          offset++;
       }
+      x--;
+      y--;
    }
 
-   x--;
-   y--;
 
    switch( s->world[ s->idx( x, y ) ].color )
    {

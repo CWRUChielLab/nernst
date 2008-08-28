@@ -173,7 +173,7 @@ NernstSim::initWorld( struct options *o )
    }
 
    world   = (struct atom*)calloc( sizeof( struct atom   ) * o->x * o->y, 1 );
-   claimed = (struct unsigned char*)calloc( sizeof( unsigned char ) * o->x * o->y, 1 );
+   claimed = (unsigned char*)calloc( sizeof( unsigned char ) * o->x * o->y, 1 );
 
    // Lay out the memory for the direction array.
    for( direction_sz64 = get_min_array_size64() * 8; direction_sz64 < (unsigned int)( o->x * o->y ); direction_sz64 *= 2 );
