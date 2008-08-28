@@ -39,12 +39,12 @@ main( int argc, char *argv[] )
 
    if( o->use_gui )
    {
-      app = new QApplication( argc, argv );
+      app = safeNew( QApplication( argc, argv ) );
       NernstGUI gui( o );
       gui.show();
       return app->exec();
    } else {
-      app = new QCoreApplication( argc, argv );
+      app = safeNew( QCoreApplication( argc, argv ) );
       NernstSim sim( o );
       sim.runSim();
       return 0;
