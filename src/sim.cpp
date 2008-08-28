@@ -348,35 +348,8 @@ NernstSim::isPermeable( unsigned int porePos, unsigned int ionPos )
 }
 
 
-static int 
-dir2dx[] =
-{
-    0, // N
-    0, // S
-    1, // E
-   -1, // W
-    1, // NE
-   -1, // NW
-    1, // SE
-   -1  // SW
-};
 
-
-static int 
-dir2dy[] =
-{
-   -1, // N
-    1, // S
-    0, // E
-    0, // W
-   -1, // NE
-   -1, // NW
-    1, // SE
-    1  // SW
-};
-
-
-static void
+void
 NernstSim::copyAtom( unsigned int from, unsigned int to, int dx, int dy )
 {
    world[ to ].delta_x = world[ from ].delta_x + dx;
@@ -389,7 +362,7 @@ NernstSim::copyAtom( unsigned int from, unsigned int to, int dx, int dy )
 }
 
 
-static int
+int
 NernstSim::shouldTransport( unsigned int from, unsigned int to )
 {
    // Returns a 1 if the ion can move through the pore, else 0.
@@ -733,6 +706,29 @@ NernstSim::moveAtoms()
 {
    unsigned int dir = 0, off = 0, from = 0, to = 0;
    unsigned int WORLD_SZ = o->x * o->y;
+   static int dir2dx[] =
+   {
+       0, // N
+       0, // S
+       1, // E
+      -1, // W
+       1, // NE
+      -1, // NW
+       1, // SE
+      -1  // SW
+   };
+   static int dir2dy[] =
+   {
+      -1, // N
+       1, // S
+       0, // E
+       0, // W
+      -1, // NE
+      -1, // NW
+       1, // SE
+       1  // SW
+   };
+
 
    // Only need to clear out claimed.
    memset( claimed, 0, o->x * o->y );
