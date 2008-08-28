@@ -30,7 +30,7 @@
 
 #include "options.h"
 #include "world.h"
-
+#include "safecalls.h"
 
 char
 *version[] =
@@ -88,13 +88,14 @@ char
 
 
 int 
-safe_strtol( char *str )
+safeStrtol( char *str )
 {
    //Handle error checking on strtol.
    long int val;
    char *endptr;
    errno = 0;
    val = strtol( str, &endptr, 10 );
+   char msg[1024];
 
    if( ( errno == ERANGE && ( val == LONG_MAX || val == LONG_MIN ) ) || ( errno != 0 && val == 0 ) )
    {
@@ -283,16 +284,16 @@ parseOptions(int argc, char **argv)
       switch( c )
       {
          case 'a':
-            options->max_atoms = safe_strtol( optarg );
+            options->max_atoms = safeStrtol( optarg );
             break;
          case 'A':
-            options->pK = safe_strtol( optarg );
+            options->pK = safeStrtol( optarg );
             break;
          case 'B':
-            options->pNa = safe_strtol( optarg );
+            options->pNa = safeStrtol( optarg );
             break;
          case 'C':
-            options->pCl = safe_strtol( optarg );
+            options->pCl = safeStrtol( optarg );
             break;
          case 'e':
             options->electrostatics = 0;
@@ -305,19 +306,19 @@ parseOptions(int argc, char **argv)
             exit( 0 );
             break;
          case 'i':
-            options->iters = safe_strtol( optarg );
+            options->iters = safeStrtol( optarg );
             break;
          case 'l':
-            options->sleep = safe_strtol( optarg );
+            options->sleep = safeStrtol( optarg );
             break;
          case 'L':
-            options->lK = safe_strtol( optarg );
+            options->lK = safeStrtol( optarg );
             break;
          case 'M':
-            options->lNa = safe_strtol( optarg );
+            options->lNa = safeStrtol( optarg );
             break;
          case 'N':
-            options->lCl = safe_strtol( optarg );
+            options->lCl = safeStrtol( optarg );
             break;
          case 'p':
             options->profiling = 1;
@@ -326,22 +327,22 @@ parseOptions(int argc, char **argv)
             options->progress = 1;
             break;
          case 'r':
-            options->randseed = safe_strtol( optarg );
+            options->randseed = safeStrtol( optarg );
             break;
          case 'R':
-            options->rK = safe_strtol( optarg );
+            options->rK = safeStrtol( optarg );
             break;
          case 's':
             options->selectivity = 0;
             break;
          case 'S':
-            options->rNa = safe_strtol( optarg );
+            options->rNa = safeStrtol( optarg );
             break;
          case 't':
-            options->threads = safe_strtol( optarg );
+            options->threads = safeStrtol( optarg );
             break;
          case 'T':
-            options->rCl = safe_strtol( optarg );
+            options->rCl = safeStrtol( optarg );
             break;
          case 'v':
             options->verbose = 1;
@@ -351,10 +352,10 @@ parseOptions(int argc, char **argv)
             exit( 0 );
             break;
          case 'x':
-            options->x = safe_strtol( optarg );
+            options->x = safeStrtol( optarg );
             break;
          case 'y':
-            options->y = safe_strtol( optarg );
+            options->y = safeStrtol( optarg );
             break;
          default:
             fprintf( stderr, "Unknown option.  Try --help for a full list.\n" );

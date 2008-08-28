@@ -5,11 +5,11 @@
 
 #ifndef OPTIONS_H
 #define OPTIONS_H
-
+/*
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+*/
 
 struct options
 {
@@ -51,16 +51,15 @@ struct options
 };
 
 
-int safe_strtol( char *str );
 struct options * parseOptions( int argc, char **argv );
 void print_help( void );
 void print_version( void );
 void set_defaults( struct options *o );
 void dump_options( struct options *o );
-
+/*
 #ifdef __cplusplus
 }
 #endif
-
+*/
 #endif /* OPTIONS_H */
 
