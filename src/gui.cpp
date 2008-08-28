@@ -54,7 +54,8 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
 
    // Simulation
    sim = safeNew( XNernstSim( o, this ) );
-   o->s = sim;	//easy way to pass around access to the simulation.
+   s = o->s = sim;	//easy way to pass around access to the simulation.
+   
 
    // Control panel
    ctrl = safeNew( NernstCtrl( o, this ) );

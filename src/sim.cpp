@@ -25,9 +25,9 @@
 
 #include <QApplication>
 #include <iostream>
-#include <unistd>
+#include <unistd.h>
 #include <cstdlib>
-#include <stdio>
+#include <stdio.h>
 #include <string.h>        //memset()
 #include <assert.h>
 #include <SFMT.h>
@@ -172,8 +172,8 @@ NernstSim::initWorld( struct options *o )
       ASSERT( !( ( o->x * o->y )  &  ( ( o->x * o->y ) - 1 ) ) );
    }
 
-   world   = calloc( sizeof( struct atom   ) * o->x * o->y, 1 );
-   claimed = calloc( sizeof( unsigned char ) * o->x * o->y, 1 );
+   world   = (struct atom*)calloc( sizeof( struct atom   ) * o->x * o->y, 1 );
+   claimed = (struct unsigned char*)calloc( sizeof( unsigned char ) * o->x * o->y, 1 );
 
    // Lay out the memory for the direction array.
    for( direction_sz64 = get_min_array_size64() * 8; direction_sz64 < (unsigned int)( o->x * o->y ); direction_sz64 *= 2 );
@@ -413,9 +413,9 @@ NernstSim::shufflePositions( struct options *o )
 
    if( !initialized )
    {
-      positionsLHS   = malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 1 ) * ( MAX_Y ) );
-      positionsRHS   = malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 2 ) * ( MAX_Y ) );
-      positionsPORES = malloc( sizeof( unsigned int ) * ( 1 )             * ( MAX_Y / 2 ) );
+      positionsLHS   = (unsigned int*)malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 1 ) * ( MAX_Y ) );
+      positionsRHS   = (unsigned int*)malloc( sizeof( unsigned int ) * ( MAX_X / 2 - 2 ) * ( MAX_Y ) );
+      positionsPORES = (unsigned int*)malloc( sizeof( unsigned int ) * ( 1 )             * ( MAX_Y / 2 ) );
 
       assert( positionsLHS && positionsRHS && positionsPORES );
       initialized = 1;
@@ -540,7 +540,7 @@ NernstSim::initAtoms( struct options *options )
    off_se = (  o->x + 1 );
    off_sw = (  o->x - 1 );
 
-   dir2offset = malloc( sizeof( unsigned int ) * 8 );
+   dir2offset = (unsigned int*)malloc( sizeof( unsigned int ) * 8 );
    assert( dir2offset );
    dir2offset[ 0 ] = off_n;
    dir2offset[ 1 ] = off_s;
