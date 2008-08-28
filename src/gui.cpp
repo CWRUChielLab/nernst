@@ -472,8 +472,8 @@ NernstGUI::howDoesItWork()
       "noncharged particles are present to ensure osmotic balance "
       "between the compartments (at least initially)." );
 
-   QMessageBox *msg1 = new QMessageBox( QMessageBox::Information, "How does it work?", *part1 );
-   QMessageBox *msg2 = new QMessageBox( QMessageBox::Information, "How does it work?", *part2 );
+   QMessageBox *msg1 = new QMessageBox( QMessageBox::Information, "How does it work?", *part1, NULL, this );
+   QMessageBox *msg2 = new QMessageBox( QMessageBox::Information, "How does it work?", *part2, NULL, this );
    QPushButton *moreBtn = msg1->addButton( "More", QMessageBox::ActionRole );
    
    msg1->exec();
@@ -488,7 +488,9 @@ NernstGUI::howDoesItWork()
 void
 NernstGUI::howDoIUse()
 {
-   QMessageBox::information( this, "How do I use the simulator?",
+   QString *part1 = new QString(
+      "<h3>A Short Tutorial</h3><br>"
+      "<br>"
       "<b>Iterations:</b> Move this slider to increase or decrease "
       "the length of time the simulation will run. Additional iterations "
       "can be added while the simulation is paused or after it has "
@@ -509,7 +511,11 @@ NernstGUI::howDoIUse()
       "is proportional to these values. Each ion type has its own "
       "selective ion channel that only allows that type to pass through. "
       "Increasing or decreasing the permeability of an ion will increase "
-      "or decrease the number of pores for that ion.<br>"
+      "or decrease the number of pores for that ion." );
+
+   QString *part2 = new QString(
+      "<h3>A Short Tutorial</h3><br>"
+      "<br>"
       "<b>Selective Permeability:</b> Unchecking this box allows ions of "
       "any type to pass through any channel.<br>"
       "<b>Electrostatics:</b> Unchecking this box causes the ions to "
@@ -532,6 +538,17 @@ NernstGUI::howDoIUse()
       "the Goldman-Hodgkin-Katz voltage equation.<br>"
       "<b>Measured concentrations table:</b> This table displays the "
       "current concentrations of ions in each compartment." );
+
+   QMessageBox *msg1 = new QMessageBox( QMessageBox::Information, "How do I use the simulator?", *part1, NULL, this );
+   QMessageBox *msg2 = new QMessageBox( QMessageBox::Information, "How do I use the simulator?", *part2, NULL, this );
+   QPushButton *moreBtn = msg1->addButton( "More", QMessageBox::ActionRole );
+   
+   msg1->exec();
+   
+   if( msg1->clickedButton() == moreBtn )
+   {
+      msg2->exec();
+   }
 }
 
 
