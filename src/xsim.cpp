@@ -24,6 +24,7 @@
 
 
 #include <QApplication>
+#include <QTimer>
 #include <iostream>
 #include <unistd.h>
 
@@ -84,6 +85,7 @@ XNernstSim::preIter()
    } else {
       if( resetting || quitting )
       {
+         currentIter = 0;
          return 1;
       } else {
          return 0;
@@ -116,7 +118,17 @@ XNernstSim::postIter()
       emit updateVoltsStatus( currentIter, 1 );
    }
 
-   sleep( o->sleep );
+   //sleep( o->sleep );
+   if( o->sleep > 0 )
+   {
+      QTimer *snooze = new QTimer( this );
+      snooze->setSingleShot( 1 );
+      snooze->start( 100 );
+      while( snooze->isActive() )
+      {
+         QCoreApplication::processEvents();
+      }
+   }
 }
 
 
@@ -149,7 +161,10 @@ XNernstSim::runSim()
 
    elapsed += qtime->elapsed() / 1000.0;
 
-   emit updateVoltsStatus( currentIter - 1, 0 );
+   if( !resetting )
+   {
+      emit updateVoltsStatus( currentIter - 1, 0 );
+   }
 
    if( currentIter > o->iters )
    {
@@ -187,8 +202,8 @@ XNernstSim::resetSim()
    }
    o->max_atoms = maxatomsDefault;
    shufflePositions( o );
-   emit updateVoltsStatus( 0, 0 );
    emit updateStatus( "Ready" );
+   emit updateVoltsStatus( 0, 0 );
 }
 
 

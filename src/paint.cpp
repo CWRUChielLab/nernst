@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <SFMT.h>
 
+
 #include "paint.h"
 #include "options.h"
 #include "atom.h"

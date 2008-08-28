@@ -33,9 +33,6 @@
 #include "safecalls.h"
 using namespace SafeCalls;
 
-#include <iostream>
-
-
 NernstStatusBar::NernstStatusBar( struct options *options, QWidget *parent )
    : QStatusBar( parent )
 {
