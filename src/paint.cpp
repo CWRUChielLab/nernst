@@ -38,10 +38,11 @@ NernstPainter::NernstPainter( struct options *options, int zoomOn, QWidget *pare
 	: QGLWidget( parent )
 {
    o = options;
+   s = o->s;
    running = 0;
    zoom = zoomOn;
 
-   shufflePositions( o );
+   s->shufflePositions( o );
  
    setFormat( QGLFormat( QGL::DoubleBuffer | QGL::DepthBuffer ) );
    rotationX = 0.0;
@@ -137,7 +138,7 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
    x = mouseX;
    y = mouseY;
 
-   if( !isUntrackedAtom( idx( x, y ) ) )
+   if( !s->isUntrackedAtom( s->idx( x, y ) ) )
    {
       int offset = 1, done = 0;
       double offsetMax = 5.0 * (double)zoomXWindow / (double)zoomXRange;
@@ -148,7 +149,7 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
          {
             for( y = mouseY - offset; y <= mouseY + offset && !done; y++ )
             {
-               if( isUntrackedAtom( idx( x, y ) ) )
+               if( s->isUntrackedAtom( s->idx( x, y ) ) )
                {
                   done = 1;
                }
@@ -161,16 +162,16 @@ NernstPainter::mousePressEvent( QMouseEvent *event )
    x--;
    y--;
 
-   switch( world[ idx( x, y ) ].color )
+   switch( s->world[ s->idx( x, y ) ].color )
    {
       case ATOM_K:
-         world[ idx( x, y ) ].color = ATOM_K_TRACK;
+         s->world[ s->idx( x, y ) ].color = ATOM_K_TRACK;
          break;
       case ATOM_Na:
-         world[ idx( x, y ) ].color = ATOM_Na_TRACK;
+         s->world[ s->idx( x, y ) ].color = ATOM_Na_TRACK;
          break;
       case ATOM_Cl:
-         world[ idx( x, y ) ].color = ATOM_Cl_TRACK;
+         s->world[ s->idx( x, y ) ].color = ATOM_Cl_TRACK;
          break;
       default:
          event->ignore();
@@ -268,7 +269,7 @@ NernstPainter::draw()
             {
                int tracked = 0;
 
-               switch( world[ idx( x, y ) ].color )
+               switch( s->world[ s->idx( x, y ) ].color )
                {
                   case SOLVENT:
                      continue;
@@ -380,9 +381,9 @@ NernstPainter::draw()
       numNa = (int)( (double)( 1.0 ) * (double)( o->y / 2 ) / 3.0 * (double)( o->pNa ) + 0.5 );
       numCl = (int)( (double)( 1.0 ) * (double)( o->y / 2 ) / 3.0 * (double)( o->pCl ) + 0.5 );
 
-      posK  = positionsPORES;
-      posNa = positionsPORES + (int)( (double)( ( 1 ) * ( o->y / 2 ) ) * 1.0 / 3.0 );
-      posCl = positionsPORES + (int)( (double)( ( 1 ) * ( o->y / 2 ) ) * 2.0 / 3.0 );
+      posK  = s->positionsPORES;
+      posNa = s->positionsPORES + (int)( (double)( ( 1 ) * ( o->y / 2 ) ) * 1.0 / 3.0 );
+      posCl = s->positionsPORES + (int)( (double)( ( 1 ) * ( o->y / 2 ) ) * 2.0 / 3.0 );
 
       for( y = 0; y < o->y; y++ )
       {
@@ -467,9 +468,9 @@ NernstPainter::draw()
       numNa = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lNa ) / (double)MAX_CONC + 0.5 );
       numCl = (int)( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 * (double)( o->lCl ) / (double)MAX_CONC + 0.5 );
 
-      posK  = positionsLHS;
-      posNa = positionsLHS + (int)( (double)( ( o->x / 2 - 1 ) * ( o->y ) ) * 1.0 / 3.0 );
-      posCl = positionsLHS + (int)( (double)( ( o->x / 2 - 1 ) * ( o->y ) ) * 2.0 / 3.0 );
+      posK  = s->positionsLHS;
+      posNa = s->positionsLHS + (int)( (double)( ( o->x / 2 - 1 ) * ( o->y ) ) * 1.0 / 3.0 );
+      posCl = s->positionsLHS + (int)( (double)( ( o->x / 2 - 1 ) * ( o->y ) ) * 2.0 / 3.0 );
 
       for( i = 0; i < numK && placed < o->max_atoms; i++ )
       {
@@ -548,9 +549,9 @@ NernstPainter::draw()
       numNa = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 * (double)( o->rNa ) / (double)MAX_CONC + 0.5 );
       numCl = (int)( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 * (double)( o->rCl ) / (double)MAX_CONC + 0.5 );
 
-      posK  = positionsRHS;
-      posNa = positionsRHS + (int)( (double)( ( o->x / 2 - 2 ) * ( o->y ) ) * 1.0 / 3.0 );
-      posCl = positionsRHS + (int)( (double)( ( o->x / 2 - 2 ) * ( o->y ) ) * 2.0 / 3.0 );
+      posK  = s->positionsRHS;
+      posNa = s->positionsRHS + (int)( (double)( ( o->x / 2 - 2 ) * ( o->y ) ) * 1.0 / 3.0 );
+      posCl = s->positionsRHS + (int)( (double)( ( o->x / 2 - 2 ) * ( o->y ) ) * 2.0 / 3.0 );
 
       for( i = 0; i < numK && placed < o->max_atoms; i++ )
       {

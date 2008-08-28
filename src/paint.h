@@ -28,7 +28,7 @@
 
 #include <QGLWidget>
 
-
+class NernstSim;
 class NernstPainter : public QGLWidget
 {
    Q_OBJECT
@@ -54,6 +54,7 @@ class NernstPainter : public QGLWidget
 
    private:
       struct options *o;
+      class NernstSim *s;
       int running;
       int zoom;
       int zoomXRange;
