@@ -35,7 +35,7 @@ enum
    MIN_ITERS = 1,
    MAX_ITERS = 100000,
    MIN_CONC = 0,     // Minimum ion concentration (mM)
-   MAX_CONC = 2000   // Maximum ion concentration (mM)
+   MAX_CONC = 2000,  // Maximum ion concentration (mM)
    // Things that need colors
    SOLVENT=0,
    ATOM_K,
@@ -47,7 +47,7 @@ enum
    MEMBRANE,
    PORE_K,
    PORE_Na,
-   PORE_Cl
+   PORE_Cl,
    DIR_MASK = 0x7
 };
 

@@ -37,6 +37,7 @@ class QHBoxLayout;
 class QGridLayout;
 class QGroupBox;
 class QStackedLayout;
+class NernstSim;
 
 
 class NernstCtrl : public QWidget
@@ -98,6 +99,7 @@ class NernstCtrl : public QWidget
  
    private:
       struct options *o;
+      class NernstSim *s;
       int currentIter;
 
       int itersDefault;

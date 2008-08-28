@@ -30,8 +30,13 @@ extern "C" {
 #endif
 */
 
+class NernstSim;
+
 struct options
 {
+   // sim ptr.
+   NernstSim *s;	// Don't modify or initialize.
+
    // world options
                         // x & y dimensions of the world
    int x;               // -x[=256]

@@ -42,7 +42,7 @@ class QLabel;
 class QProgressBar;
 class QwtPlot;
 class QwtPlotCurve;
-
+class NernstSim;
 
 extern double x_iters[], y_volts[], y_ghk[]; // y_gibbs[], y_boltzmann[];
 
@@ -93,6 +93,7 @@ class NernstGUI : public QMainWindow
  
    private:
       struct options *o;
+      class NernstSim *s;
 
       XNernstSim *sim;
 

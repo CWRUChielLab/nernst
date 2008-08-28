@@ -29,6 +29,7 @@
 
 #include "ctrl.h"
 #include "options.h"
+#include "sim.h"
 #include "safecalls.h"
 using namespace SafeCalls;
 
@@ -36,6 +37,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
    : QWidget( parent )
 {
    o = options;
+   s = o->s;
    currentIter = 0;
 
    // Default values
@@ -471,7 +473,7 @@ NernstCtrl::changeX( int xpow )
    o->x = (int)pow( 2, xpow );
    xVal->setNum( o->x );
 
-   shufflePositions( o );
+   s->shufflePositions( o );
    resetDefaultBtn->setEnabled( 1 );
    emit worldSizeChange();
    emit updatePreview();
@@ -484,7 +486,7 @@ NernstCtrl::changeY( int ypow )
    o->y = (int)pow( 2, ypow );
    yVal->setNum( o->y );
 
-   shufflePositions( o );
+   s->shufflePositions( o );
    resetDefaultBtn->setEnabled( 1 );
    emit worldSizeChange();
    emit updatePreview();
@@ -506,7 +508,7 @@ void
 NernstCtrl::changeSeed( QString seed )
 {
    o->randseed = seed.toInt();
-   shufflePositions( o );
+   s->shufflePositions( o );
    emit updatePreview();
 }
 
@@ -686,7 +688,7 @@ NernstCtrl::changePermK( int pK )
    {
       o->pK = (double)pK / 100.0;
       pKVal->setText( QString::number( o->pK ) );
-      distributePores( o );
+      s->distributePores( o );
       resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
@@ -712,7 +714,7 @@ NernstCtrl::changePermK( QString pK )
    {
       o->pK = pK.toDouble();
       pKSld->setValue( (int)( o->pK * 100.0 ) );
-      distributePores( o );
+      s->distributePores( o );
       resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
@@ -726,7 +728,7 @@ NernstCtrl::changePermNa( int pNa )
    {
       o->pNa = (double)pNa / 100.0;
       pNaVal->setText( QString::number( o->pNa ) );
-      distributePores( o );
+      s->distributePores( o );
       resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
@@ -752,7 +754,7 @@ NernstCtrl::changePermNa( QString pNa )
    {
       o->pNa = pNa.toDouble();
       pNaSld->setValue( (int)( o->pNa * 100.0 ) );
-      distributePores( o );
+      s->distributePores( o );
       resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
@@ -766,7 +768,7 @@ NernstCtrl::changePermCl( int pCl )
    {
       o->pCl = (double)pCl / 100.0;
       pClVal->setText( QString::number( o->pCl ) );
-      distributePores( o );
+      s->distributePores( o );
       resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }
@@ -792,7 +794,7 @@ NernstCtrl::changePermCl( QString pCl )
    {
       o->pCl = pCl.toDouble();
       pClSld->setValue( (int)( o->pCl * 100.0 ) );
-      distributePores( o );
+      s->distributePores( o );
       resetDefaultBtn->setEnabled( 1 );
       emit updatePreview();
    }

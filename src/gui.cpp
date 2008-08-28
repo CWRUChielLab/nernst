@@ -54,6 +54,7 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
 
    // Simulation
    sim = safeNew( XNernstSim( o, this ) );
+   o->s = sim;	//easy way to pass around access to the simulation.
 
    // Control panel
    ctrl = safeNew( NernstCtrl( o, this ) );
@@ -844,22 +845,22 @@ NernstGUI::disableLoadWorld()
 void
 NernstGUI::clearTrackedIons()
 {
-   if( world != NULL )
+   if( s->world != NULL )
    {
       for( int x = 0; x < o->x; x++ )
       {
          for( int y = 0; y < o->y; y++ )
          {
-            switch( world[ idx( x, y ) ].color )
+            switch( s->world[ s->idx( x, y ) ].color )
             {
                case ATOM_K_TRACK:
-                  world[ idx( x, y ) ].color = ATOM_K;
+                  s->world[ s->idx( x, y ) ].color = ATOM_K;
                   break;
                case ATOM_Na_TRACK:
-                  world[ idx( x, y ) ].color = ATOM_Na;
+                  s->world[ s->idx( x, y ) ].color = ATOM_Na;
                   break;
                case ATOM_Cl_TRACK:
-                  world[ idx( x, y ) ].color = ATOM_Cl;
+                  s->world[ s->idx( x, y ) ].color = ATOM_Cl;
                   break;
                default:
                   break;
@@ -920,8 +921,8 @@ NernstGUI::calcEquilibrium()
    //voltsNernst = R * t / F * log( (double)initRHS_K / (double)initLHS_K ) * 1000;
 
    // Equilibrium predicted by the Goldman-Hodgkin-Katz voltage equation
-   voltsGHK = o->R * o->t / o->F * log( ( ( o->pK * initRHS_K ) + ( o->pNa * initRHS_Na ) + ( o->pCl * initLHS_Cl ) ) /
-                               ( ( o->pK * initLHS_K ) + ( o->pNa * initLHS_Na ) + ( o->pCl * initRHS_Cl ) ) ) * 1000;
+   voltsGHK = o->R * o->t / o->F * log( ( ( o->pK * s->initRHS_K ) + ( o->pNa * s->initRHS_Na ) + ( o->pCl * s->initLHS_Cl ) ) /
+                               ( ( o->pK * s->initLHS_K ) + ( o->pNa * s->initLHS_Na ) + ( o->pCl * s->initRHS_Cl ) ) ) * 1000;
 
    /*
    int q;
@@ -1019,7 +1020,7 @@ NernstGUI::updatePlots( int currentIter )
    }
 
    x_iters[ currentIter ] = currentIter;
-   y_volts[ currentIter ] = LRcharge * o->e / ( o->c * o->a * o->y ) * 1000;  // Current membrane potential (mV)
+   y_volts[ currentIter ] = s->LRcharge * o->e / ( o->c * o->a * o->y ) * 1000;  // Current membrane potential (mV)
    // y_gibbs[ currentIter ] = voltsGibbs;
    // y_boltzmann[ currentIter ] = voltsBoltzmann;
 
@@ -1154,17 +1155,17 @@ NernstGUI::updateTable()
    // Fill the concentration table with the current concentrations.
    int numK, numNa, numCl;
 
-   numK  = (int)( (double)initLHS_K  / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
-   numNa = (int)( (double)initLHS_Na / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
-   numCl = (int)( (double)initLHS_Cl / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numK  = (int)( (double)(s->initLHS_K)  / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numNa = (int)( (double)(s->initLHS_Na) / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numCl = (int)( (double)(s->initLHS_Cl) / ( (double)( o->x / 2 - 1 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
 
    KInLbl->setText( QString::number( numK ) + " mM" );
    NaInLbl->setText( QString::number( numNa ) + " mM" );
    ClInLbl->setText( QString::number( numCl ) + " mM" );
 
-   numK  = (int)( (double)initRHS_K  / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
-   numNa = (int)( (double)initRHS_Na / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
-   numCl = (int)( (double)initRHS_Cl / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numK  = (int)( (double)(s->initRHS_K)  / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numNa = (int)( (double)(s->initRHS_Na) / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
+   numCl = (int)( (double)(s->initRHS_Cl) / ( (double)( o->x / 2 - 2 ) * (double)( o->y ) / 3.0 ) * (double)MAX_CONC + 0.5 );
 
    KOutLbl->setText( QString::number( numK ) + " mM" );
    NaOutLbl->setText( QString::number( numNa ) + " mM" );
