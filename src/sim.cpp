@@ -702,10 +702,52 @@ NernstSim::initAtoms( struct options *options )
 
 
 void
-NernstSim::moveAtoms()
+NernstSim::moveAtoms(unsigned int start_idx, unsigned int end_idx)
 {
+   moveAtoms_prep();
+   moveAtoms_stakeclaim();
+   moveAtoms_move(start_idx, end_idx);
+   moveAtoms_poretransport();
+}
+
+void
+NernstSim::moveAtoms_prep(){
+   // Only need to clear out claimed.
+   memset( claimed, 0, o->x * o->y );
+
+   // Get new set of directions.
+   fill_array64( (uint64_t*)(direction), direction_sz64 / 8 );
+
+   //The GUI may change x and y dynamically, so go ahead and recalc.
+   WORLD_SZ = o->x * o->y;
+}
+
+void
+NernstSim::moveAtoms_stakeclaim(){
+   // Stake our claims for next turn.
    unsigned int dir = 0, off = 0, from = 0, to = 0;
-   unsigned int WORLD_SZ = o->x * o->y;
+   for( from = 0; from < WORLD_SZ; from++ )
+   {
+      if( isAtom( from ) )
+      {                                            // If there's an atom present,
+         claimed[ from ]++;                        // block anyone from moving here,
+         dir = direction[ from ] & DIR_MASK;       // get my direction,
+         off = dir2offset[ dir ];                  // get my offset,
+         to = ( from + off ) & WORLD_SZ_MASK;      // add offset and normalize,
+         claimed[ to ]++;                          // and stake my claim.
+      }
+
+      // Don't run through the membrane
+      if( isMembrane( from ) || isPore( from ) )
+      {
+         claimed[ from ]++;
+      }
+   }
+}
+
+void
+NernstSim::moveAtoms_move(unsigned int start_idx, unsigned int end_idx){
+   unsigned int dir = 0, off = 0, from = 0, to = 0;
    static int dir2dx[] =
    {
        0, // N
@@ -729,34 +771,14 @@ NernstSim::moveAtoms()
        1  // SW
    };
 
-
-   // Only need to clear out claimed.
-   memset( claimed, 0, o->x * o->y );
-
-   // Get new set of directions.
-   fill_array64( (uint64_t*)(direction), direction_sz64 / 8 );
-
-   // Stake our claims for next turn.
-   for( from = 0; from < WORLD_SZ; from++ )
-   {
-      if( isAtom( from ) )
-      {                                            // If there's an atom present,
-         claimed[ from ]++;                        // block anyone from moving here,
-         dir = direction[ from ] & DIR_MASK;       // get my direction,
-         off = dir2offset[ dir ];                  // get my offset,
-         to = ( from + off ) & WORLD_SZ_MASK;      // add offset and normalize,
-         claimed[ to ]++;                          // and stake my claim.
-      }
-
-      // Don't run through the membrane
-      if( isMembrane( from ) || isPore( from ) )
-      {
-         claimed[ from ]++;
-      }
+   //This handles the single-thread case.
+   if(start_idx == end_idx){
+	   start_idx = 0;
+	   end_idx = WORLD_SZ;
    }
 
    // Move those that are eligible.
-   for( from = 0; from < WORLD_SZ; from++ )
+   for( from = start_idx; from < end_idx; from++ )
    {
       if( claimed[ from ] == 1 && isAtom( from ) )
       {                                            // If there's an atom present,
@@ -771,10 +793,14 @@ NernstSim::moveAtoms()
          }
       }
    }
+}
 
+void
+NernstSim::moveAtoms_poretransport(){
    // Transport atoms through pores.
    int y;
    unsigned int current_idx;
+   unsigned int from = 0, to = 0;
    for( y = 0; y < o->y; y++ )
    {
       current_idx = idx( o->x / 2, y );

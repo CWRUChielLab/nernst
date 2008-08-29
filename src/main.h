@@ -95,7 +95,8 @@ class MainThread : public QCoreApplication {
 		int argc;
 		char **argv;
 		struct options *o;
-
+		NernstSim *s;
+		
 		// Assume that number of workers will be fetched off of the 
 		// commmand line.
 		int nWorkers;
@@ -103,10 +104,7 @@ class MainThread : public QCoreApplication {
 		// Our worker threads.
 		class WorkerThread **worker;
 
-		// These are the messages we use (they get recycled).
-		class WorkEvent **event;
 	private:
-		NernstSim *s;
 
 	
 };

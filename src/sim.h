@@ -84,6 +84,7 @@ class NernstSim
       void shufflePositions( struct options *o );
       void distributePores( struct options *o );
       void initAtoms( struct options *options );
+      QTime *qtime;
 
 
 
@@ -92,7 +93,6 @@ class NernstSim
       long maxatomsDefault;
       double elapsed;
       int currentIter;
-      QTime *qtime;
 
       void initNernstSim();
       int preIter();
@@ -102,8 +102,9 @@ class NernstSim
    private:
       void initWorld( struct options *o );
       int WORLD_SZ_MASK;
-      signed int off_n, off_s, off_e, off_w, off_ne, off_nw, off_se, off_sw;
-      signed int *dir2offset;
+      unsigned int WORLD_SZ;
+      unsigned int off_n, off_s, off_e, off_w, off_ne, off_nw, off_se, off_sw;
+      unsigned int *dir2offset;
       int getX( unsigned int position );
       int getY( unsigned int position );
       int isMembrane( unsigned int position );
@@ -113,9 +114,13 @@ class NernstSim
       int isPermeable( unsigned int porePos, unsigned int ionPos );
       void copyAtom( unsigned int from, unsigned int to, int dx, int dy );
       int shouldTransport( unsigned int from, unsigned int to );
-      void moveAtoms(void);
       void takeCensus( int iter );
       void finalizeAtoms(void);
+      void moveAtoms(unsigned int start_idx=0, unsigned int end_idx=0);
+      void moveAtoms_prep(void);
+      void moveAtoms_stakeclaim(void);
+      void moveAtoms_move(unsigned int start_idx=0, unsigned int end_idx=0);
+      void moveAtoms_poretransport(void);
 };
 
 #endif /* SIM_H */

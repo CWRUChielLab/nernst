@@ -50,10 +50,11 @@ main( int argc, char *argv[] )
       gui.show();
       return app->exec();
    } else if (o->threads > 1){
-      //Multi-threaded non-gui.
+      //Multi-threaded console.
 	// Create the main GUI thread and a custom event.
 	MainThread *app = safeNew( MainThread( argc, argv ) );	
 	app->o = o;
+	app->s = safeNew( NernstSim( o ) );
 	app->LocalInit(app);
 	// Start the thread running.
 	return app->exec();
@@ -89,7 +90,6 @@ void
 MainThread::LocalInit( class MainThread *app ){
 	int i;
 
-        fprintf(stderr, "threads = %d\n", o->threads);
 	nWorkers = o->threads;
 	
 	// Allocate the arrays for worker threads and messages.
@@ -97,23 +97,30 @@ MainThread::LocalInit( class MainThread *app ){
 	worker = (class WorkerThread **)
 		 malloc( sizeof(class WorkerThread *) * nWorkers );
 
-	event = (class WorkEvent **)
-		malloc( sizeof(class WorkEvent *) * nWorkers );
 
 	// Fill in the arrays.
 
-	for(i=0; i<nWorkers; i++){
-		worker[i] = safeNew( WorkerThread( i, app ) );
-		event[i]  = safeNew( WorkEvent( i, app, worker[i] ) );
-
 		// Prime the worker message queue.
-		
-		QCoreApplication::postEvent( worker[i], event[i] );
+		//QCoreApplication::postEvent( worker[i], event[i] );
 
+	for(i=0; i<nWorkers; i++){
+		// Create the worker.
+		worker[i] = safeNew( WorkerThread( i, app ) );
 		// Begin the thread w/ an event queue.
-
 		worker[i]->start();
 	}
+
+	s->initNernstSim();
+	s->qtime->start();
+
+	// Start the iterations.
+	QCoreApplication::postEvent( 
+		worker[0], 
+		safeNew(  initIterationEvent( 0, app, worker[0] )  ) 
+	);
+
+
+
 }
 
 
@@ -137,21 +144,120 @@ WorkerThread::run(){
 // Several events
 //===========================================================================
 
-void
-WorkEvent::work(){
-	WorkAckEvent *reply = safeNew( WorkAckEvent( id, app, worker ) );
-	fprintf(stdout, "Worker %d received msg.\n", id);
-	QCoreApplication::postEvent( app, reply );
+/* This is just a little baroque.  Here's what happens.
+ *
+ * MainThread::LocalInit performs all simulation initialization and ends by
+ * sending a initIteration event to thread0.
+ *
+ * Thread0 performs per-iteration initialization and sends a initIterationAck
+ * event to MainThread.
+ *
+ * MainThread sends a runIteration event to all child threads.  
+ *
+ * All child threads will send a runIterationAck event to MainThread.
+ *
+ * When MainThread has received all of the Acks, it will send a finalizeIteration
+ * event to thread0.
+ *
+ * When thread0 has finished finalization, it will send a finalizeIterationAck
+ * event to MainThread.
+ *
+ * Mainthread will decrement the iteration count and, if zero, perform 
+ * simulation finalization and send Quit events to all threads.
+ *
+ * Threads will post an ack and then call exit.
+ *
+ * Mainthread, after collecting all acks, will exit.  
+ */
+
+// Received by worker0.
+void 
+moveAtoms_prep__Event::work(){
+	// Worker0 performs PREP.
+	app->s->moveAtoms_prep();
+	QCoreApplication::postEvent( safeNew( moveAtoms_prep__EventAck( id, app, worker ) ) );
 }
 
+// Received by MainThread.
 void
-WorkAckEvent::work(){
-	fprintf(stdout, "Main received notice from worker %d.\n", id);
-	QuitEvent *event = safeNew( QuitEvent( id, app, worker ) );
-	QCoreApplication::postEvent( worker, event );
-
+moveAtoms_prep__EventAck::work(){
+	int i;
+	// Have all workers start on STAKECLAIM.
+	for(i=0; i<app->nWorkers; i++){
+		QCoreApplication::postEvent( safeNew( moveAtoms_stakeclaim__Event( i, app, app->worker[i] ) ) );
+	}
 }
 
+// Received by all workers.
+void
+moveAtoms_stakeclaim__Event::work(){
+	app->s->moveAtoms_stakeclaim( id, id );	//FIXME start_idx, end_idx
+	QCoreApplication::postEvent( safeNew( moveAtoms_stakeclaim__EventAck( id, app, worker ) ) );
+}
+
+// Received by MainThread.
+void
+moveAtoms_stakeclaim__EventAck::work(){
+	int i;
+	static int w = 0;
+	w++;
+	if(w == app->nWorkers){
+		w = 0;
+		for(i=0; i<app->nWorkers; i++){
+			QCoreApplication::postEvent( safeNew( moveAtoms_move__Event( i, app, app->worker[i] ) ) );
+		}
+	}
+}
+
+// Received by all workers.
+void
+moveAtoms_move__Event::work(){
+	app->s->moveAtoms_move( id, id );	//FIXME start_idx, end_idx
+	QCoreApplication::postEvent( safeNew( moveAtoms_move__EventAck( id, app, worker ) ) );
+}
+
+// Received by MainThread.
+void
+moveAtoms_move__EventAck::work(){
+	int i;
+	static int w = 0;
+	w++;
+	if(w == app->nWorkers){
+		w = 0;
+		for(i=0; i<app->nWorkers; i++){
+			QCoreApplication::postEvent( safeNew( moveAtoms_poretransport__Event( i, app, app->worker[i] ) ) );
+		}
+	}
+}
+
+
+// Received by all workers.
+void
+moveAtoms_poretransport__Event::work(){
+	app->s->moveAtoms_poretransport( id, id );	//FIXME start_idx, end_idx
+	QCoreApplication::postEvent( safeNew( moveAtoms_poretransport__EventAck( id, app, worker ) ) );
+}
+
+
+// Received by MainThread.
+void
+moveAtoms_poretransport__EventAck::work(){
+	int i;
+	static int w = 0;
+	w++;
+	if(w == app->nWorkers){
+		w = 0;
+		if( --(app->o->iters) ){
+			QCoreApplication::postEvent( safeNew( moveAtoms_prep__Event( 0, app, app->worker[0] ) ) );
+		}else{
+			for(i=0; i<app->nWorkers; i++){
+				QCoreApplication::postEvent( safeNew( QuitEvent( i, app, app->worker[i] ) ) );
+			}
+		}
+	}
+}
+
+// Received by all workers.
 void
 QuitEvent::work(){
 	fprintf(stdout, "Worker %d quitting.\n", id);
@@ -162,15 +268,27 @@ QuitEvent::work(){
 
 }
 
+// Recieved by MainThread.
 void
 QuitAckEvent::work(){
 	worker->wait();
 	fprintf(stdout, "Main received notice worker %d is finished.\n", id);
 	app->nWorkers--;
 	if(! app->nWorkers ){
+		app->s->elapsed += qtime->elapsed() / 1000.0;
+		app->s->completeNernstSim();
 		app->exit(0);
 	}
 }
+
+
+
+
+
+
+
+
+
 
 
 //===========================================================================
