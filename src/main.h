@@ -5,11 +5,34 @@
 #include <QThread>
 #include <QEvent>
 #include <QSemaphore>
+#include <QTime>
 
 class WorkerThread;
 class MainThread;
 class CustomEvent;
 class NernstSim;
+
+// Kinds of events.
+enum{
+	NOOP,
+	PREP,
+	PREP_ACK,
+	STAKE1,
+	STAKE1_ACK,
+	STAKE2,
+	STAKE2_ACK,
+	MOVE1,
+	MOVE1_ACK,
+	MOVE2,
+	MOVE2_ACK,
+	TRANSPORT1,
+	TRANSPORT1_ACK,
+	TRANSPORT2,
+	TRANSPORT2_ACK,
+	QUIT,
+	QUIT_ACK,
+	NUM_CMDS
+};
 
 //===========================================================================
 // Parent events
@@ -28,11 +51,12 @@ class WorkEvent : public CustomEvent {
 		int id;
 		class MainThread *app;
 		class WorkerThread *worker;
-		WorkEvent( int param_id, MainThread *param_app, WorkerThread *param_worker ) :
-			CustomEvent(), id( param_id ), app(param_app), worker(param_worker){}
+		int cmd;
+		WorkEvent( int param_id, MainThread *param_app, WorkerThread *param_worker, int param_cmd ) :
+			CustomEvent(), id( param_id ), app(param_app), worker(param_worker), cmd(param_cmd){}
 		virtual void work();
 };
-
+/*
 class QuitEvent : public CustomEvent {
 	public:
 		int id;
@@ -42,10 +66,11 @@ class QuitEvent : public CustomEvent {
 			CustomEvent(), id( param_id ), app(param_app), worker(param_worker){}
 		virtual void work();
 };
-
+*/
 //===========================================================================
 // Events sent by workers, received by main.
 //===========================================================================
+/*
 class WorkAckEvent : public CustomEvent {
 	public:
 		int id;
@@ -65,7 +90,7 @@ class QuitAckEvent : public CustomEvent {
 			CustomEvent(), id( param_id ), app(param_app), worker(param_worker){}
 		virtual void work();
 };
-
+*/
 
 
 class MainThread : public QCoreApplication {

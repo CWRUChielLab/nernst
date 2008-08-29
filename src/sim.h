@@ -85,20 +85,23 @@ class NernstSim
       void distributePores( struct options *o );
       void initAtoms( struct options *options );
       QTime *qtime;
-
-
+      int rpt;	//cells per thread.
+      void initNernstSim();
+      void completeNernstSim();
+      double elapsed;
+      void moveAtoms_prep(void);
+      void moveAtoms_stakeclaim(void);
+      void moveAtoms_move(unsigned int start_idx=0, unsigned int end_idx=0);
+      void moveAtoms_poretransport(void);
 
 
    protected:
       long maxatomsDefault;
-      double elapsed;
       int currentIter;
 
-      void initNernstSim();
       int preIter();
       void Iter();
       void postIter();
-      void completeNernstSim();
    private:
       void initWorld( struct options *o );
       int WORLD_SZ_MASK;
@@ -117,10 +120,6 @@ class NernstSim
       void takeCensus( int iter );
       void finalizeAtoms(void);
       void moveAtoms(unsigned int start_idx=0, unsigned int end_idx=0);
-      void moveAtoms_prep(void);
-      void moveAtoms_stakeclaim(void);
-      void moveAtoms_move(unsigned int start_idx=0, unsigned int end_idx=0);
-      void moveAtoms_poretransport(void);
 };
 
 #endif /* SIM_H */

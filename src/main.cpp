@@ -114,10 +114,12 @@ MainThread::LocalInit( class MainThread *app ){
 	s->qtime->start();
 
 	// Start the iterations.
-	QCoreApplication::postEvent( 
-		worker[0], 
-		safeNew(  initIterationEvent( 0, app, worker[0] )  ) 
-	);
+	for(i=0; i<nWorkers; i++){
+		QCoreApplication::postEvent( 
+			worker[i], 
+			safeNew(  WorkEvent( 0, app, worker[0], PREP )  ) 
+		);
+	}
 
 
 
@@ -140,155 +142,171 @@ WorkerThread::run(){
 	exec();
 }
 
+
+
+
 //===========================================================================
 // Several events
 //===========================================================================
 
-/* This is just a little baroque.  Here's what happens.
- *
- * MainThread::LocalInit performs all simulation initialization and ends by
- * sending a initIteration event to thread0.
- *
- * Thread0 performs per-iteration initialization and sends a initIterationAck
- * event to MainThread.
- *
- * MainThread sends a runIteration event to all child threads.  
- *
- * All child threads will send a runIterationAck event to MainThread.
- *
- * When MainThread has received all of the Acks, it will send a finalizeIteration
- * event to thread0.
- *
- * When thread0 has finished finalization, it will send a finalizeIterationAck
- * event to MainThread.
- *
- * Mainthread will decrement the iteration count and, if zero, perform 
- * simulation finalization and send Quit events to all threads.
- *
- * Threads will post an ack and then call exit.
- *
- * Mainthread, after collecting all acks, will exit.  
- */
 
-// Received by worker0.
-void 
-moveAtoms_prep__Event::work(){
-	// Worker0 performs PREP.
-	app->s->moveAtoms_prep();
-	QCoreApplication::postEvent( safeNew( moveAtoms_prep__EventAck( id, app, worker ) ) );
-}
 
-// Received by MainThread.
 void
-moveAtoms_prep__EventAck::work(){
-	int i;
-	// Have all workers start on STAKECLAIM.
-	for(i=0; i<app->nWorkers; i++){
-		QCoreApplication::postEvent( safeNew( moveAtoms_stakeclaim__Event( i, app, app->worker[i] ) ) );
-	}
-}
-
-// Received by all workers.
-void
-moveAtoms_stakeclaim__Event::work(){
-	app->s->moveAtoms_stakeclaim( id, id );	//FIXME start_idx, end_idx
-	QCoreApplication::postEvent( safeNew( moveAtoms_stakeclaim__EventAck( id, app, worker ) ) );
-}
-
-// Received by MainThread.
-void
-moveAtoms_stakeclaim__EventAck::work(){
+WorkEvent::work(){
 	int i;
 	static int w = 0;
-	w++;
-	if(w == app->nWorkers){
-		w = 0;
-		for(i=0; i<app->nWorkers; i++){
-			QCoreApplication::postEvent( safeNew( moveAtoms_move__Event( i, app, app->worker[i] ) ) );
+	switch(cmd){
+		//===============================================================================================================================
+		case PREP:{
+			//if(id == 0){  app->s->moveAtoms_prep(id, id);	}
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, PREP_ACK ) ) );
+			break;
 		}
-	}
-}
-
-// Received by all workers.
-void
-moveAtoms_move__Event::work(){
-	app->s->moveAtoms_move( id, id );	//FIXME start_idx, end_idx
-	QCoreApplication::postEvent( safeNew( moveAtoms_move__EventAck( id, app, worker ) ) );
-}
-
-// Received by MainThread.
-void
-moveAtoms_move__EventAck::work(){
-	int i;
-	static int w = 0;
-	w++;
-	if(w == app->nWorkers){
-		w = 0;
-		for(i=0; i<app->nWorkers; i++){
-			QCoreApplication::postEvent( safeNew( moveAtoms_poretransport__Event( i, app, app->worker[i] ) ) );
-		}
-	}
-}
-
-
-// Received by all workers.
-void
-moveAtoms_poretransport__Event::work(){
-	app->s->moveAtoms_poretransport( id, id );	//FIXME start_idx, end_idx
-	QCoreApplication::postEvent( safeNew( moveAtoms_poretransport__EventAck( id, app, worker ) ) );
-}
-
-
-// Received by MainThread.
-void
-moveAtoms_poretransport__EventAck::work(){
-	int i;
-	static int w = 0;
-	w++;
-	if(w == app->nWorkers){
-		w = 0;
-		if( --(app->o->iters) ){
-			QCoreApplication::postEvent( safeNew( moveAtoms_prep__Event( 0, app, app->worker[0] ) ) );
-		}else{
-			for(i=0; i<app->nWorkers; i++){
-				QCoreApplication::postEvent( safeNew( QuitEvent( i, app, app->worker[i] ) ) );
+		case PREP_ACK:{
+			w++;
+			if( w == app->nWorkers ){
+				w=0;
+				for(i=0; i<app->nWorkers; i++){
+					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], STAKE1 ) ) );
+				}
 			}
+			break;
+		}
+
+		//===============================================================================================================================
+		case STAKE1:{
+			//if(id == 0){app->s->moveAtoms_stakeclaim( id, id );}	
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE1_ACK ) ) );
+			break;
+		}
+		case STAKE1_ACK:{
+			w++;
+			if( w == app->nWorkers ){
+				w=0;
+				for(i=0; i<app->nWorkers; i++){
+					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], STAKE2 ) ) );
+				}
+			}
+			break;
+		}
+
+		//===============================================================================================================================
+		case STAKE2:{
+			//if( id == 0 ){ app->s->moveAtoms_stakeclaim( id, id ); }
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE2_ACK ) ) );
+			break;
+		}
+		case STAKE2_ACK:{
+			w++;
+			if( w == app->nWorkers ){
+				w=0;
+				for(i=0; i<app->nWorkers; i++){
+					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], MOVE1 ) ) );
+				}
+			}
+			break;
+		}
+
+		//===============================================================================================================================
+		case MOVE1:{
+			//if( id == 0 ){ app->s->moveAtoms_move( id, id ); }	
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE1_ACK ) ) );
+			break;
+		}
+		case MOVE1_ACK:{
+			w++;
+			if( w == app->nWorkers ){
+				w=0;
+				for(i=0; i<app->nWorkers; i++){
+					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], MOVE2 ) ) );
+				}
+			}
+			break;
+		}
+
+		//===============================================================================================================================
+		case MOVE2:{
+			//if( id == 0 ){ app->s->moveAtoms_move( id, id ); }	
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE2_ACK ) ) );
+			break;
+		}
+		case MOVE2_ACK:{
+			w++;
+			if( w == app->nWorkers ){
+				w=0;
+				for(i=0; i<app->nWorkers; i++){
+					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], TRANSPORT1 ) ) );
+				}
+			}
+			break;
+		}
+
+		//===============================================================================================================================
+		case TRANSPORT1:{
+			//if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT1_ACK ) ) );
+			break;
+		}
+		case TRANSPORT1_ACK:{
+			w++;
+			if( w == app->nWorkers ){
+				w=0;
+				for(i=0; i<app->nWorkers; i++){
+					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], TRANSPORT2 ) ) );
+				}
+			}
+			break;
+		}
+
+		//===============================================================================================================================
+		case TRANSPORT2:{
+			//if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }	
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT2_ACK ) ) );
+			break;
+		}
+		case TRANSPORT2_ACK:{
+			w++;
+			if( w == app->nWorkers ){
+				app->o->iters--;
+				w=0;
+				for(i=0; i<app->nWorkers; i++){
+					if( app->o->iters ){
+						fprintf(stderr, "%d iterations remaining.\n", app->o->iters);
+						QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], PREP ) ) );
+					}else{
+						fprintf(stderr, "Program ending....\n");
+						QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], QUIT ) ) );
+					}
+				}
+			}
+			break;
+		}
+		//===============================================================================================================================
+
+		case QUIT:{
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, QUIT_ACK ) ) );
+			worker->exit(0);
+			break;
+		}
+		case QUIT_ACK:{
+			worker->wait();
+			w++;
+			fprintf(stderr, "Thread %d exited.\n", id);
+			if( w == app->nWorkers ){
+				app->s->elapsed += app->s->qtime->elapsed() / 1000.0;
+				app->s->completeNernstSim();
+				app->exit(0);
+			}
+			break;
+		}
+
+
+		default:{
+			fprintf(stderr, "%s::%d bad event %d\n", __FILE__, __LINE__, cmd);
+			app->exit(EXIT_FAILURE);
 		}
 	}
 }
-
-// Received by all workers.
-void
-QuitEvent::work(){
-	fprintf(stdout, "Worker %d quitting.\n", id);
-	QuitAckEvent *event = safeNew( QuitAckEvent( id, app, worker ) );
-	QCoreApplication::postEvent( worker, event );
-
-	worker->exit(0);
-
-}
-
-// Recieved by MainThread.
-void
-QuitAckEvent::work(){
-	worker->wait();
-	fprintf(stdout, "Main received notice worker %d is finished.\n", id);
-	app->nWorkers--;
-	if(! app->nWorkers ){
-		app->s->elapsed += qtime->elapsed() / 1000.0;
-		app->s->completeNernstSim();
-		app->exit(0);
-	}
-}
-
-
-
-
-
-
-
-
-
 
 
 //===========================================================================
@@ -297,6 +315,6 @@ QuitAckEvent::work(){
 
 void
 CustomEvent::work(){
-	fprintf(stdout, "Why is CustomEvent::work() getting called?\n");
+	fprintf(stderr, "Why is CustomEvent::work() getting called?\n");
 }
 
