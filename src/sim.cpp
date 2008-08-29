@@ -735,7 +735,11 @@ NernstSim::moveAtoms_stakeclaim(unsigned int start_idx, unsigned int end_idx){
    // Stake our claims for next turn.
    unsigned int dir = 0, off = 0, from = 0, to = 0;
 //fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
-   for( from = 0; from < WORLD_SZ; from++ )
+   if(start_idx == end_idx){
+	   start_idx = 0;
+	   end_idx = WORLD_SZ;
+   }
+   for( from = start_idx; from < end_idx; from++ )
    {
       if( isAtom( from ) )
       {                                            // If there's an atom present,

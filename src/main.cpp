@@ -194,8 +194,8 @@ WorkEvent::work(){
 
 		//===============================================================================================================================
 		case STAKE1:{
-			if( id == 0 ){ app->s->moveAtoms_stakeclaim( id, id ); }
-			//app->s->moveAtoms_stakeclaim( worker->start_idx1, worker->end_idx1 );	
+			//if( id == 0 ){ app->s->moveAtoms_stakeclaim( id, id ); }
+			app->s->moveAtoms_stakeclaim( worker->start_idx1, worker->end_idx1 );	
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE1_ACK ) ) );
 			break;
 		}
@@ -212,7 +212,7 @@ WorkEvent::work(){
 
 		//===============================================================================================================================
 		case STAKE2:{
-			//if( id == 0 ){ app->s->moveAtoms_stakeclaim( worker->start_idx2, worker->end_idx2 ); }
+			app->s->moveAtoms_stakeclaim( worker->start_idx2, worker->end_idx2 ); 
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE2_ACK ) ) );
 			break;
 		}
@@ -229,7 +229,7 @@ WorkEvent::work(){
 
 		//===============================================================================================================================
 		case MOVE1:{
-			if( id == 0 ){ app->s->moveAtoms_move( id, id ); }	
+			app->s->moveAtoms_move( worker->start_idx1, worker->end_idx1 ); 
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE1_ACK ) ) );
 			break;
 		}
@@ -246,7 +246,7 @@ WorkEvent::work(){
 
 		//===============================================================================================================================
 		case MOVE2:{
-			//if( id == 0 ){ app->s->moveAtoms_move( id, id ); }	
+			app->s->moveAtoms_move( worker->start_idx2, worker->end_idx2); 
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE2_ACK ) ) );
 			break;
 		}
