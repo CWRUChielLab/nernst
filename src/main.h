@@ -152,5 +152,7 @@ class WorkerThread : public QThread {
 		// This is a pure virtual function that we have to override.
 		// I think all it needs to do is call exec.
 		virtual void run();
+
+		unsigned int start_idx1, start_idx2, end_idx1, end_idx2;
 };
 

@@ -81,7 +81,7 @@ const char
    "(C) 2008  Jeffrey Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Dr. Hillel J. Chiel",
    "",
-   "Version 1.0.1-blr1",
+   "Version 1.0.1-blr2",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
@@ -98,6 +98,7 @@ const char
    "-B, --pNa                 Permeability of Na. Default=0.04.",
    "-C, --pCl                 Permeability of Cl. Default=0.45.",
    "-e, --no-electrostatics   Turn off electrostatics.",
+   "-f, --output-file         Generate output files.",
    "-g, --no-gui              Don't use the GUI.",
    "-h, --help                Display this information.",
    "-i, --iters               Number of iterations. Default=50000.",
@@ -115,8 +116,7 @@ const char
    "-R, --rK                  Concentration of K in RHS in mM. Default=20.",
    "-s, --no-selectivity      Turn off pore selectivity.",
    "-S, --rNa                 Concentration of Na in RHS in mM. Default=440.",
-   "-t, --threads             Number of threads per machine.  Not yet",
-   "                             implemented.",
+   "-t, --threads             Number of threads per machine.",
    "-T, --rCl                 Concentration of Cl in RHS in mM. Default=560.",
    "-v, --verbose             Print debugging information (occasionally",
    "                             implemented).",
@@ -139,32 +139,6 @@ const char
    "--cboltz                   Constant used in Boltzmann coef    (see doc)",
    NULL
 };
-/*
-int 
-safeStrtol( char *str )
-{
-   //Handle error checking on strtol.
-   long int val;
-   char *endptr;
-   errno = 0;
-   val = strtol( str, &endptr, 10 );
-   char msg[1024];
-
-   if( ( errno == ERANGE && ( val == LONG_MAX || val == LONG_MIN ) ) || ( errno != 0 && val == 0 ) )
-   {
-      perror( "strtol" );
-      exit( EXIT_FAILURE );
-   }
-
-   if( endptr == str )
-   {
-      fprintf( stderr, "No digits were found\n" );
-      exit( EXIT_FAILURE );
-   }
-
-   return val;
-}
-*/
 
 void
 print_help()
@@ -227,6 +201,7 @@ set_defaults( struct options *o )
 
    o->profiling      = 0;
    o->progress       = 0;
+   o->output_file    = 0;
 
    o->e 	= 1.60218e-19;     // Elementary charge (C)
    o->k 	= 1.38056e-23;     // Boltzmann's constant (J K^-1)
@@ -275,6 +250,7 @@ dump_options( struct options *o )
 
    fprintf( stderr, "progress =       %d\n", o->progress );
    fprintf( stderr, "profiling =      %d\n", o->profiling );
+   fprintf( stderr, "output_file =    %d\n", o->output_file );
    fprintf( stderr, "---------------------------------------------------------------------------\n" );
    fprintf( stderr, "elementary-charge     %lf\n", o->e		);
    fprintf( stderr, "boltzmann		 %lf\n", o->k		);
@@ -308,6 +284,7 @@ parseOptions(int argc, char **argv)
       { "pNa",               1, 0, 'B' },
       { "pCl",               1, 0, 'C' },
       { "no-electrostatics", 0, 0, 'e' },
+      { "output-file",       0, 0, 'f' },
       { "no-gui",            0, 0, 'g' },
       { "help",              0, 0, 'h' },
       { "iters",             1, 0, 'i' },
@@ -347,7 +324,7 @@ parseOptions(int argc, char **argv)
    set_defaults( options );
    while( 1 )
    {
-      c = getopt_long( argc, argv, "a:A:B:C:eghi:l:L:M:N:p::Pr:R:sS:t:T:vVx:y:", long_options, &option_index );
+      c = getopt_long( argc, argv, "a:A:B:C:efghi:l:L:M:N:p::Pr:R:sS:t:T:vVx:y:", long_options, &option_index );
       if( c == -1 )
       {
          break;
@@ -370,6 +347,9 @@ parseOptions(int argc, char **argv)
          case 'e':
             options->electrostatics = 0;
             break;
+	 case 'f':
+	    options->output_file = 1;
+	    break;
          case 'g':
             options->use_gui = 0;
             break;

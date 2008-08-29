@@ -119,7 +119,9 @@ NernstSim::postIter()
 void 
 NernstSim::completeNernstSim()
 {
-   //finalizeAtoms();
+   if(o->output_file){
+	   finalizeAtoms();
+   }
 
    if( o->progress )
    {
@@ -170,6 +172,11 @@ NernstSim::initWorld( struct options *o )
    if( ( o->x * o->y )  &  ( ( o->x * o->y ) - 1 ) )
    {
       ASSERT( !( ( o->x * o->y )  &  ( ( o->x * o->y ) - 1 ) ) );
+   }
+
+   // Test that the number of threads is a power of 2.
+   if( o->threads & ( o->threads - 1) ){
+      ASSERT( !(  o->threads & ( o->threads - 1 )  ) );
    }
 
    world   = (struct atom*)calloc( sizeof( struct atom   ) * o->x * o->y, 1 );
@@ -711,8 +718,9 @@ NernstSim::moveAtoms(unsigned int start_idx, unsigned int end_idx)
 }
 
 void
-NernstSim::moveAtoms_prep(){
+NernstSim::moveAtoms_prep(unsigned int start_idx, unsigned int end_idx){
    // Only need to clear out claimed.
+//fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
    memset( claimed, 0, o->x * o->y );
 
    // Get new set of directions.
@@ -723,9 +731,10 @@ NernstSim::moveAtoms_prep(){
 }
 
 void
-NernstSim::moveAtoms_stakeclaim(){
+NernstSim::moveAtoms_stakeclaim(unsigned int start_idx, unsigned int end_idx){
    // Stake our claims for next turn.
    unsigned int dir = 0, off = 0, from = 0, to = 0;
+//fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
    for( from = 0; from < WORLD_SZ; from++ )
    {
       if( isAtom( from ) )
@@ -770,7 +779,7 @@ NernstSim::moveAtoms_move(unsigned int start_idx, unsigned int end_idx){
        1, // SE
        1  // SW
    };
-
+//fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
    //This handles the single-thread case.
    if(start_idx == end_idx){
 	   start_idx = 0;
@@ -796,11 +805,12 @@ NernstSim::moveAtoms_move(unsigned int start_idx, unsigned int end_idx){
 }
 
 void
-NernstSim::moveAtoms_poretransport(){
+NernstSim::moveAtoms_poretransport(unsigned int start_idx, unsigned int end_idx){
    // Transport atoms through pores.
    int y;
    unsigned int current_idx;
    unsigned int from = 0, to = 0;
+//fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
    for( y = 0; y < o->y; y++ )
    {
       current_idx = idx( o->x / 2, y );

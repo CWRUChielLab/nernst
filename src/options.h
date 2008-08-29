@@ -72,6 +72,7 @@ struct options
    // runtime options
    int profiling;
    int progress;
+   int output_file;
 
 	// constants
    double e;		//= 1.60218e-19;     // Elementary charge (C)

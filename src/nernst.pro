@@ -3,7 +3,8 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = "Nernst Potential Simulator"
+# TARGET = "Nernst Potential Simulator"
+TARGET = "nernst"
 RESOURCES = resources.qrc
 DEPENDPATH += .
 INCLUDEPATH += ../SFMT

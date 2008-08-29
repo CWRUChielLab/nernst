@@ -54,7 +54,7 @@ main( int argc, char *argv[] )
 	// Create the main GUI thread and a custom event.
 	MainThread *app = safeNew( MainThread( argc, argv ) );	
 	app->o = o;
-	app->s = safeNew( NernstSim( o ) );
+	o->s = app->s = safeNew( NernstSim( o ) );
 	app->LocalInit(app);
 	// Start the thread running.
 	return app->exec();
@@ -88,8 +88,7 @@ MainThread::customEvent(QEvent *e){
 
 void
 MainThread::LocalInit( class MainThread *app ){
-	int i;
-
+	int i, rpt;
 	nWorkers = o->threads;
 	
 	// Allocate the arrays for worker threads and messages.
@@ -103,9 +102,28 @@ MainThread::LocalInit( class MainThread *app ){
 		// Prime the worker message queue.
 		//QCoreApplication::postEvent( worker[i], event[i] );
 
+
 	for(i=0; i<nWorkers; i++){
 		// Create the worker.
 		worker[i] = safeNew( WorkerThread( i, app ) );
+
+		// Set indicies.
+		worker[i]->start_idx1 = (i * o->x * o->y)/nWorkers;
+		worker[i]->end_idx1   = (i * o->x * o->y)/nWorkers + (o->x * o->y)/(2 * nWorkers);
+		worker[i]->start_idx2 = (i * o->x * o->y)/nWorkers + (o->x * o->y)/(2 * nWorkers);
+		worker[i]->end_idx2   = ( (i+1) * o->x * o->y)/nWorkers; 
+		/*
+		fprintf(stderr, "worker %d covers %u to %u and %u to %u \n",
+			i,
+			worker[i]->start_idx1,
+                        worker[i]->end_idx1,
+                        worker[i]->start_idx2,
+                        worker[i]->end_idx2
+			); 
+		*/ 
+			
+
+	
 		// Begin the thread w/ an event queue.
 		worker[i]->start();
 	}
@@ -117,7 +135,7 @@ MainThread::LocalInit( class MainThread *app ){
 	for(i=0; i<nWorkers; i++){
 		QCoreApplication::postEvent( 
 			worker[i], 
-			safeNew(  WorkEvent( 0, app, worker[0], PREP )  ) 
+			safeNew(  WorkEvent( i, app, worker[i], PREP )  ) 
 		);
 	}
 
@@ -155,10 +173,11 @@ void
 WorkEvent::work(){
 	int i;
 	static int w = 0;
+	static int iters = -1;
 	switch(cmd){
 		//===============================================================================================================================
 		case PREP:{
-			//if(id == 0){  app->s->moveAtoms_prep(id, id);	}
+			if(id == 0){  app->s->moveAtoms_prep(id, id);	}
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, PREP_ACK ) ) );
 			break;
 		}
@@ -175,7 +194,8 @@ WorkEvent::work(){
 
 		//===============================================================================================================================
 		case STAKE1:{
-			//if(id == 0){app->s->moveAtoms_stakeclaim( id, id );}	
+			if( id == 0 ){ app->s->moveAtoms_stakeclaim( id, id ); }
+			//app->s->moveAtoms_stakeclaim( worker->start_idx1, worker->end_idx1 );	
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE1_ACK ) ) );
 			break;
 		}
@@ -192,7 +212,7 @@ WorkEvent::work(){
 
 		//===============================================================================================================================
 		case STAKE2:{
-			//if( id == 0 ){ app->s->moveAtoms_stakeclaim( id, id ); }
+			//if( id == 0 ){ app->s->moveAtoms_stakeclaim( worker->start_idx2, worker->end_idx2 ); }
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE2_ACK ) ) );
 			break;
 		}
@@ -209,7 +229,7 @@ WorkEvent::work(){
 
 		//===============================================================================================================================
 		case MOVE1:{
-			//if( id == 0 ){ app->s->moveAtoms_move( id, id ); }	
+			if( id == 0 ){ app->s->moveAtoms_move( id, id ); }	
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE1_ACK ) ) );
 			break;
 		}
@@ -243,7 +263,7 @@ WorkEvent::work(){
 
 		//===============================================================================================================================
 		case TRANSPORT1:{
-			//if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }
+			if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT1_ACK ) ) );
 			break;
 		}
@@ -267,14 +287,15 @@ WorkEvent::work(){
 		case TRANSPORT2_ACK:{
 			w++;
 			if( w == app->nWorkers ){
-				app->o->iters--;
+				if( iters == -1 ){
+					iters = app->o->iters;
+				}
+				iters--; app->s->currentIter++;
 				w=0;
 				for(i=0; i<app->nWorkers; i++){
-					if( app->o->iters ){
-						fprintf(stderr, "%d iterations remaining.\n", app->o->iters);
+					if( iters ){
 						QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], PREP ) ) );
 					}else{
-						fprintf(stderr, "Program ending....\n");
 						QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], QUIT ) ) );
 					}
 				}
@@ -291,7 +312,6 @@ WorkEvent::work(){
 		case QUIT_ACK:{
 			worker->wait();
 			w++;
-			fprintf(stderr, "Thread %d exited.\n", id);
 			if( w == app->nWorkers ){
 				app->s->elapsed += app->s->qtime->elapsed() / 1000.0;
 				app->s->completeNernstSim();

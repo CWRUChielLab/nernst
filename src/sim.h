@@ -89,15 +89,15 @@ class NernstSim
       void initNernstSim();
       void completeNernstSim();
       double elapsed;
-      void moveAtoms_prep(void);
-      void moveAtoms_stakeclaim(void);
+      void moveAtoms_prep(unsigned int start_idx=0, unsigned int end_idx=0);
+      void moveAtoms_stakeclaim(unsigned int start_idx=0, unsigned int end_idx=0);
       void moveAtoms_move(unsigned int start_idx=0, unsigned int end_idx=0);
-      void moveAtoms_poretransport(void);
+      void moveAtoms_poretransport(unsigned int start_idx=0, unsigned int end_idx=0);
+      int currentIter;
 
 
    protected:
       long maxatomsDefault;
-      int currentIter;
 
       int preIter();
       void Iter();
