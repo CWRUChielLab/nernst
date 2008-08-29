@@ -30,8 +30,8 @@ enum
 {
    MIN_X = 16,
    MIN_Y = 16,
-   MAX_X = 1024,
-   MAX_Y = 1024,
+   MAX_X = 65536,
+   MAX_Y = 65536,
    MIN_ITERS = 1,
    MAX_ITERS = 100000,
    MIN_CONC = 0,     // Minimum ion concentration (mM)

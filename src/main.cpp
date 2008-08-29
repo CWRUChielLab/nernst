@@ -169,6 +169,7 @@ WorkerThread::run(){
 
 
 
+volatile int z;
 void
 WorkEvent::work(){
 	int i;
@@ -177,6 +178,8 @@ WorkEvent::work(){
 	switch(cmd){
 		//===============================================================================================================================
 		case PREP:{
+			fprintf(stderr, "%d starting to spin.\n", id);
+			for(z=0; z<10000000000; z++);
 			if(id == 0){  app->s->moveAtoms_prep(id, id);	}
 			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, PREP_ACK ) ) );
 			break;

@@ -417,6 +417,7 @@ NernstSim::shufflePositions( struct options *o )
 {
    static int initialized = 0;
    unsigned int i, highest, lowest, range, rand, temp;
+   assert( o->x <= MAX_X && o->y <= MAX_Y );
 
    if( !initialized )
    {
@@ -732,6 +733,7 @@ NernstSim::moveAtoms_prep(unsigned int start_idx, unsigned int end_idx){
 
 void
 NernstSim::moveAtoms_stakeclaim(unsigned int start_idx, unsigned int end_idx){
+   
    // Stake our claims for next turn.
    unsigned int dir = 0, off = 0, from = 0, to = 0;
 //fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
@@ -756,10 +758,12 @@ NernstSim::moveAtoms_stakeclaim(unsigned int start_idx, unsigned int end_idx){
          claimed[ from ]++;
       }
    }
+	
 }
 
 void
 NernstSim::moveAtoms_move(unsigned int start_idx, unsigned int end_idx){
+   
    unsigned int dir = 0, off = 0, from = 0, to = 0;
    static int dir2dx[] =
    {
@@ -783,7 +787,7 @@ NernstSim::moveAtoms_move(unsigned int start_idx, unsigned int end_idx){
        1, // SE
        1  // SW
    };
-//fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
+
    //This handles the single-thread case.
    if(start_idx == end_idx){
 	   start_idx = 0;
@@ -806,15 +810,17 @@ NernstSim::moveAtoms_move(unsigned int start_idx, unsigned int end_idx){
          }
       }
    }
+   
 }
 
 void
 NernstSim::moveAtoms_poretransport(unsigned int start_idx, unsigned int end_idx){
    // Transport atoms through pores.
+   
    int y;
    unsigned int current_idx;
    unsigned int from = 0, to = 0;
-//fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
+
    for( y = 0; y < o->y; y++ )
    {
       current_idx = idx( o->x / 2, y );
@@ -851,7 +857,7 @@ NernstSim::moveAtoms_poretransport(unsigned int start_idx, unsigned int end_idx)
                default:
 #ifndef QT_NO_DEBUG
                   ASSERT( isAtom( from ) );
-#endif /* QT_NO_DEBUG */
+#endif // QT_NO_DEBUG 
                   break;
             }
          } else {
@@ -886,13 +892,14 @@ NernstSim::moveAtoms_poretransport(unsigned int start_idx, unsigned int end_idx)
                   default:
 #ifndef QT_NO_DEBUG
                      ASSERT( isAtom( from ) );
-#endif /* QT_NO_DEBUG */
+#endif / QT_NO_DEBUG 
                      break;
                }
             }
          }
       }
    }
+   
 }
 
 
