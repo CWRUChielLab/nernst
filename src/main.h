@@ -6,6 +6,8 @@
 #include <QEvent>
 #include <QSemaphore>
 #include <QTime>
+#include <QMutex>
+#include <QWaitCondition>
 
 class WorkerThread;
 class MainThread;
@@ -142,7 +144,7 @@ class WorkerThread : public QThread {
 		// 2.  Set param_parent to 0 if it is not provided.
 		// 3.  Pass param_parent along to the parent class (QThread).
 		// 4.  Set this->id = param_id.
-		int id;
+		int id; 
 		WorkerThread(int param_id, QObject *param_parent=0) : 
 			QThread( param_parent ), id( param_id ){}
 		
@@ -153,6 +155,9 @@ class WorkerThread : public QThread {
 		// I think all it needs to do is call exec.
 		virtual void run();
 
+		QWaitCondition *waitcondition;
 		unsigned int start_idx1, start_idx2, end_idx1, end_idx2;
+	private:
+		QMutex mutex();
 };
 

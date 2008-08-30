@@ -157,9 +157,77 @@ WorkerThread::customEvent(QEvent *e){
 
 void
 WorkerThread::run(){
-	exec();
+	while(1){
+		mutex.lock();
+		waitcondition.wait(&mutex);
+		switch(cmd){
+		case PREP:{
+			fprintf(stderr, "%d starting to spin.\n", id);
+			for(z=0; z<10000000000; z++);
+			if(id == 0){  app->s->moveAtoms_prep(id, id);	}
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, PREP_ACK ) ) );
+			break;
+		}
+		case STAKE1:{
+			app->s->moveAtoms_stakeclaim( worker->start_idx1, worker->end_idx1 );	
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE1_ACK ) ) );
+			break;
+		}
+			default:{
+				assert(0);
+			}
+		}
+		case STAKE2:{
+			app->s->moveAtoms_stakeclaim( worker->start_idx2, worker->end_idx2 ); 
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE2_ACK ) ) );
+			break;
+		}
+		case MOVE1:{
+			app->s->moveAtoms_move( worker->start_idx1, worker->end_idx1 ); 
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE1_ACK ) ) );
+			break;
+		}
+		case MOVE2:{
+			app->s->moveAtoms_move( worker->start_idx2, worker->end_idx2); 
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE2_ACK ) ) );
+			break;
+		}
+		case TRANSPORT1:{
+			if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT1_ACK ) ) );
+			break;
+		}
+		case TRANSPORT2:{
+			//if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }	
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT2_ACK ) ) );
+			break;
+		}
+		case QUIT:{
+			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, QUIT_ACK ) ) );
+			worker->exit(0);
+			break;
+		}
+		mutex.unlock();
+	}
 }
 
+/*
+ * rendevous
+ *
+ * mutex.wait()
+ * 	count++
+ * mutex.signal()
+ *
+ * if( count==n ){
+ * 	barrier.signal()
+ * }
+ *
+ * barrier.wait()
+ * barrier.signal()
+ *
+ * critical point
+ */
+ 
 
 
 
@@ -172,39 +240,32 @@ WorkerThread::run(){
 volatile int z;
 void
 WorkEvent::work(){
-	int i;
+	int i, msg;
 	static int w = 0;
 	static int iters = -1;
-	switch(cmd){
-		//===============================================================================================================================
-		case PREP:{
-			fprintf(stderr, "%d starting to spin.\n", id);
-			for(z=0; z<10000000000; z++);
-			if(id == 0){  app->s->moveAtoms_prep(id, id);	}
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, PREP_ACK ) ) );
-			break;
-		}
-		case PREP_ACK:{
 			w++;
 			if( w == app->nWorkers ){
 				w=0;
+				switch(cmd){
+
+		case PREP_ACK:{
+		case STAKE1_ACK:{
+		case STAKE2_ACK:{
+		case MOVE1_ACK:{
+		case MOVE2_ACK:{
+		case TRANSPORT1_ACK:{
+		case TRANSPORT2_ACK:{
+		case QUIT_ACK:{
 				for(i=0; i<app->nWorkers; i++){
+				
+	switch(cmd){
+		//===============================================================================================================================
 					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], STAKE1 ) ) );
-				}
 			}
 			break;
 		}
 
 		//===============================================================================================================================
-		case STAKE1:{
-			//if( id == 0 ){ app->s->moveAtoms_stakeclaim( id, id ); }
-			app->s->moveAtoms_stakeclaim( worker->start_idx1, worker->end_idx1 );	
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE1_ACK ) ) );
-			break;
-		}
-		case STAKE1_ACK:{
-			w++;
-			if( w == app->nWorkers ){
 				w=0;
 				for(i=0; i<app->nWorkers; i++){
 					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], STAKE2 ) ) );
@@ -214,14 +275,6 @@ WorkEvent::work(){
 		}
 
 		//===============================================================================================================================
-		case STAKE2:{
-			app->s->moveAtoms_stakeclaim( worker->start_idx2, worker->end_idx2 ); 
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE2_ACK ) ) );
-			break;
-		}
-		case STAKE2_ACK:{
-			w++;
-			if( w == app->nWorkers ){
 				w=0;
 				for(i=0; i<app->nWorkers; i++){
 					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], MOVE1 ) ) );
@@ -231,14 +284,6 @@ WorkEvent::work(){
 		}
 
 		//===============================================================================================================================
-		case MOVE1:{
-			app->s->moveAtoms_move( worker->start_idx1, worker->end_idx1 ); 
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE1_ACK ) ) );
-			break;
-		}
-		case MOVE1_ACK:{
-			w++;
-			if( w == app->nWorkers ){
 				w=0;
 				for(i=0; i<app->nWorkers; i++){
 					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], MOVE2 ) ) );
@@ -248,14 +293,6 @@ WorkEvent::work(){
 		}
 
 		//===============================================================================================================================
-		case MOVE2:{
-			app->s->moveAtoms_move( worker->start_idx2, worker->end_idx2); 
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE2_ACK ) ) );
-			break;
-		}
-		case MOVE2_ACK:{
-			w++;
-			if( w == app->nWorkers ){
 				w=0;
 				for(i=0; i<app->nWorkers; i++){
 					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], TRANSPORT1 ) ) );
@@ -265,14 +302,6 @@ WorkEvent::work(){
 		}
 
 		//===============================================================================================================================
-		case TRANSPORT1:{
-			if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT1_ACK ) ) );
-			break;
-		}
-		case TRANSPORT1_ACK:{
-			w++;
-			if( w == app->nWorkers ){
 				w=0;
 				for(i=0; i<app->nWorkers; i++){
 					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], TRANSPORT2 ) ) );
@@ -282,14 +311,6 @@ WorkEvent::work(){
 		}
 
 		//===============================================================================================================================
-		case TRANSPORT2:{
-			//if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }	
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT2_ACK ) ) );
-			break;
-		}
-		case TRANSPORT2_ACK:{
-			w++;
-			if( w == app->nWorkers ){
 				if( iters == -1 ){
 					iters = app->o->iters;
 				}
@@ -307,12 +328,6 @@ WorkEvent::work(){
 		}
 		//===============================================================================================================================
 
-		case QUIT:{
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, QUIT_ACK ) ) );
-			worker->exit(0);
-			break;
-		}
-		case QUIT_ACK:{
 			worker->wait();
 			w++;
 			if( w == app->nWorkers ){
