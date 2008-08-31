@@ -32,109 +32,89 @@
 #include "safecalls.h"
 using namespace SafeCalls;
 
+
+int WorkerThread::inCount[2];
+int WorkerThread::outCount[2];
+QSemaphore* WorkerThread::semaphore[2];
+QSemaphore* WorkerThread::barrier[2];
+NernstSim*  WorkerThread::s;
+struct options* WorkerThread::o;
+
 int
 main( int argc, char *argv[] )
 {
-   QCoreApplication *app;
-
-   struct options *o;
-   o = parseOptions( argc, argv );
-   fprintf(stderr, "threads = %d\n", o->threads);
-
-   //FIXME multithread gui case.
-   if( o->use_gui && o->threads == 1)
-   {
-      //Single-threaded gui.
-      app = safeNew( QApplication( argc, argv ) );
-      NernstGUI gui( o );
-      gui.show();
-      return app->exec();
-   } else if (o->threads > 1){
-      //Multi-threaded console.
-	// Create the main GUI thread and a custom event.
-	MainThread *app = safeNew( MainThread( argc, argv ) );	
-	app->o = o;
-	o->s = app->s = safeNew( NernstSim( o ) );
-	app->run();
-	// Start the thread running.
-	// return app->exec();
-   }else{
-      //Single-threaded non-gui.
-      app = safeNew( QCoreApplication( argc, argv ) );
-      NernstSim sim( o );
-      sim.runSim();
-      return 0;
-   }
-}
-
-/* main.cpp
- *
- */
-
-
-#define BLR_NTHREADS 4
-#define BLR_NROUNDS 4
-
-//===========================================================================
-// MainThread
-//===========================================================================
-
-
-void
-MainThread::run( ){
+	QCoreApplication *app;
 	int i;
+	class WorkerThread **worker = NULL;
+	class NernstSim *s = NULL;
+	struct options *o;
+	int nWorkers=0;
+	o = parseOptions( argc, argv );
 	nWorkers = o->threads;
-	
-	s->initNernstSim();
-	s->qtime->start();
 
-	// Allocate the arrays for worker threads and messages.
+	if( o->use_gui && o->threads == 1) {
+	//Single-threaded gui.
+		app = safeNew( QApplication( argc, argv ) );
+		NernstGUI gui( o );
+		gui.show();
+		return app->exec();
 
-	worker = (class WorkerThread **)
-		 malloc( sizeof(class WorkerThread *) * nWorkers );
+	} else if (o->threads > 1){
+	//Multi-threaded console.
 
+		// Make room for workers.
+		worker = (class WorkerThread **)
+			 malloc( sizeof(class WorkerThread *) * nWorkers );
 
-	inCount[0] = inCount[1] = 0;
-	outCount[0]= outCount[1]= 0;
-	semaphore[0] = safeNew( QSemaphore(1) );
-	semaphore[1] = safeNew( QSemaphore(1) );
-	barrier[0]   = safeNew( QSemaphore(0) );
-	barrier[1]   = safeNew( QSemaphore(0) );
+		// Create the workers.
+		for(i=0; i<nWorkers; i++){
+			worker[i] = safeNew( WorkerThread( i, NULL ) );
+		}
 
+		// Populate the static variables.
+		worker[0]->o = o;
+		worker[0]->s = s        = safeNew( NernstSim( o ) );
+		worker[0]->inCount[0]   = worker[0]->inCount[1] = 0;
+		worker[0]->outCount[0]  = worker[0]->outCount[1]= 0;
+		worker[0]->semaphore[0] = safeNew( QSemaphore(1) );
+		worker[0]->semaphore[1] = safeNew( QSemaphore(1) );
+		worker[0]->barrier[0]   = safeNew( QSemaphore(0) );
+		worker[0]->barrier[1]   = safeNew( QSemaphore(0) );
 
-	for(i=0; i<nWorkers; i++){
-		// Create the worker.
-		worker[i] = safeNew( WorkerThread( i, this ) );
+		// Initialization.
+		s->initNernstSim();
+		s->qtime->start();
 
-		// Set indicies.
-		worker[i]->start_idx1 = (i * o->x * o->y)/nWorkers;
-		worker[i]->end_idx1   = (i * o->x * o->y)/nWorkers + (o->x * o->y)/(2 * nWorkers);
-		worker[i]->start_idx2 = (i * o->x * o->y)/nWorkers + (o->x * o->y)/(2 * nWorkers);
-		worker[i]->end_idx2   = ( (i+1) * o->x * o->y)/nWorkers; 
-			
-		// Set up synchronization.
-		worker[i]->inCount  = &inCount[0];
-		worker[i]->outCount = &outCount[0];
-		worker[i]->semaphore  = &semaphore[0];
-		worker[i]->barrier    = &barrier[0];
-		worker[i]->nWorkers   = nWorkers;
-		worker[i]->iters      = o->iters;
-		worker[i]->s          = s;
+		// Start the workers.
+		for(i=0; i<nWorkers; i++){
 
-	
-		// Begin the thread w/ an event queue.
-		worker[i]->start();
+			// Set indicies.
+			worker[i]->start_idx1 = (i * o->x * o->y)/nWorkers;
+			worker[i]->end_idx1   = (i * o->x * o->y)/nWorkers + (o->x * o->y)/(2 * nWorkers);
+			worker[i]->start_idx2 = (i * o->x * o->y)/nWorkers + (o->x * o->y)/(2 * nWorkers);
+			worker[i]->end_idx2   = ( (i+1) * o->x * o->y)/nWorkers; 
+
+			// Begin the thread w/ an event queue.
+			worker[i]->start();
+		}
+
+		// Wait for the workers to finish.
+		for(i=0; i<nWorkers; i++){
+			worker[i]->wait();
+		}
+		
+		// Cleanup.
+		s->elapsed += s->qtime->elapsed() / 1000.0;
+		s->completeNernstSim();
+		return 0;
+
+	}else{
+	//Single-threaded console.
+		app = safeNew( QCoreApplication( argc, argv ) );
+		NernstSim sim( o );
+		sim.runSim();
+		return 0;
 	}
-
-
-	
-	for(i=0; i<nWorkers; i++){
-		worker[i]->wait();
-	}
-	s->elapsed += s->qtime->elapsed() / 1000.0;
-	s->completeNernstSim();
-	exit(0);
-	
 }
 
 
@@ -144,9 +124,9 @@ MainThread::run( ){
 
 void
 WorkerThread::run(){
-	volatile int i=0;
-	
-	for(i=0; i<iters; i++){
+	int i=0;
+
+	for(i=0; i<o->iters; i++){
 		if(id == 0){  s->moveAtoms_prep(id, id);	}
 		Barrier();
 
@@ -162,7 +142,10 @@ WorkerThread::run(){
 		s->moveAtoms_move( start_idx2, end_idx2); 
 		Barrier();
 
-		if( id == 0 ){ s->moveAtoms_poretransport( id, id ); }
+		if( id == 0 ){ 
+			s->moveAtoms_poretransport( id, id ); 
+			s->currentIter++;
+		}
 		Barrier();
 	}
 	
@@ -173,22 +156,6 @@ WorkerThread::run(){
 
 void
 WorkerThread::Barrier(){
-	/*
-	 * rendevous
-	 *
-	 * mutex.wait()
-	 * 	count++
-	 * mutex.signal()
-	 *
-	 * if( count==n ){
-	 * 	barrier.signal()
-	 * }
-	 *
-	 * barrier.wait()
-	 * barrier.signal()
-	 *
-	 * critical point
-	 */
 
 	// Initialized with semaphore released and barrier acquired.
 	// inCount = outCount = 0;
@@ -200,7 +167,7 @@ WorkerThread::Barrier(){
 		semaphore[i]->acquire();
 		inCount[i]++;
 
-		if( inCount[i]==nWorkers ){
+		if( inCount[i]==o->threads ){
 			barrier[i]->release();
 		}
 		semaphore[i]->release();
@@ -213,7 +180,7 @@ WorkerThread::Barrier(){
 		semaphore[i]->acquire();
 		outCount[i]++;
 
-		if( outCount[i]==nWorkers ){
+		if( outCount[i]==o->threads ){
 			barrier[i]->acquire();
 			inCount[i] = outCount[i] = 0;
 		}
