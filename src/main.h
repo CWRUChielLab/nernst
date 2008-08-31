@@ -6,94 +6,11 @@
 #include <QEvent>
 #include <QSemaphore>
 #include <QTime>
-#include <QMutex>
-#include <QWaitCondition>
-
+#include <QSemaphore>
 class WorkerThread;
 class MainThread;
 class CustomEvent;
 class NernstSim;
-
-// Kinds of events.
-enum{
-	NOOP,
-	PREP,
-	PREP_ACK,
-	STAKE1,
-	STAKE1_ACK,
-	STAKE2,
-	STAKE2_ACK,
-	MOVE1,
-	MOVE1_ACK,
-	MOVE2,
-	MOVE2_ACK,
-	TRANSPORT1,
-	TRANSPORT1_ACK,
-	TRANSPORT2,
-	TRANSPORT2_ACK,
-	QUIT,
-	QUIT_ACK,
-	NUM_CMDS
-};
-
-//===========================================================================
-// Parent events
-//===========================================================================
-class CustomEvent : public QEvent {
-	public:
-		CustomEvent():QEvent(QEvent::User){}
-		virtual void work();
-};	
-
-//===========================================================================
-// Events sent by main, received by workers.  Be sure to include app and thread ptrs.
-//===========================================================================
-class WorkEvent : public CustomEvent {
-	public:
-		int id;
-		class MainThread *app;
-		class WorkerThread *worker;
-		int cmd;
-		WorkEvent( int param_id, MainThread *param_app, WorkerThread *param_worker, int param_cmd ) :
-			CustomEvent(), id( param_id ), app(param_app), worker(param_worker), cmd(param_cmd){}
-		virtual void work();
-};
-/*
-class QuitEvent : public CustomEvent {
-	public:
-		int id;
-		class MainThread *app;
-		class WorkerThread *worker;
-		QuitEvent( int param_id, MainThread *param_app, WorkerThread *param_worker ) :
-			CustomEvent(), id( param_id ), app(param_app), worker(param_worker){}
-		virtual void work();
-};
-*/
-//===========================================================================
-// Events sent by workers, received by main.
-//===========================================================================
-/*
-class WorkAckEvent : public CustomEvent {
-	public:
-		int id;
-		class MainThread *app;
-		class WorkerThread *worker;
-		WorkAckEvent( int param_id, MainThread *param_app, WorkerThread *param_worker ) :
-			CustomEvent(), id( param_id ), app(param_app), worker(param_worker){}
-		virtual void work();
-};
-		
-class QuitAckEvent : public CustomEvent {
-	public:
-		int id;
-		class MainThread *app;
-		class WorkerThread *worker;
-		QuitAckEvent( int param_id, MainThread *param_app, WorkerThread *param_worker ) :
-			CustomEvent(), id( param_id ), app(param_app), worker(param_worker){}
-		virtual void work();
-};
-*/
-
 
 class MainThread : public QCoreApplication {
 	public:
@@ -107,13 +24,10 @@ class MainThread : public QCoreApplication {
 			QCoreApplication( param_argc, param_argv ), 
 			argc(param_argc), argv(param_argv){}
 		
-		// Override the custom event queue so we can grab our own 
-		// events.
-		void customEvent( QEvent *e );
 
 		// Initialize here rather in the constructor.  Makes life 
 		// just a tiny bit easier.
-		void LocalInit( class MainThread *app );
+		virtual void run();
 
 		//-----------------------------------------------------------
 		// Variables
@@ -132,6 +46,11 @@ class MainThread : public QCoreApplication {
 		class WorkerThread **worker;
 
 	private:
+		int inCount[2];
+		int outCount[2];
+		QSemaphore *semaphore[2];
+		QSemaphore *barrier[2];
+
 
 	
 };
@@ -148,16 +67,22 @@ class WorkerThread : public QThread {
 		WorkerThread(int param_id, QObject *param_parent=0) : 
 			QThread( param_parent ), id( param_id ){}
 		
-		// Override the custom event queue so we can grab our own events.
-		void customEvent( QEvent *e );
-
 		// This is a pure virtual function that we have to override.
 		// I think all it needs to do is call exec.
 		virtual void run();
 
-		QWaitCondition *waitcondition;
 		unsigned int start_idx1, start_idx2, end_idx1, end_idx2;
+
+		int *inCount;
+		int *outCount;
+		QSemaphore **semaphore;
+		QSemaphore **barrier;
+
+		int nWorkers;
+		int iters;
+		NernstSim *s;
 	private:
-		QMutex mutex();
+		void Barrier(void);
+
 };
 

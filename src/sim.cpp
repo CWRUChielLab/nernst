@@ -720,8 +720,11 @@ NernstSim::moveAtoms(unsigned int start_idx, unsigned int end_idx)
 
 void
 NernstSim::moveAtoms_prep(unsigned int start_idx, unsigned int end_idx){
+   // use start_idx and end_idx if we ever decided to make this 
+   // multithreaded.  Otherwise, shut up the compiler.
+   start_idx = start_idx; end_idx=end_idx;
+
    // Only need to clear out claimed.
-//fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
    memset( claimed, 0, o->x * o->y );
 
    // Get new set of directions.
@@ -736,7 +739,6 @@ NernstSim::moveAtoms_stakeclaim(unsigned int start_idx, unsigned int end_idx){
    
    // Stake our claims for next turn.
    unsigned int dir = 0, off = 0, from = 0, to = 0;
-//fprintf(stderr, "%s::%d\n", __FILE__, __LINE__);
    if(start_idx == end_idx){
 	   start_idx = 0;
 	   end_idx = WORLD_SZ;
@@ -820,6 +822,9 @@ NernstSim::moveAtoms_poretransport(unsigned int start_idx, unsigned int end_idx)
    int y;
    unsigned int current_idx;
    unsigned int from = 0, to = 0;
+   // use start_idx and end_idx if we ever decided to make this 
+   // multithreaded.  Otherwise, shut up the compiler.
+   start_idx = start_idx; end_idx=end_idx;
 
    for( y = 0; y < o->y; y++ )
    {
@@ -892,7 +897,7 @@ NernstSim::moveAtoms_poretransport(unsigned int start_idx, unsigned int end_idx)
                   default:
 #ifndef QT_NO_DEBUG
                      ASSERT( isAtom( from ) );
-#endif / QT_NO_DEBUG 
+#endif // QT_NO_DEBUG 
                      break;
                }
             }

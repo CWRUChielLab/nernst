@@ -55,9 +55,9 @@ main( int argc, char *argv[] )
 	MainThread *app = safeNew( MainThread( argc, argv ) );	
 	app->o = o;
 	o->s = app->s = safeNew( NernstSim( o ) );
-	app->LocalInit(app);
+	app->run();
 	// Start the thread running.
-	return app->exec();
+	// return app->exec();
    }else{
       //Single-threaded non-gui.
       app = safeNew( QCoreApplication( argc, argv ) );
@@ -79,68 +79,62 @@ main( int argc, char *argv[] )
 // MainThread
 //===========================================================================
 
-void
-MainThread::customEvent(QEvent *e){
-	// The interesting work has been moved to the various 
-	// subclasses of CustomEvent.
-	((class CustomEvent *)e)->work();
-}
 
 void
-MainThread::LocalInit( class MainThread *app ){
-	int i, rpt;
+MainThread::run( ){
+	int i;
 	nWorkers = o->threads;
 	
+	s->initNernstSim();
+	s->qtime->start();
+
 	// Allocate the arrays for worker threads and messages.
 
 	worker = (class WorkerThread **)
 		 malloc( sizeof(class WorkerThread *) * nWorkers );
 
 
-	// Fill in the arrays.
-
-		// Prime the worker message queue.
-		//QCoreApplication::postEvent( worker[i], event[i] );
+	inCount[0] = inCount[1] = 0;
+	outCount[0]= outCount[1]= 0;
+	semaphore[0] = safeNew( QSemaphore(1) );
+	semaphore[1] = safeNew( QSemaphore(1) );
+	barrier[0]   = safeNew( QSemaphore(0) );
+	barrier[1]   = safeNew( QSemaphore(0) );
 
 
 	for(i=0; i<nWorkers; i++){
 		// Create the worker.
-		worker[i] = safeNew( WorkerThread( i, app ) );
+		worker[i] = safeNew( WorkerThread( i, this ) );
 
 		// Set indicies.
 		worker[i]->start_idx1 = (i * o->x * o->y)/nWorkers;
 		worker[i]->end_idx1   = (i * o->x * o->y)/nWorkers + (o->x * o->y)/(2 * nWorkers);
 		worker[i]->start_idx2 = (i * o->x * o->y)/nWorkers + (o->x * o->y)/(2 * nWorkers);
 		worker[i]->end_idx2   = ( (i+1) * o->x * o->y)/nWorkers; 
-		/*
-		fprintf(stderr, "worker %d covers %u to %u and %u to %u \n",
-			i,
-			worker[i]->start_idx1,
-                        worker[i]->end_idx1,
-                        worker[i]->start_idx2,
-                        worker[i]->end_idx2
-			); 
-		*/ 
 			
+		// Set up synchronization.
+		worker[i]->inCount  = &inCount[0];
+		worker[i]->outCount = &outCount[0];
+		worker[i]->semaphore  = &semaphore[0];
+		worker[i]->barrier    = &barrier[0];
+		worker[i]->nWorkers   = nWorkers;
+		worker[i]->iters      = o->iters;
+		worker[i]->s          = s;
 
 	
 		// Begin the thread w/ an event queue.
 		worker[i]->start();
 	}
 
-	s->initNernstSim();
-	s->qtime->start();
 
-	// Start the iterations.
+	
 	for(i=0; i<nWorkers; i++){
-		QCoreApplication::postEvent( 
-			worker[i], 
-			safeNew(  WorkEvent( i, app, worker[i], PREP )  ) 
-		);
+		worker[i]->wait();
 	}
-
-
-
+	s->elapsed += s->qtime->elapsed() / 1000.0;
+	s->completeNernstSim();
+	exit(0);
+	
 }
 
 
@@ -149,210 +143,83 @@ MainThread::LocalInit( class MainThread *app ){
 //===========================================================================
 
 void
-WorkerThread::customEvent(QEvent *e){
-	// The interesting work has been moved to the various 
-	// subclasses of CustomEvent.
-	((class CustomEvent *)e)->work();
+WorkerThread::run(){
+	volatile int i=0;
+	
+	for(i=0; i<iters; i++){
+		if(id == 0){  s->moveAtoms_prep(id, id);	}
+		Barrier();
+
+		s->moveAtoms_stakeclaim( start_idx1, end_idx1 );	
+		Barrier();
+	
+		s->moveAtoms_stakeclaim( start_idx2, end_idx2 ); 
+		Barrier();
+
+		s->moveAtoms_move( start_idx1, end_idx1 ); 
+		Barrier();
+
+		s->moveAtoms_move( start_idx2, end_idx2); 
+		Barrier();
+
+		if( id == 0 ){ s->moveAtoms_poretransport( id, id ); }
+		Barrier();
+	}
+	
+
 }
+
+
 
 void
-WorkerThread::run(){
-	while(1){
-		mutex.lock();
-		waitcondition.wait(&mutex);
-		switch(cmd){
-		case PREP:{
-			fprintf(stderr, "%d starting to spin.\n", id);
-			for(z=0; z<10000000000; z++);
-			if(id == 0){  app->s->moveAtoms_prep(id, id);	}
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, PREP_ACK ) ) );
-			break;
+WorkerThread::Barrier(){
+	/*
+	 * rendevous
+	 *
+	 * mutex.wait()
+	 * 	count++
+	 * mutex.signal()
+	 *
+	 * if( count==n ){
+	 * 	barrier.signal()
+	 * }
+	 *
+	 * barrier.wait()
+	 * barrier.signal()
+	 *
+	 * critical point
+	 */
+
+	// Initialized with semaphore released and barrier acquired.
+	// inCount = outCount = 0;
+	
+	// Need a double latch.
+	for(int i=0; i<2; i++){
+		// Stack up threads at the barrier.aquire until the last
+		// one arrives.
+		semaphore[i]->acquire();
+		inCount[i]++;
+
+		if( inCount[i]==nWorkers ){
+			barrier[i]->release();
 		}
-		case STAKE1:{
-			app->s->moveAtoms_stakeclaim( worker->start_idx1, worker->end_idx1 );	
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE1_ACK ) ) );
-			break;
+		semaphore[i]->release();
+
+		// Turnstile to let threads through one at a time.
+		barrier[i]->acquire();
+		barrier[i]->release();
+
+		// The last thread through should reset the state.
+		semaphore[i]->acquire();
+		outCount[i]++;
+
+		if( outCount[i]==nWorkers ){
+			barrier[i]->acquire();
+			inCount[i] = outCount[i] = 0;
 		}
-			default:{
-				assert(0);
-			}
-		}
-		case STAKE2:{
-			app->s->moveAtoms_stakeclaim( worker->start_idx2, worker->end_idx2 ); 
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, STAKE2_ACK ) ) );
-			break;
-		}
-		case MOVE1:{
-			app->s->moveAtoms_move( worker->start_idx1, worker->end_idx1 ); 
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE1_ACK ) ) );
-			break;
-		}
-		case MOVE2:{
-			app->s->moveAtoms_move( worker->start_idx2, worker->end_idx2); 
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, MOVE2_ACK ) ) );
-			break;
-		}
-		case TRANSPORT1:{
-			if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT1_ACK ) ) );
-			break;
-		}
-		case TRANSPORT2:{
-			//if( id == 0 ){ app->s->moveAtoms_poretransport( id, id ); }	
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, TRANSPORT2_ACK ) ) );
-			break;
-		}
-		case QUIT:{
-			QCoreApplication::postEvent( app, safeNew( WorkEvent( id, app, worker, QUIT_ACK ) ) );
-			worker->exit(0);
-			break;
-		}
-		mutex.unlock();
+		semaphore[i]->release();
 	}
 }
-
-/*
- * rendevous
- *
- * mutex.wait()
- * 	count++
- * mutex.signal()
- *
- * if( count==n ){
- * 	barrier.signal()
- * }
- *
- * barrier.wait()
- * barrier.signal()
- *
- * critical point
- */
  
 
-
-
-//===========================================================================
-// Several events
-//===========================================================================
-
-
-
-volatile int z;
-void
-WorkEvent::work(){
-	int i, msg;
-	static int w = 0;
-	static int iters = -1;
-			w++;
-			if( w == app->nWorkers ){
-				w=0;
-				switch(cmd){
-
-		case PREP_ACK:{
-		case STAKE1_ACK:{
-		case STAKE2_ACK:{
-		case MOVE1_ACK:{
-		case MOVE2_ACK:{
-		case TRANSPORT1_ACK:{
-		case TRANSPORT2_ACK:{
-		case QUIT_ACK:{
-				for(i=0; i<app->nWorkers; i++){
-				
-	switch(cmd){
-		//===============================================================================================================================
-					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], STAKE1 ) ) );
-			}
-			break;
-		}
-
-		//===============================================================================================================================
-				w=0;
-				for(i=0; i<app->nWorkers; i++){
-					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], STAKE2 ) ) );
-				}
-			}
-			break;
-		}
-
-		//===============================================================================================================================
-				w=0;
-				for(i=0; i<app->nWorkers; i++){
-					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], MOVE1 ) ) );
-				}
-			}
-			break;
-		}
-
-		//===============================================================================================================================
-				w=0;
-				for(i=0; i<app->nWorkers; i++){
-					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], MOVE2 ) ) );
-				}
-			}
-			break;
-		}
-
-		//===============================================================================================================================
-				w=0;
-				for(i=0; i<app->nWorkers; i++){
-					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], TRANSPORT1 ) ) );
-				}
-			}
-			break;
-		}
-
-		//===============================================================================================================================
-				w=0;
-				for(i=0; i<app->nWorkers; i++){
-					QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], TRANSPORT2 ) ) );
-				}
-			}
-			break;
-		}
-
-		//===============================================================================================================================
-				if( iters == -1 ){
-					iters = app->o->iters;
-				}
-				iters--; app->s->currentIter++;
-				w=0;
-				for(i=0; i<app->nWorkers; i++){
-					if( iters ){
-						QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], PREP ) ) );
-					}else{
-						QCoreApplication::postEvent( app->worker[i], safeNew( WorkEvent( i, app, app->worker[i], QUIT ) ) );
-					}
-				}
-			}
-			break;
-		}
-		//===============================================================================================================================
-
-			worker->wait();
-			w++;
-			if( w == app->nWorkers ){
-				app->s->elapsed += app->s->qtime->elapsed() / 1000.0;
-				app->s->completeNernstSim();
-				app->exit(0);
-			}
-			break;
-		}
-
-
-		default:{
-			fprintf(stderr, "%s::%d bad event %d\n", __FILE__, __LINE__, cmd);
-			app->exit(EXIT_FAILURE);
-		}
-	}
-}
-
-
-//===========================================================================
-// CustomEvent
-//===========================================================================
-
-void
-CustomEvent::work(){
-	fprintf(stderr, "Why is CustomEvent::work() getting called?\n");
-}
 
