@@ -4,6 +4,8 @@ Makefile*
 *~
 moc_*
 qrc_resources.cpp
+nernst
+nernst.app
 Nernst Potential Simulator
 Nernst Potential Simulator.app
 debug

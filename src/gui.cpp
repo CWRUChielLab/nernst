@@ -413,7 +413,7 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 1.0.1<br>"
+      "Version 1.0.2<br>"
       "Copyright &copy; 2008  "
       "Jeffrey Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
