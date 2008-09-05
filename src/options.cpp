@@ -1,4 +1,4 @@
-/* options.c
+/* options.cpp
  *
  *
  * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
@@ -33,6 +33,7 @@
  * 6.  If you're feeling particularly virtuous, update print_help().
  * 7.  Finally, update dump_options().
  */
+
 
 //options that only take long-opt form should be indexed here.
 //In order not to clash with single-letter options, start from
@@ -81,7 +82,7 @@ const char
    "(C) 2008  Jeffrey Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Dr. Hillel J. Chiel",
    "",
-   "Version 1.0.2",
+   "Version 1.0.3",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",

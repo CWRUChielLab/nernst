@@ -108,8 +108,8 @@ class NernstSim
       void initWorld( struct options *o );
       int WORLD_SZ_MASK;
       unsigned int WORLD_SZ;
-      unsigned int off_n, off_s, off_e, off_w, off_ne, off_nw, off_se, off_sw;
-      unsigned int *dir2offset;
+      int off_n, off_s, off_e, off_w, off_ne, off_nw, off_se, off_sw;
+      int *dir2offset;
       int getX( unsigned int position );
       int getY( unsigned int position );
       int isMembrane( unsigned int position );

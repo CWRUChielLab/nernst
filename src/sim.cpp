@@ -192,7 +192,7 @@ NernstSim::initWorld( struct options *o )
    direction = malloc( direction_sz64 );
 #else
 #ifdef BLR_USEWIN
-   direction = malloc( direction_sz64 + 16 );
+   direction = (unsigned char*)malloc( direction_sz64 + 16 );
    direction += 16 - (long int)direction % 16;
 #endif
 #endif
@@ -548,7 +548,7 @@ NernstSim::initAtoms( struct options *options )
    off_se = (  o->x + 1 );
    off_sw = (  o->x - 1 );
 
-   dir2offset = (unsigned int*)malloc( sizeof( unsigned int ) * 8 );
+   dir2offset = (int*)malloc( sizeof( unsigned int ) * 8 );
    assert( dir2offset );
    dir2offset[ 0 ] = off_n;
    dir2offset[ 1 ] = off_s;
