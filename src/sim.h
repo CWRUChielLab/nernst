@@ -25,6 +25,7 @@
 #define SIM_H 
 
 #include <QTime>
+#include <stdint.h>
 
 enum
 {

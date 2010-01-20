@@ -1101,9 +1101,9 @@ NernstGUI::updatePlots( int currentIter )
       curves[ currentNernstCurve ]->setData( x_iters + beganThisNernstCurve,
                                              y_ghk + beganThisNernstCurve,
                                              currentIter - beganThisNernstCurve + 1 );
-      if( o->pK >  0 && o->pNa == 0 && o->pCl == 0 ||
-          o->pK == 0 && o->pNa >  0 && o->pCl == 0 ||
-          o->pK == 0 && o->pNa == 0 && o->pCl >  0 )
+      if( ( o->pK >  0 && o->pNa == 0 && o->pCl == 0 ) ||
+          ( o->pK == 0 && o->pNa >  0 && o->pCl == 0 ) ||
+          ( o->pK == 0 && o->pNa == 0 && o->pCl >  0 ) )
       {
          curveLbl->setText( "<font color=#ff0000>Nernst: " + QString::number( voltsGHK ) + " mV</font>" );
       } else {

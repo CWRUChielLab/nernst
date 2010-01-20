@@ -23,6 +23,7 @@
 
 
 #include <cerrno>
+#include <stdio.h>
 #include "safecalls.h"
 
 namespace SafeCalls{
