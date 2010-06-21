@@ -189,7 +189,7 @@ NernstSim::initWorld( struct options *o )
    rc = posix_memalign( (void**)&direction, getpagesize(), direction_sz64 );
 #else
 #ifdef BLR_USEMAC
-   direction = malloc( direction_sz64 );
+   direction = (unsigned char*)malloc( direction_sz64 );
 #else
 #ifdef BLR_USEWIN
    direction = (unsigned char*)malloc( direction_sz64 + 16 );

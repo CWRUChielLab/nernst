@@ -24,7 +24,11 @@
 
 #include <QApplication>
 #include <stdlib.h>
+#ifdef BLR_USEMAC
+#include <sys/malloc.h>
+#else
 #include <malloc.h>
+#endif
 #include "main.h"
 #include "options.h"
 #include "sim.h"
