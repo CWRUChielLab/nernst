@@ -103,7 +103,7 @@ NernstSim::Iter()
 void 
 NernstSim::postIter()
 {
-   if( o->output_file && currentIter % 4 == 0 )
+   if( o->output_file )
    {
       takeCensus( currentIter );
    }
