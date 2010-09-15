@@ -443,7 +443,9 @@ parseOptions(int argc, char **argv)
             options->eps0	=safeStrtod( optarg );
 	    break;
 	 case OPT_MEMBRANE_DIELECTRIC:
-            options->eps	=safeStrtod( optarg );
+            options->eps = safeStrtod( optarg );
+            options->c = options->eps * options->eps0 / options->d;  // Membrane capacitance (F m^-2)
+            options->cBoltz = options->e * options->e / ( 2 * options->k * options->t * options->c * options->a ); //used in Boltzmann calc
 	    break;
 	 case OPT_MEMBRANE_CAPACITACE:
             options->c	=safeStrtod( optarg );

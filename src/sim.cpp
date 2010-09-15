@@ -73,7 +73,10 @@ NernstSim::initNernstSim()
    shufflePositions( o );
    initWorld( o );
    initAtoms( o );
-   //takeCensus( 0 );
+   if( o->output_file )
+   {
+      takeCensus( 0 );
+   }
 
    if( o->progress )
 	{
@@ -100,12 +103,10 @@ NernstSim::Iter()
 void 
 NernstSim::postIter()
 {
-   /*
-   if( currentIter % 4 == 0 )
+   if( o->output_file && currentIter % 4 == 0 )
    {
       takeCensus( currentIter );
    }
-   */
 
    if( o->progress && currentIter % 256 == 0 )
    {
@@ -933,7 +934,7 @@ NernstSim::takeCensus( int iter )
       fp = fopen( "static.out", "w" );
       if( fp )
       {
-         fprintf( fp, "T LK LNa LCl RK RNa RCl q\n" );
+         fprintf( fp, "T LK LNa LCl RK RNa RCl q vm\n" );
       }
    }
 
@@ -993,7 +994,10 @@ NernstSim::takeCensus( int iter )
       fprintf( fp, "%d %d %d ", K, Na, Cl );
 
       // Output net charge across membrane
-      fprintf( fp, "%d\n", LRcharge );
+      fprintf( fp, "%d ", LRcharge );
+
+      // Output membrane potential in mV
+      fprintf( fp, "%f\n", LRcharge * o->e / ( o->c * o->a * o->y ) * 1000 );
    }
 }
 
