@@ -398,15 +398,15 @@ NernstSim::shouldTransport( unsigned int from, unsigned int to )
    if( getX( from ) == o->x / 2 - 1 && getX( to ) == o->x / 2 + 1 )
    {
       //return ( direction[ to ] % 256 <= 16 * exp( o->cBoltz * LRcharge * q / o->y ) );
-      double test = exp( 2 * o->cBoltz * LRcharge * q / o->y );
-      return ( direction[ to ] % 256 <= 256*test/(1+test) );
+      double ratio = exp( 2 * o->cBoltz * LRcharge * q / o->y );
+      return ( direction[ to ] % 256 <= 256*ratio/(1+ratio) );
    } else {
       // Moving right to left across membrane.
       if( getX( from ) == o->x / 2 + 1 && getX( to ) == o->x / 2 - 1 )
       {
          //return ( direction[ to ] % 256 <= 16 * exp( o->cBoltz * LRcharge * -q / o->y ) );
-         double test = exp( 2 * o->cBoltz * LRcharge * -q / o->y );
-         return ( direction[ to ] % 256 <= 256*test/(1+test) );
+         double ratio = exp( 2 * o->cBoltz * LRcharge * -q / o->y );
+         return ( direction[ to ] % 256 <= 256*ratio/(1+ratio) );
       } else {
 #ifndef QT_NO_DEBUG
          ASSERT( ( getX( from ) == o->x / 2 - 1 && getX( to ) == o->x / 2 + 1 ) || ( getX( from ) == o->x / 2 + 1 && getX( from ) == o->x / 2 - 1 ) );
