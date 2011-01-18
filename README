@@ -4,6 +4,10 @@ Nernst Potential Simulator
 Nernst Potential Simulator is an educational program that allows the user to
 see the behavior of ions near a semi-permeable membrane.  
 
+Support
+=======
+This project was partially supported by NSF UBM DUE-0634612.
+
 Dependencies
 ============
 
