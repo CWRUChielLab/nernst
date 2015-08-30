@@ -1,7 +1,7 @@
 /* world.h
  * 
  *
- * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2015, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.

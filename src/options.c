@@ -1,7 +1,7 @@
 /* options.c
  *
  *
- * Copyright (c) 2008, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2015, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.
@@ -57,10 +57,10 @@ char
 *version[] =
 {
    "Nernst potential simulator.",
-   "(C) 2008  Jeffrey Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
+   "(C) 2015  Jeffrey Gill, Barry Rountree, Kendrick Shaw, Catherine Kehl,",
    "          Jocelyn Eckert, and Dr. Hillel J. Chiel",
    "",
-   "Version 1.0.1",
+   "Version 1.0.1b",
    "Released under the GPL version 3 or any later version.",
    "This is free software; see the source for copying conditions. There is NO",
    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
