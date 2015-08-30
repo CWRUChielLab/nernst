@@ -23,7 +23,7 @@
  */
 
 
-#include <QtGui>
+#include <QtWidgets>
 #include <time.h>
 #include <math.h>
 

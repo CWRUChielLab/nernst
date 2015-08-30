@@ -23,7 +23,7 @@
  */
 
 
-#include <QtGui>
+#include <QtWidgets>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <SFMT.h>

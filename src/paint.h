@@ -27,9 +27,10 @@
 
 
 #include <QGLWidget>
+#include <QOpenGLFunctions_1_1>
 
 
-class NernstPainter : public QGLWidget
+class NernstPainter : public QGLWidget, public QOpenGLFunctions_1_1
 {
    Q_OBJECT
 

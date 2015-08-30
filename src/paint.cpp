@@ -204,6 +204,8 @@ NernstPainter::resetPaint()
 void
 NernstPainter::initializeGL()
 {
+   initializeOpenGLFunctions();
+
    qglClearColor( Qt::white );
    glShadeModel( GL_FLAT );
    glEnable( GL_DEPTH_TEST );
