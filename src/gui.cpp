@@ -122,26 +122,26 @@ NernstGUI::NernstGUI( struct options *options, QWidget *parent, Qt::WindowFlags 
    currentNernstCurve = 3;
 
    curves[ 0 ] = new QwtPlotCurve( "Membrane Potential" );
-   curves[ 0 ]->setData( x_iters, y_volts, 0 );
+   curves[ 0 ]->setSamples( x_iters, y_volts, 0 );
    curves[ 0 ]->attach( voltsPlot );
 
    /*
    curves[ 1 ] = new QwtPlotCurve( "Equilibrium Potential (Gibbs)" );
    curves[ 1 ]->setPen( QColor( Qt::green ) );
-   curves[ 1 ]->setData( x_iters, y_gibbs, 0 );
+   curves[ 1 ]->setSamples( x_iters, y_gibbs, 0 );
    curves[ 1 ]->attach( voltsPlot );
    voltsGibbs = 0;
 
    curves[ 2 ] = new QwtPlotCurve( "Equilibrium Potential (Boltzmann)" );
    curves[ 2 ]->setPen( QColor( Qt::blue ) );
-   curves[ 2 ]->setData( x_iters, y_boltzmann, 0 );
+   curves[ 2 ]->setSamples( x_iters, y_boltzmann, 0 );
    curves[ 2 ]->attach( voltsPlot );
    voltsBoltzmann = 0;
    */
 
    curves[ currentNernstCurve ] = new QwtPlotCurve( "GHK Potential" );
    curves[ currentNernstCurve ]->setPen( QColor( Qt::red ) );
-   curves[ currentNernstCurve ]->setData( x_iters, y_ghk, 0 );
+   curves[ currentNernstCurve ]->setSamples( x_iters, y_ghk, 0 );
    curves[ currentNernstCurve ]->attach( voltsPlot );
    voltsGHK = 0;
 
@@ -1074,9 +1074,9 @@ NernstGUI::updatePlots( int currentIter )
    // y_gibbs[ currentIter ] = voltsGibbs;
    // y_boltzmann[ currentIter ] = voltsBoltzmann;
 
-   curves[ 0 ]->setData( x_iters, y_volts, currentIter );
-   // curves[ 1 ]->setData( x_iters, y_gibbs, currentIter );
-   // curves[ 2 ]->setData( x_iters, y_boltzmann, currentIter );
+   curves[ 0 ]->setSamples( x_iters, y_volts, currentIter );
+   // curves[ 1 ]->setSamples( x_iters, y_gibbs, currentIter );
+   // curves[ 2 ]->setSamples( x_iters, y_boltzmann, currentIter );
 
    int drawThisTime = 1;
    if( o->electrostatics != 1                               ||
@@ -1097,7 +1097,7 @@ NernstGUI::updatePlots( int currentIter )
       }
 
       y_ghk[ currentIter ] = voltsGHK;
-      curves[ currentNernstCurve ]->setData( x_iters + beganThisNernstCurve,
+      curves[ currentNernstCurve ]->setSamples( x_iters + beganThisNernstCurve,
                                              y_ghk + beganThisNernstCurve,
                                              currentIter - beganThisNernstCurve + 1 );
       if( o->pK >  0 && o->pNa == 0 && o->pCl == 0 ||
@@ -1141,13 +1141,13 @@ NernstGUI::updatePlots( int currentIter )
 void
 NernstGUI::resetPlots()
 {
-   curves[ 0 ]->setData( x_iters, y_volts, 0 );
-   // curves[ 1 ]->setData( x_iters, y_gibbs, 0 );
-   // curves[ 2 ]->setData( x_iters, y_boltzmann, 0 );
+   curves[ 0 ]->setSamples( x_iters, y_volts, 0 );
+   // curves[ 1 ]->setSamples( x_iters, y_gibbs, 0 );
+   // curves[ 2 ]->setSamples( x_iters, y_boltzmann, 0 );
 
    for( int i = 3; i <= currentNernstCurve; i++ )
    {
-      curves[ i ]->setData( x_iters, y_ghk, 0 );
+      curves[ i ]->setSamples( x_iters, y_ghk, 0 );
    }
 
    currentNernstCurve = 3;
