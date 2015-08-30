@@ -29,6 +29,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 extern int nAtoms;
 extern int WORLD_T;
 extern unsigned int WORLD_COUNTER;
