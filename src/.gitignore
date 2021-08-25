@@ -3,6 +3,7 @@ Makefile*
 *.o
 *~
 moc_*
+.qmake.stash
 qrc_resources.cpp
 Nernst Potential Simulator
 Nernst Potential Simulator.app

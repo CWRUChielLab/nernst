@@ -10,10 +10,10 @@ Dependencies
 This project uses code developed by the Qt, Qwt, and SFMT projects. 
 
 To build this program, you will need to install the development tools for 
-Qt 4 (version 4.3 or later, available from www.trolltech.com) and the Qwt 
-libraries (available from qwt.sourceforge.net).  The SFMT libraries have
-been modified and are included with the source code, but the project page
-can be found at http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT ).
+Qt 5 (https://www.qt.io/offline-installers) and the Qwt libraries (available
+from qwt.sourceforge.net).  The SFMT libraries have been modified and are
+included with the source code, but the project page can be found at
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT ).
 
 Compilation Instructions
 ========================
@@ -23,3 +23,41 @@ This program uses the standard Qt build process run from the src directory:
   qmake
   make
 
+macOS Compilation Details
+-------------------------
+
+Last updated: 2021-08-25
+
+Install Qt 5:
+
+  - Download a Qt 5.12 offline installer:
+      https://www.qt.io/offline-installers
+  - Install into home directory:
+      /Users/<my user name>/Qt5.12.11
+  - Include prebuilt components for macOS and sources
+  - Update your PATH variable in your shell's configuration file (e.g., ~/.bashrc):
+      export PATH="/Users/<my user name>/Qt5.12.11/5.12.11/clang_64/bin:$PATH"
+
+Build qwt:
+
+  - Download the qwt 6.2.0 source code with compressed extension tar.bz2:
+      https://sourceforge.net/projects/qwt/files/qwt/
+  - Unpack the source code into your home directory:
+      /Users/<my user name>/qwt-6.2.0
+  - Comment out the line `QWT_CONFIG += QwtSvg` in qwtconfig.pri (or else
+    `QT += svg` must be added to nernst.pro)
+  - Build qwt:
+      cd ~/qwt-6.2.0/src
+      qmake -config release
+      make staticlib
+
+Build nernst:
+
+  - Make sure the paths for qwt are correct in nernst.pro for macOS:
+      INCLUDEPATH += /Users/<my user name>/qwt-6.2.0/src
+      QMAKE_LIBDIR += /Users/<my user name>/qwt-6.2.0/lib
+  - Build nernst:
+      cd nernst/src
+      qmake -config release
+      make
+      macdeployqt "Nernst Potential Simulator.app"
