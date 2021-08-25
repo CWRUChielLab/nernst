@@ -2,7 +2,7 @@
  *
  * The engine of the simulation with GUI support.
  *
- * Copyright (c) 2015, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2021, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.

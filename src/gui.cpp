@@ -2,7 +2,7 @@
  *
  * The main application GUI.
  *
- * Copyright (c) 2015, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
+ * Copyright (c) 2021, Jeffrey Gill, Barry Rountree, Kendrick Shaw, 
  *    Catherine Kehl, Jocelyn Eckert, and Dr. Hillel J. Chiel
  *
  * This file is part of Nernst Potential Simulator.
@@ -412,8 +412,8 @@ NernstGUI::about()
    QMessageBox::about( this, "About Nernst Potential Simulator",
       "<h3>About Nernst Potential Simulator</h3><br>"
       "<br>"
-      "Version 1.0.1b<br>"
-      "Copyright &copy; 2015  "
+      "Version 1.0.1c<br>"
+      "Copyright &copy; 2021  "
       "Jeffrey Gill, Barry Rountree, Kendrick Shaw, "
       "Catherine Kehl, Jocelyn Eckert, "
       "and Dr. Hillel J. Chiel.<br>"
@@ -424,8 +424,8 @@ NernstGUI::about()
       "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>"
       "<br>"
       "Have a suggestion? Find a bug? Send us your comments "
-      "at <a href='mailto:autopoiesis@case.edu'>"
-      "autopoiesis@case.edu</a>." );
+      "at <a href='mailto:neuroinstructors@case.edu'>"
+      "neuroinstructors@case.edu</a>." );
 }
 
 
