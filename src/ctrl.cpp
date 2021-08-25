@@ -102,7 +102,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    xSld = new QSlider( Qt::Horizontal );
    xSld->setMinimumWidth( 100 );
-   xSld->setRange( (int)( log( MIN_X ) / log( 2 ) + 0.5 ), (int)( log( MAX_X ) / log( 2 ) + 0.5 ) );
+   xSld->setRange( (int)( log( (int)MIN_X ) / log( 2 ) + 0.5 ), (int)( log( (int)MAX_X ) / log( 2 ) + 0.5 ) );
    xSld->setValue( (int)( log( xDefault ) / log( 2 ) + 0.5 ) );
    xSld->setToolTip( "Set the width of the world." );
 
@@ -117,7 +117,7 @@ NernstCtrl::NernstCtrl( struct options *options, QWidget *parent )
 
    ySld = new QSlider( Qt::Horizontal );
    ySld->setMinimumWidth( 100 );
-   ySld->setRange( (int)( log( MIN_Y ) / log( 2 ) + 0.5 ), (int)( log( MAX_Y ) / log( 2 ) + 0.5 ) );
+   ySld->setRange( (int)( log( (int)MIN_Y ) / log( 2 ) + 0.5 ), (int)( log( (int)MAX_Y ) / log( 2 ) + 0.5 ) );
    ySld->setValue( (int)( log( yDefault ) / log( 2 ) + 0.5 ) );
    ySld->setToolTip( "Set the height of the world." );
 
